@@ -1,14 +1,35 @@
 "use client";
 
+// --- Data Contracts (Easily Modifiable) ---
+const TIMELINE_OPTIONS = [
+  "Flexible (Standard Scheduling)",
+  "Within 1-3 Months",
+  "Next Year / Long Term",
+];
+
+const BUDGET_OPTIONS = [
+  "Under $5,000 (Consultation Only)",
+  "$5,000 - $15,000",
+  "$15,000 - $50,000",
+  "$50,000+",
+];
+
+const SCOPE_OPTIONS = [
+  "Structural Modification",
+  "Custom Built-ins / Architectural Millwork",
+  "Comprehensive Remodel",
+  "Other (Specify below)",
+];
+
 export default function EstimateForm() {
   return (
-    <form className="mt-10 border border-zinc-800 bg-zinc-900/30 p-8 text-left backdrop-blur-sm max-w-3xl mx-auto">
+    <form className="mt-10 border border-brand-surface bg-brand-surface/50 p-8 text-left backdrop-blur-sm max-w-3xl mx-auto rounded-lg">
       <div className="grid grid-cols-1 gap-x-8 gap-y-6 sm:grid-cols-2">
         {/* Geographic Constraint */}
         <div className="sm:col-span-1">
           <label
             htmlFor="zip-code"
-            className="block text-sm font-medium leading-6 text-zinc-300"
+            className="block text-sm font-medium leading-6 opacity-90"
           >
             Project Zip Code
           </label>
@@ -19,7 +40,7 @@ export default function EstimateForm() {
               name="zip-code"
               maxLength={5}
               required
-              className="block w-full rounded-md border-0 bg-zinc-950 py-2.5 px-3 text-zinc-50 ring-1 ring-inset ring-zinc-800 focus:ring-2 focus:ring-inset focus:ring-white sm:text-sm sm:leading-6"
+              className="block w-full rounded-md border-0 bg-brand-canvas py-2.5 px-3 ring-1 ring-inset ring-brand-surface focus:ring-2 focus:ring-inset focus:ring-brand-primary sm:text-sm sm:leading-6"
               placeholder="e.g., 46012"
             />
           </div>
@@ -29,7 +50,7 @@ export default function EstimateForm() {
         <div className="sm:col-span-1">
           <label
             htmlFor="timeline"
-            className="block text-sm font-medium leading-6 text-zinc-300"
+            className="block text-sm font-medium leading-6 opacity-90"
           >
             Desired Start Date
           </label>
@@ -37,11 +58,13 @@ export default function EstimateForm() {
             <select
               id="timeline"
               name="timeline"
-              className="block w-full rounded-md border-0 bg-zinc-950 py-2.5 px-3 text-zinc-50 ring-1 ring-inset ring-zinc-800 focus:ring-2 focus:ring-inset focus:ring-white sm:text-sm sm:leading-6"
+              className="block w-full rounded-md border-0 bg-brand-canvas py-2.5 px-3 ring-1 ring-inset ring-brand-surface focus:ring-2 focus:ring-inset focus:ring-brand-primary sm:text-sm sm:leading-6"
             >
-              <option>Flexible (Standard Scheduling)</option>
-              <option>Within 1-3 Months</option>
-              <option>Next Year / Long Term</option>
+              {TIMELINE_OPTIONS.map((option) => (
+                <option key={option} value={option} className="bg-brand-canvas">
+                  {option}
+                </option>
+              ))}
             </select>
           </div>
         </div>
@@ -50,7 +73,7 @@ export default function EstimateForm() {
         <div className="sm:col-span-2">
           <label
             htmlFor="budget"
-            className="block text-sm font-medium leading-6 text-zinc-300"
+            className="block text-sm font-medium leading-6 opacity-90"
           >
             Anticipated Capital Allocation
           </label>
@@ -58,12 +81,13 @@ export default function EstimateForm() {
             <select
               id="budget"
               name="budget"
-              className="block w-full rounded-md border-0 bg-zinc-950 py-2.5 px-3 text-zinc-50 ring-1 ring-inset ring-zinc-800 focus:ring-2 focus:ring-inset focus:ring-white sm:text-sm sm:leading-6"
+              className="block w-full rounded-md border-0 bg-brand-canvas py-2.5 px-3 ring-1 ring-inset ring-brand-surface focus:ring-2 focus:ring-inset focus:ring-brand-primary sm:text-sm sm:leading-6"
             >
-              <option>Under $5,000 (Consultation Only)</option>
-              <option>$5,000 - $15,000</option>
-              <option>$15,000 - $50,000</option>
-              <option>$50,000+</option>
+              {BUDGET_OPTIONS.map((option) => (
+                <option key={option} value={option} className="bg-brand-canvas">
+                  {option}
+                </option>
+              ))}
             </select>
           </div>
         </div>
@@ -72,7 +96,7 @@ export default function EstimateForm() {
         <div className="sm:col-span-2">
           <label
             htmlFor="project-type"
-            className="block text-sm font-medium leading-6 text-zinc-300"
+            className="block text-sm font-medium leading-6 opacity-90"
           >
             Project Scope
           </label>
@@ -80,12 +104,13 @@ export default function EstimateForm() {
             <select
               id="project-type"
               name="project-type"
-              className="block w-full rounded-md border-0 bg-zinc-950 py-2.5 px-3 text-zinc-50 ring-1 ring-inset ring-zinc-800 focus:ring-2 focus:ring-inset focus:ring-white sm:text-sm sm:leading-6"
+              className="block w-full rounded-md border-0 bg-brand-canvas py-2.5 px-3 ring-1 ring-inset ring-brand-surface focus:ring-2 focus:ring-inset focus:ring-brand-primary sm:text-sm sm:leading-6"
             >
-              <option>Structural Modification</option>
-              <option>Custom Built-ins / Architectural Millwork</option>
-              <option>Comprehensive Remodel</option>
-              <option>Other (Specify below)</option>
+              {SCOPE_OPTIONS.map((option) => (
+                <option key={option} value={option} className="bg-brand-canvas">
+                  {option}
+                </option>
+              ))}
             </select>
           </div>
         </div>
@@ -94,7 +119,7 @@ export default function EstimateForm() {
         <div className="sm:col-span-2">
           <label
             htmlFor="details"
-            className="block text-sm font-medium leading-6 text-zinc-300"
+            className="block text-sm font-medium leading-6 opacity-90"
           >
             Project Details & Current State
           </label>
@@ -104,7 +129,7 @@ export default function EstimateForm() {
               name="details"
               rows={5}
               required
-              className="block w-full rounded-md border-0 bg-zinc-950 py-2 px-3 text-zinc-50 ring-1 ring-inset ring-zinc-800 focus:ring-2 focus:ring-inset focus:ring-white sm:text-sm sm:leading-6"
+              className="block w-full rounded-md border-0 bg-brand-canvas py-2 px-3 ring-1 ring-inset ring-brand-surface focus:ring-2 focus:ring-inset focus:ring-brand-primary sm:text-sm sm:leading-6"
               placeholder="Detail the existing structure and your target functional outcome..."
             />
           </div>
@@ -114,7 +139,7 @@ export default function EstimateForm() {
       <div className="mt-8 flex justify-end">
         <button
           type="submit"
-          className="rounded-md bg-white px-6 py-2.5 text-sm font-semibold text-zinc-900 shadow-sm hover:bg-zinc-200 transition-colors"
+          className="rounded-md bg-brand-primary px-6 py-2.5 text-sm font-semibold text-brand-canvas shadow-sm hover:opacity-90 transition-opacity"
         >
           Submit Project Brief
         </button>

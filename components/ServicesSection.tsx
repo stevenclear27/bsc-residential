@@ -1,3 +1,5 @@
+import React from "react";
+
 interface ServiceItem {
   title: string;
   description: string;
@@ -35,7 +37,7 @@ const services: ServiceItem[] = [
 
 export default function ServicesSection() {
   return (
-    <section className="w-full py-24 border-t border-zinc-900 bg-zinc-950">
+    <section className="w-full py-24 border-t border-brand-surface bg-brand-canvas">
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         <div className="mx-auto max-w-2xl text-center">
           <h1 className="text-4xl font-bold tracking-tight text-zinc-50 sm:text-5xl uppercase">
@@ -53,7 +55,7 @@ export default function ServicesSection() {
             {services.map((service) => (
               <div
                 key={service.title}
-                className="flex flex-col items-start border border-zinc-800 bg-zinc-900/30 p-8 text-left backdrop-blur-sm"
+                className="flex flex-col items-start border border-brand-surface bg-brand-surface/50 p-8 text-left backdrop-blur-sm rounded-lg"
               >
                 <dt className="text-xl font-semibold leading-7 text-zinc-100 uppercase">
                   {service.title}
@@ -66,7 +68,7 @@ export default function ServicesSection() {
                         key={feature}
                         className="flex gap-x-3 text-sm text-zinc-300"
                       >
-                        <span aria-hidden="true" className="text-zinc-500">
+                        <span aria-hidden="true" className="text-brand-primary">
                           ▹
                         </span>
                         {feature}

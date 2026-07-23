@@ -1,27 +1,22 @@
-import type { Metadata } from "next";
-import { Inter } from "next/font/google";
 import "./globals.css";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
-
-const inter = Inter({ subsets: ["latin"] });
+import type { Metadata } from "next";
+import Navbar from "../components/Navbar";
+import Footer from "../components/Footer";
 
 export const metadata: Metadata = {
-  title: "BSC Residential LLC | High-End Custom Carpentry",
+  title: "BSC Residential LLC",
   description:
-    "Precision custom carpentry, architectural upgrades, and high-end remodeling.",
+    "High-end, boutique custom carpentry and premium remodeling services.",
 };
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
     <html lang="en">
-      <body
-        className={`${inter.className} bg-zinc-950 text-zinc-50 antialiased pt-24 flex flex-col min-h-screen`}
-      >
+      <body className="antialiased flex flex-col min-h-screen">
         <Navbar />
         <main className="flex-grow">{children}</main>
         <Footer />

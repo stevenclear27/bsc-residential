@@ -1,6 +1,8 @@
+"use client";
+
 export default function PortalLogin() {
   return (
-    <section className="w-full py-24 border-t border-zinc-900 bg-zinc-950 flex justify-center">
+    <section className="w-full py-24 border-t border-brand-surface bg-brand-canvas flex justify-center">
       <div className="max-w-md w-full px-6 text-center">
         <h1 className="text-3xl font-bold tracking-tight text-zinc-50 uppercase">
           Client Gateway
@@ -11,7 +13,7 @@ export default function PortalLogin() {
         </p>
 
         {/* Authentication Lockbox */}
-        <div className="mt-10 border border-zinc-800 bg-zinc-900/30 p-8 text-left backdrop-blur-sm">
+        <div className="mt-10 border border-brand-surface bg-brand-surface/50 p-8 text-left backdrop-blur-sm rounded-lg">
           <form className="flex flex-col gap-6">
             <div>
               <label
@@ -23,7 +25,7 @@ export default function PortalLogin() {
               <input
                 type="email"
                 id="email"
-                className="mt-2 block w-full rounded-md border-0 bg-zinc-950 py-2 px-3 text-zinc-50 ring-1 ring-inset ring-zinc-800 focus:ring-2 focus:ring-inset focus:ring-white sm:text-sm sm:leading-6"
+                className="mt-2 block w-full rounded-md border-0 bg-brand-canvas py-2 px-3 text-zinc-50 ring-1 ring-inset ring-brand-surface focus:ring-2 focus:ring-inset focus:ring-brand-primary sm:text-sm sm:leading-6"
                 placeholder="client@example.com"
               />
             </div>
@@ -37,13 +39,13 @@ export default function PortalLogin() {
               <input
                 type="password"
                 id="pin"
-                className="mt-2 block w-full rounded-md border-0 bg-zinc-950 py-2 px-3 text-zinc-50 ring-1 ring-inset ring-zinc-800 focus:ring-2 focus:ring-inset focus:ring-white sm:text-sm sm:leading-6"
+                className="mt-2 block w-full rounded-md border-0 bg-brand-canvas py-2 px-3 text-zinc-50 ring-1 ring-inset ring-brand-surface focus:ring-2 focus:ring-inset focus:ring-brand-primary sm:text-sm sm:leading-6"
                 placeholder="••••••••"
               />
             </div>
             <button
               type="button"
-              className="mt-4 w-full rounded-md bg-white px-3 py-2 text-sm font-semibold text-zinc-900 shadow-sm hover:bg-zinc-200 transition-colors"
+              className="mt-4 w-full rounded-md bg-brand-primary px-3 py-2 text-sm font-semibold text-brand-canvas shadow-sm hover:opacity-90 transition-opacity"
             >
               Access Ledger
             </button>

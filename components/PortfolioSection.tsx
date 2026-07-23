@@ -31,7 +31,7 @@ const projects: PortfolioItem[] = [
 
 export default function PortfolioSection() {
   return (
-    <section className="w-full py-24 border-t border-zinc-900 bg-zinc-950">
+    <section className="w-full py-24 border-t border-brand-surface bg-brand-canvas">
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         <div className="mx-auto max-w-2xl text-center">
           <h1 className="text-4xl font-bold tracking-tight text-zinc-50 sm:text-5xl uppercase">
@@ -48,17 +48,17 @@ export default function PortfolioSection() {
           {projects.map((project) => (
             <div
               key={project.id}
-              className="flex flex-col border border-zinc-800 bg-zinc-900/30 overflow-hidden backdrop-blur-sm group"
+              className="flex flex-col border border-brand-surface bg-brand-surface/50 overflow-hidden backdrop-blur-sm group rounded-lg"
             >
               {/* Image Placeholder Frame */}
-              <div className="h-64 w-full bg-zinc-800 flex items-center justify-center border-b border-zinc-800 transition-colors group-hover:bg-zinc-700">
-                <span className="text-zinc-500 text-sm tracking-widest uppercase">
+              <div className="h-64 w-full bg-brand-surface flex items-center justify-center border-b border-brand-surface transition-colors group-hover:bg-zinc-800">
+                <span className="text-zinc-400 text-sm tracking-widest uppercase">
                   [ Image Frame ]
                 </span>
               </div>
 
               <div className="flex flex-1 flex-col p-8 text-left">
-                <span className="text-xs font-semibold uppercase tracking-wider text-zinc-500">
+                <span className="text-xs font-semibold uppercase tracking-wider text-brand-primary">
                   {project.category}
                 </span>
                 <h3 className="mt-2 text-xl font-semibold leading-7 text-zinc-100">
