@@ -9,14 +9,15 @@ const config: Config = {
     extend: {
       colors: {
         brand: {
-          gold: "#C5A059",
-          blue: "#4A6FA5",
-          dark: "#09090B",
-          panel: "#18181B",
+          canvas: "#09090B", // Deep background canvas
+          surface: "#18181B", // Card / structural surface panels
+          primary: "#C5A559", // High-end custom carpentry gold accent
+          muted: "#4A6AFA", // Secondary functional / interactive highlight
         },
       },
     },
   },
   plugins: [],
 };
+
 export default config;
