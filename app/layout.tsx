@@ -1,12 +1,11 @@
-import "./globals.css";
 import type { Metadata } from "next";
-import Navbar from "../components/Navbar";
-import Footer from "../components/Footer";
+import "./globals.css";
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
 
 export const metadata: Metadata = {
   title: "BSC Residential LLC",
-  description:
-    "High-end, boutique custom carpentry and premium remodeling services.",
+  description: "Precision in Every Detail.",
 };
 
 export default function RootLayout({
@@ -16,9 +15,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className="antialiased flex flex-col min-h-screen">
+      <body className="bg-brand-canvas text-brand-primary min-h-screen flex flex-col antialiased">
         <Navbar />
-        <main className="flex-grow">{children}</main>
+        {/* flex-1 ensures this container expands to fill available space */}
+        <main className="flex-1">{children}</main>
         <Footer />
       </body>
     </html>

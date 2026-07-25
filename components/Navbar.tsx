@@ -14,8 +14,8 @@ export default function Navbar() {
       {/* Brand Identity */}
       <div className="flex lg:flex-1">
         <Link href="/" className="-m-1.5 p-1.5 flex items-center gap-2 group">
-          <span className="sr-only">BSC Residential LLC</span>
-          <span className="text-xl font-bold tracking-widest text-zinc-50 uppercase group-hover:text-zinc-300 transition-colors">
+          <span className="sr-only ">BSC Residential LLC</span>
+          <span className="text-xl font-bold tracking-widest text-zinc-100 uppercase group-hover:text-brand-primary transition-colors">
             BSC Residential LLC
           </span>
         </Link>
@@ -120,13 +120,6 @@ export default function Navbar() {
             className="text-lg font-semibold text-zinc-50 hover:text-brand-primary transition-colors"
           >
             Client Portal
-          </Link>
-          <Link
-            href="/estimate"
-            onClick={() => setIsMobileMenuOpen(false)}
-            className="mt-4 flex justify-center rounded-md bg-brand-primary px-6 py-3 text-base font-bold text-brand-canvas shadow-sm hover:opacity-90 transition-opacity uppercase"
-          >
-            Request Estimate
           </Link>
         </div>
       )}

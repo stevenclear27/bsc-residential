@@ -4,7 +4,7 @@ export default function IntroSection() {
       <div className="mx-auto flex max-w-7xl flex-col items-center justify-center px-6 text-center lg:px-8">
         {/* Primary Introduction Frame */}
         <div className="max-w-3xl">
-          <h2 className="text-3xl font-bold tracking-tight text-zinc-50 sm:text-4xl uppercase">
+          <h2 className="text-3xl font-bold tracking-tight text-brand-primary sm:text-4xl uppercase">
             Building Beyond Standard
           </h2>
           <p className="mt-6 text-lg leading-8 text-zinc-400">

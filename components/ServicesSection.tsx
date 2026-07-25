@@ -40,10 +40,10 @@ export default function ServicesSection() {
     <section className="w-full py-24 border-t border-brand-surface bg-brand-canvas">
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         <div className="mx-auto max-w-2xl text-center">
-          <h1 className="text-4xl font-bold tracking-tight text-zinc-50 sm:text-5xl uppercase">
+          <h1 className="text-4xl font-bold tracking-tight text-brand-primary sm:text-5xl uppercase">
             Core Capabilities
           </h1>
-          <p className="mt-6 text-lg leading-8 text-zinc-400">
+          <p className="mt-6 text-lg leading-8 text-zinc-100">
             Executed with the precision of a Master Carpenter and the rigorous
             oversight of a dedicated project manager. We do not compromise on
             structural tolerances.

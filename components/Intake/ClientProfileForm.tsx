@@ -100,7 +100,7 @@ export default function ClientProfileForm({
         <div className="md:col-span-2 mt-4">
           <button
             type="submit"
-            className="w-full bg-brand-primary text-brand-canvas font-bold uppercase tracking-widest py-3 rounded hover:bg-brand-primary/90 transition-colors"
+            className="w-full bg-brand-accent text-brand-primary font-bold uppercase tracking-widest py-3 rounded hover:bg-brand-accent/90 transition-colors"
           >
             Lock Profile & Open Consultation Deck
           </button>

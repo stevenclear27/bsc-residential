@@ -4,7 +4,7 @@ export default function PortalLogin() {
   return (
     <section className="w-full py-24 border-t border-brand-surface bg-brand-canvas flex justify-center">
       <div className="max-w-md w-full px-6 text-center">
-        <h1 className="text-3xl font-bold tracking-tight text-zinc-50 uppercase">
+        <h1 className="text-3xl font-bold tracking-tight text-brand-primary uppercase">
           Client Gateway
         </h1>
         <p className="mt-4 text-sm text-zinc-400">
@@ -45,7 +45,7 @@ export default function PortalLogin() {
             </div>
             <button
               type="button"
-              className="mt-4 w-full rounded-md bg-brand-primary px-3 py-2 text-sm font-semibold text-brand-canvas shadow-sm hover:opacity-90 transition-opacity"
+              className="mt-4 w-full rounded-md bg-brand-accent px-3 py-2 text-sm font-semibold text-brand-primary shadow-sm hover:opacity-90 transition-opacity"
             >
               Access Ledger
             </button>

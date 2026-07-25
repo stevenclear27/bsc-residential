@@ -5,7 +5,7 @@ export default function HeroSection() {
         <h1 className="text-5xl font-extrabold tracking-tight sm:text-7xl text-brand-primary">
           Precision in Every Detail.
         </h1>
-        <p className="mt-6 mx-auto max-w-2xl text-lg leading-8">
+        <p className="mt-6 mx-auto max-w-2xl text-lg text-zinc-100 leading-8">
           Uncompromising custom carpentry, architectural upgrades, and high-end
           remodeling. Built for those who demand structural integrity and
           flawless execution.

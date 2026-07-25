@@ -276,7 +276,7 @@ export default function EstimatorChatBox({
               disabled={
                 isLoading || (!input.trim() && imagePayloads.length === 0)
               }
-              className="px-6 py-3 bg-brand-primary text-brand-canvas font-bold uppercase tracking-widest rounded hover:bg-brand-primary/90 disabled:opacity-50 transition-colors"
+              className="px-6 py-3 bg-brand-accent text-brand-primary font-bold uppercase tracking-widest rounded hover:bg-brand-accent/90 disabled:opacity-50 transition-colors"
             >
               Transmit
             </button>
