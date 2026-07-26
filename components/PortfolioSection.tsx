@@ -37,7 +37,7 @@ export default function PortfolioSection() {
           <h1 className="text-4xl font-bold tracking-tight text-brand-primary sm:text-5xl uppercase">
             The Portfolio
           </h1>
-          <p className="mt-6 text-lg leading-8 text-zinc-400">
+          <p className="mt-6 text-lg leading-8 text-zinc-200">
             A verified ledger of uncompromising custom carpentry and high-end
             remodeling. Built for structural integrity.
           </p>
@@ -61,10 +61,10 @@ export default function PortfolioSection() {
                 <span className="text-xs font-semibold uppercase tracking-wider text-brand-primary">
                   {project.category}
                 </span>
-                <h3 className="mt-2 text-xl font-semibold leading-7 text-zinc-100">
+                <h3 className="mt-2 text-xl font-semibold leading-7 text-zinc-200">
                   {project.title}
                 </h3>
-                <p className="mt-4 flex-auto text-sm leading-6 text-zinc-400">
+                <p className="mt-4 flex-auto text-sm leading-6 text-zinc-200">
                   {project.description}
                 </p>
               </div>

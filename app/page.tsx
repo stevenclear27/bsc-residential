@@ -16,11 +16,11 @@ export default function Home() {
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold uppercase tracking-widest">
-              Automated Intake
+              Automated Quote Generator
             </h2>
             <p className="mt-4">
-              Submit your project constraints for an immediate feasibility
-              check.
+              Submit your project goals for an immediate scope of work and
+              ballpark price range.
             </p>
           </div>
 

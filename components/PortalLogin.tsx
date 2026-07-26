@@ -7,7 +7,7 @@ export default function PortalLogin() {
         <h1 className="text-3xl font-bold tracking-tight text-brand-primary uppercase">
           Client Gateway
         </h1>
-        <p className="mt-4 text-sm text-zinc-400">
+        <p className="mt-4 text-sm text-zinc-200">
           Secure access to your project ledger, daily site logs, and financial
           milestones.
         </p>
@@ -45,16 +45,15 @@ export default function PortalLogin() {
             </div>
             <button
               type="button"
-              className="mt-4 w-full rounded-md bg-brand-accent px-3 py-2 text-sm font-semibold text-brand-primary shadow-sm hover:opacity-90 transition-opacity"
+              className="mt-4 w-full rounded-md bg-brand-accent px-3 py-2 text-sm font-semibold text-brand-primary shadow-sm hover:opacity-900 transition-opacity"
             >
               Access Ledger
             </button>
           </form>
         </div>
 
-        <p className="mt-6 text-xs text-zinc-500">
-          Access is strictly limited to active clients. Unauthorized attempts
-          are logged.
+        <p className="mt-6 text-xs text-brand-primary">
+          Access is strictly limited to active clients.
         </p>
       </div>
     </section>

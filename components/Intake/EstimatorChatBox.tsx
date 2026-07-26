@@ -1,4 +1,3 @@
-/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
@@ -16,13 +15,17 @@ interface EstimatorChatBoxProps {
 export default function EstimatorChatBox({
   onIntakeComplete,
 }: EstimatorChatBoxProps) {
+  // --- Logistical State ---
+  const [zipCode, setZipCode] = useState("");
+  const [timeline, setTimeline] = useState("flexible");
+
+  // --- Chat State ---
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "model",
-      text: "I have your property zone anchored. Let's discuss your architectural vision—are we looking at upgrading exterior cladding to premium materials, establishing a custom timber frame, or building out a specialized space like a recording studio? Detail your structural goals and attach up to 3 site photos.",
+      text: "Let's discuss your architectural vision. Are we upgrading exterior patio space, transforming a custom home office, or building a highly specialized bespoke cabinet system? Detail your goals and attach up to 3 site photos.",
     },
   ]);
-
   const [input, setInput] = useState("");
   const [imagePayloads, setImagePayloads] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -32,24 +35,18 @@ export default function EstimatorChatBox({
   const scrollRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Auto-scroll to the latest transmission
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages, isLoading, readyToCompile]);
 
-  // Handle Multi-Image Selection and Base64 Conversion
   const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     if (!files.length) return;
 
     const availableSlots = 3 - imagePayloads.length;
     const filesToProcess = files.slice(0, availableSlots);
-
-    if (filesToProcess.length < files.length) {
-      alert("Maximum limit of 3 site photos reached.");
-    }
 
     const base64Promises = filesToProcess.map((file) => {
       return new Promise<string>((resolve) => {
@@ -61,7 +58,6 @@ export default function EstimatorChatBox({
 
     const newBase64Images = await Promise.all(base64Promises);
     setImagePayloads((prev) => [...prev, ...newBase64Images]);
-
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
@@ -92,10 +88,15 @@ export default function EstimatorChatBox({
     setIsLoading(true);
 
     try {
+      // Transmit the chat history PLUS the logistical parameters
       const response = await fetch("/api/estimate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ history: newHistory, message: userMessage }),
+        body: JSON.stringify({
+          history: newHistory,
+          message: userMessage,
+          logistics: { zipCode, timeline },
+        }),
       });
 
       const data = await response.json();
@@ -109,7 +110,12 @@ export default function EstimatorChatBox({
       ]);
 
       if (data.isComplete && onIntakeComplete) {
-        setCompiledData(data.projectData);
+        // Merge the AI's extracted data with the hardcoded logistics
+        setCompiledData({
+          ...data.projectData,
+          zipCode,
+          timeline,
+        });
         setReadyToCompile(true);
       }
     } catch (error) {
@@ -127,12 +133,38 @@ export default function EstimatorChatBox({
   };
 
   return (
-    <div className="bg-brand-surface p-6 rounded-lg border border-brand-primary/20 flex flex-col h-[700px]">
-      <h3 className="text-xl font-bold text-brand-primary uppercase tracking-wide mb-4 shrink-0">
-        Structural Consultation
-      </h3>
+    <div className="bg-brand-surface p-6 rounded-lg border border-brand-primary/20 flex flex-col h-[750px]">
+      {/* Logistical Parameter Deck */}
+      <div className="shrink-0 mb-4 flex flex-col sm:flex-row gap-4 p-4 bg-brand-canvas border border-brand-primary/10 rounded">
+        <div className="flex-1">
+          <label className="block text-[10px] font-bold text-brand-primary uppercase tracking-widest mb-1">
+            Project Zip Code
+          </label>
+          <input
+            type="text"
+            value={zipCode}
+            onChange={(e) => setZipCode(e.target.value)}
+            placeholder="e.g. 46017"
+            className="w-full bg-brand-surface border border-brand-primary/30 rounded px-3 py-2 text-sm text-zinc-100 focus:border-brand-primary focus:outline-none"
+          />
+        </div>
+        <div className="flex-1">
+          <label className="block text-[10px] font-bold text-brand-primary uppercase tracking-widest mb-1">
+            Target Timeline
+          </label>
+          <select
+            value={timeline}
+            onChange={(e) => setTimeline(e.target.value)}
+            className="w-full bg-brand-surface border border-brand-primary/30 rounded px-3 py-2 text-sm text-zinc-100 focus:border-brand-primary focus:outline-none"
+          >
+            <option value="asap">As soon as possible</option>
+            <option value="1_to_3_months">1 - 3 Months</option>
+            <option value="3_to_6_months">3 - 6 Months</option>
+            <option value="flexible">Flexible / Planning Phase</option>
+          </select>
+        </div>
+      </div>
 
-      {/* Chat History Window */}
       <div
         ref={scrollRef}
         className="flex-1 overflow-y-auto space-y-4 mb-4 pr-2 scrollbar-thin scrollbar-thumb-brand-primary/30"
@@ -176,7 +208,6 @@ export default function EstimatorChatBox({
 
       {/* Input Deck */}
       <div className="shrink-0 flex flex-col gap-4">
-        {/* Enlarged Multi-Image Preview Stage */}
         {imagePayloads.length > 0 && (
           <div className="flex flex-col gap-3 px-4 py-4 bg-brand-primary/10 border border-brand-primary/30 rounded">
             <div className="flex justify-between items-center text-brand-primary">
@@ -184,7 +215,6 @@ export default function EstimatorChatBox({
                 Site Photos Staged ({imagePayloads.length}/3)
               </span>
             </div>
-
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               {imagePayloads.map((imgSrc, idx) => (
                 <div key={idx} className="relative group">
@@ -197,7 +227,6 @@ export default function EstimatorChatBox({
                     type="button"
                     onClick={() => removeStagedImage(idx)}
                     className="absolute top-2 right-2 bg-red-600/90 hover:bg-red-500 text-white font-bold px-2 py-1 uppercase text-xs rounded transition-colors shadow"
-                    title="Remove Image"
                   >
                     [X]
                   </button>
@@ -240,11 +269,6 @@ export default function EstimatorChatBox({
               onClick={() => fileInputRef.current?.click()}
               disabled={isLoading || imagePayloads.length >= 3}
               className="px-4 py-3 border border-brand-primary/30 text-brand-primary rounded hover:bg-brand-primary/10 disabled:opacity-50 transition-colors flex items-center justify-center"
-              title={
-                imagePayloads.length >= 3
-                  ? "Maximum photos attached"
-                  : "Attach Site Photos"
-              }
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -267,9 +291,9 @@ export default function EstimatorChatBox({
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Detail your material preferences and scope..."
+              placeholder="Detail your architectural goals..."
               disabled={isLoading}
-              className="flex-1 bg-brand-canvas border border-brand-primary/30 rounded px-4 py-3 text-brand-primary focus:outline-none focus:border-brand-primary disabled:opacity-50"
+              className="flex-1 bg-brand-canvas border border-brand-primary/30 rounded px-4 py-3 text-zinc-100 focus:outline-none focus:border-brand-primary disabled:opacity-50"
             />
             <button
               type="submit"

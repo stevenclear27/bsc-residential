@@ -1,0 +1,1800 @@
+This file is a merged representation of the entire codebase, combined into a single document by Repomix.
+
+npx repomix --output project_context.txt
+
+<file_summary>
+This section contains a summary of this file.
+
+<purpose>
+This file contains a packed representation of the entire repository's contents.
+It is designed to be easily consumable by AI systems for analysis, code review,
+or other automated processes.
+</purpose>
+
+<file_format>
+The content is organized as follows:
+1. This summary section
+2. Repository information
+3. Directory structure
+4. Repository files (if enabled)
+5. Multiple file entries, each consisting of:
+  - File path as an attribute
+  - Full contents of the file
+</file_format>
+
+<usage_guidelines>
+- This file should be treated as read-only. Any changes should be made to the
+  original repository files, not this packed version.
+- When processing this file, use the file path to distinguish
+  between different files in the repository.
+- Be aware that this file may contain sensitive information. Handle it with
+  the same level of security as you would the original repository.
+</usage_guidelines>
+
+<notes>
+- Some files may have been excluded based on .gitignore rules and Repomix's configuration
+- Binary files are not included in this packed representation. Please refer to the Repository Structure section for a complete list of file paths, including binary files
+- Files matching patterns in .gitignore are excluded
+- Files matching default ignore patterns are excluded
+- Files are sorted by Git change count (files with more changes are at the bottom)
+</notes>
+
+</file_summary>
+
+<directory_structure>
+app/
+  api/
+    estimate/
+      route.ts
+    generate-concept/
+      route.ts
+  portal/
+    page.tsx
+  portfolio/
+    page.tsx
+  services/
+    page.tsx
+  favicon.ico
+  globals.css
+  layout.tsx
+  page.tsx
+components/
+  Intake/
+    ChatEstimator.tsx
+    ClientProfileForm.tsx
+    DossierSummaryCard.tsx
+    EstimatorChatBox.tsx
+  AuthGateway.tsx
+  Footer.tsx
+  HeroSection.tsx
+  IntroSection.tsx
+  Navbar.tsx
+  PortalLogin.tsx
+  PortfolioSection.tsx
+  ServicesSection.tsx
+lib/
+  schemas/
+    estimateDossierSchema.ts
+  supabaseClient.ts
+public/
+  file.svg
+  globe.svg
+  next.svg
+  vercel.svg
+  window.svg
+utils/
+  supabase/
+    client.ts
+    server.ts
+.gitignore
+AGENTS.md
+CLAUDE.md
+eslint.config.mjs
+next.config.ts
+package.json
+postcss.config.mjs
+README.md
+tsconfig.json
+</directory_structure>
+
+<files>
+This section contains the contents of the repository's files.
+
+<file path="app/api/estimate/route.ts">
+import { NextResponse } from "next/server";
+import { GoogleGenAI } from "@google/genai";
+
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+
+export async function POST(request: Request) {
+  try {
+    const body = await request.json();
+    const { history, message } = body;
+
+    const systemInstruction = `
+      You are the master carpentry consultant and senior intake estimator for BSC Residential LLC. 
+      Your tone is clinical, candid, architectural, and deeply focused on material integrity and custom craftsmanship.
+      
+      DO NOT aggressively interrogate clients for raw dollar amounts. Focus on architectural vision, material selection, project scope, and timeline.
+      
+      When you have enough architectural data to formulate a comprehensive project scope, set 'isComplete' to true and summarize the specifications.
+      CRITICAL: When setting 'isComplete' to true, your 'chatResponse' MUST be a variation of this exact sentiment: "I have the structural parameters anchored. Do you have any final details to add before I compile your preliminary estimate?"
+      
+      Return your answer strictly in a JSON format containing:
+      {
+        "chatResponse": "your conversational response here",
+        "isComplete": boolean,
+        "projectData": {
+          "projectScope": "string summary if complete",
+          "materialTier": "string gathered from conversation",
+          "timeline": "string if gathered"
+        }
+      }
+    `;
+
+    const formattedContents = history.map((msg: any) => ({
+      role: msg.role === "user" ? "user" : "model",
+      parts: [{ text: msg.text }],
+    }));
+
+    // Target the current production-stable model ID
+    const response = await ai.models.generateContent({
+      model: "gemini-3.6-flash",
+      contents: formattedContents,
+      config: {
+        systemInstruction: systemInstruction,
+        responseMimeType: "application/json",
+      },
+    });
+
+    // Extract text safely using the official SDK response structure
+    const rawText =
+      response.text ||
+      (response as any).candidates?.[0]?.content?.parts?.[0]?.text ||
+      "{}";
+    const parsedResponse = JSON.parse(rawText);
+
+    return NextResponse.json({
+      chatResponse:
+        parsedResponse.chatResponse ||
+        "Transmission received. Elaborate on your structural requirements.",
+      isComplete: parsedResponse.isComplete || false,
+      projectData: parsedResponse.projectData || null,
+    });
+  } catch (error: any) {
+    console.error("AI Processing Critical Failure Detail:", error);
+
+    const isRateLimited =
+      error?.status === 429 ||
+      error?.message?.includes("429") ||
+      error?.message?.includes("quota");
+
+    const userMessage = isRateLimited
+      ? "System Notice: API rate limit reached. Please allow a brief cooldown window before transmitting again."
+      : "Failed to process AI transmission. Verify system logs.";
+
+    return NextResponse.json(
+      { chatResponse: userMessage, isComplete: false, projectData: null },
+      { status: 200 },
+    );
+  }
+}
+</file>
+
+<file path="app/api/generate-concept/route.ts">
+import { NextResponse } from "next/server";
+import { GoogleGenAI } from "@google/genai";
+
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+
+export async function POST(request: Request) {
+  try {
+    const body = await request.json();
+    const { projectScope } = body;
+
+    const prompt = `A realistic, high-end architectural photo of a finished custom carpentry and exterior remodeling project matching this scope: ${projectScope}. Professional lighting, master craftsmanship, premium materials.`;
+
+    // Correct SDK method call for image generation or safe fallback wrapper
+    let imageUrl = "";
+    try {
+      const response = await ai.models.generateImages({
+        model: "imagen-3.0-generate-002",
+        prompt: prompt,
+        config: {
+          numberOfImages: 1,
+          outputMimeType: "image/jpeg",
+        },
+      });
+      imageUrl = response.generatedImages?.[0]?.image?.imageBytes
+        ? `data:image/jpeg;base64,${response.generatedImages[0].image.imageBytes}`
+        : "";
+    } catch (imgError) {
+      console.warn("Imagen generation fallback triggered:", imgError);
+      // Fallback placeholder schematic if model generation is restricted on current tier key
+      imageUrl =
+        "https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=800&q=80";
+    }
+
+    return NextResponse.json({
+      success: true,
+      imageUrl: imageUrl,
+      dossierSummary:
+        "Project parameters locked. Verified by BSC Residential structural intake protocol.",
+    });
+  } catch (error: any) {
+    console.error("Conceptual Render Engine Error:", error);
+    return NextResponse.json(
+      { error: error.message || "Failed to generate conceptual render." },
+      { status: 500 },
+    );
+  }
+}
+</file>
+
+<file path="app/portal/page.tsx">
+import PortalLogin from "@/components/PortalLogin";
+
+export default function PortalPage() {
+  return (
+    <main className="flex min-h-screen flex-col items-center justify-start w-full">
+      <PortalLogin />
+    </main>
+  );
+}
+</file>
+
+<file path="app/portfolio/page.tsx">
+import PortfolioSection from "@/components/PortfolioSection";
+
+export default function PortfolioPage() {
+  return (
+    <main className="flex min-h-screen flex-col items-center justify-start w-full">
+      <PortfolioSection />
+    </main>
+  );
+}
+</file>
+
+<file path="app/services/page.tsx">
+import ServicesSection from "@/components/ServicesSection";
+
+export default function ServicesPage() {
+  return (
+    <main className="flex min-h-screen flex-col items-center justify-start w-full">
+      <ServicesSection />
+    </main>
+  );
+}
+</file>
+
+<file path="components/Intake/ChatEstimator.tsx">
+"use client";
+
+import React, { useState } from "react";
+import ClientProfileForm from "./ClientProfileForm";
+import EstimatorChatBox from "./EstimatorChatBox";
+import DossierSummaryCard from "./DossierSummaryCard";
+
+export default function ChatEstimator() {
+  // 1. Establish System State (Memory)
+  const [intakeStep, setIntakeStep] = useState<1 | 2 | 3>(1);
+  const [clientData, setClientData] = useState<any>(null);
+
+  // 2. Logic Handlers
+  const handleProfileSubmit = (data: any) => {
+    setClientData(data);
+    setIntakeStep(2); // Advance to AI Chat
+  };
+
+  const handleIntakeComplete = (projectData: any) => {
+    console.log("Architectural parameters locked:", projectData);
+    setClientData((prev: any) => ({ ...prev, ...projectData }));
+    setIntakeStep(3); // Advance to Dossier Summary
+  };
+
+  const handleDossierAcknowledge = () => {
+    console.log("Dossier acknowledged by:", clientData);
+    // Future logic: Push to Supabase database here
+  };
+
+  // 3. Render the correct module based on the current step
+  return (
+    <section className="w-full max-w-4xl mx-auto my-12 px-4">
+      {/* Progress Indicator */}
+      <div className="flex gap-2 mb-6">
+        <div
+          className={`h-2 flex-1 rounded ${intakeStep >= 1 ? "bg-brand-primary" : "bg-brand-primary/20"}`}
+        />
+        <div
+          className={`h-2 flex-1 rounded ${intakeStep >= 2 ? "bg-brand-primary" : "bg-brand-primary/20"}`}
+        />
+        <div
+          className={`h-2 flex-1 rounded ${intakeStep === 3 ? "bg-brand-primary" : "bg-brand-primary/20"}`}
+        />
+      </div>
+
+      {/* Component Routing Floor */}
+      {intakeStep === 1 && (
+        <ClientProfileForm onSubmitProfile={handleProfileSubmit} />
+      )}
+
+      {/* ... previous code ... */}
+      {intakeStep === 2 && (
+        <div className="flex flex-col gap-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <EstimatorChatBox onIntakeComplete={handleIntakeComplete} />
+        </div>
+      )}
+
+      {intakeStep === 3 && (
+        <div className="flex flex-col gap-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <EstimatorChatBox />
+          <DossierSummaryCard onAcknowledge={handleDossierAcknowledge} />
+        </div>
+      )}
+    </section>
+  );
+}
+</file>
+
+<file path="components/Intake/DossierSummaryCard.tsx">
+"use client";
+
+import React from "react";
+
+interface DossierSummaryCardProps {
+  onAcknowledge: () => void;
+}
+
+export default function DossierSummaryCard({
+  onAcknowledge,
+}: DossierSummaryCardProps) {
+  return (
+    <div className="p-6 border-t border-brand-primary/20 bg-brand-surface/50 flex flex-col md:flex-row items-center justify-between gap-4 mt-6 rounded-b-lg">
+      <div>
+        <h4 className="text-sm font-bold text-brand-primary uppercase tracking-wider">
+          Project Dossier Compiled
+        </h4>
+        <p className="text-xs text-brand-primary/80">
+          Ready for Master Carpenter physical verification.
+        </p>
+      </div>
+      <button
+        onClick={onAcknowledge}
+        className="px-6 py-3 bg-brand-primary text-brand-canvas rounded hover:bg-brand-primary/90 font-bold uppercase tracking-widest transition-colors"
+      >
+        Acknowledge Terms & Schedule
+      </button>
+    </div>
+  );
+}
+</file>
+
+<file path="components/AuthGateway.tsx">
+"use client";
+
+import { useState } from "react";
+import { createClient } from "@/utils/supabase/client";
+
+interface AuthGatewayProps {
+  onSuccess: () => void;
+  // Optional: Pass the verified dossier payload here if you want to write it
+  // to the database immediately after successful account creation.
+  dossierPayload?: any;
+}
+
+export default function AuthGateway({
+  onSuccess,
+  dossierPayload,
+}: AuthGatewayProps) {
+  const supabase = createClient();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  const handleSignUp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMsg(null);
+
+    if (!termsAccepted) {
+      setErrorMsg("You must accept the terms of service to proceed.");
+      return;
+    }
+
+    setIsProcessing(true);
+
+    try {
+      // Provision the secure user account
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          // In a production environment, you would configure email verification routing here.
+          emailRedirectTo: `${location.origin}/portal`,
+        },
+      });
+
+      if (error) throw error;
+
+      // Note: If you passed the dossierPayload, you would execute the database insert here,
+      // now that the user is authenticated and RLS policies can bind the data to their ID.
+
+      onSuccess();
+    } catch (error: any) {
+      console.error("Auth Provisioning Error:", error);
+      setErrorMsg(error.message || "Failed to establish a secure connection.");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  return (
+    <div className="w-full max-w-md mx-auto p-6 bg-brand-surface rounded-lg shadow-2xl border border-brand-primary/20">
+      <div className="mb-6">
+        <h3 className="text-lg font-bold text-brand-primary uppercase tracking-widest">
+          Client Portal Activation
+        </h3>
+        <p className="text-xs text-brand-primary/80 mt-2">
+          Establish your secure account to save your project dossier and
+          schedule the Master Carpenter diagnostic visit.
+        </p>
+      </div>
+
+      <form onSubmit={handleSignUp} className="space-y-4">
+        <div>
+          <label className="block text-xs font-bold text-brand-primary uppercase mb-1">
+            Email Address
+          </label>
+          <input
+            type="email"
+            required
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="w-full bg-brand-canvas border-0 ring-1 ring-inset ring-brand-primary/30 focus:ring-2 focus:ring-brand-primary rounded-md px-4 py-2 text-sm text-brand-primary"
+            disabled={isProcessing}
+          />
+        </div>
+
+        <div>
+          <label className="block text-xs font-bold text-brand-primary uppercase mb-1">
+            Secure Password
+          </label>
+          <input
+            type="password"
+            required
+            minLength={8}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="w-full bg-brand-canvas border-0 ring-1 ring-inset ring-brand-primary/30 focus:ring-2 focus:ring-brand-primary rounded-md px-4 py-2 text-sm text-brand-primary"
+            disabled={isProcessing}
+          />
+        </div>
+
+        <div className="flex items-start gap-3 pt-4 border-t border-brand-primary/20">
+          <input
+            type="checkbox"
+            id="terms"
+            checked={termsAccepted}
+            onChange={(e) => setTermsAccepted(e.target.checked)}
+            className="mt-1 h-4 w-4 rounded border-brand-primary/30 bg-brand-canvas text-brand-primary focus:ring-brand-primary"
+            disabled={isProcessing}
+          />
+          <label
+            htmlFor="terms"
+            className="text-xs text-brand-primary/80 leading-relaxed"
+          >
+            I acknowledge that all structural work requires a paid on-site
+            physical inspection to produce a binding contract. I agree that the
+            initial diagnostic fee will be credited toward my final project
+            deposit.
+          </label>
+        </div>
+
+        {errorMsg && (
+          <div className="p-3 bg-red-900/20 border border-red-500/50 rounded text-xs text-red-400">
+            {errorMsg}
+          </div>
+        )}
+
+        <button
+          type="submit"
+          disabled={isProcessing || !termsAccepted || !email || !password}
+          className="w-full mt-4 px-6 py-3 bg-brand-primary text-brand-canvas rounded-md font-bold text-sm uppercase shadow-lg hover:opacity-90 transition-opacity disabled:opacity-50"
+        >
+          {isProcessing ? "Provisioning..." : "Activate Secure Portal"}
+        </button>
+      </form>
+    </div>
+  );
+}
+</file>
+
+<file path="lib/schemas/estimateDossierSchema.ts">
+import * as z from "zod";
+
+/**
+ * Strict Data Contract for the Final Project Dossier Handoff.
+ * Guarantees compiler-level verification before Supabase write or Stripe checkout.
+ */
+export const estimateDossierSchema = z.object({
+  // Contact & Location
+  clientName: z.string().min(2, "Full name is required."),
+  clientEmail: z.string().email("Valid email address is required."),
+  clientPhone: z.string().min(10, "Valid contact number is required."),
+  zipCode: z.string().regex(/^\d{5}$/, "Must be a valid 5-digit zip code."),
+
+  // AI-Gathered Scope Parameters
+  timeline: z.string().min(1, "Timeline selection required."),
+  budgetTier: z.string().min(1, "Budget allocation required."),
+  scopeOfWork: z.string().min(20, "Project scope description must be defined."),
+
+  // Multimodal Visual Assets (Optional base64 payload strings)
+  beforeImage: z.string().optional(),
+  afterImage: z.string().optional(),
+
+  // System Auditing
+  createdAt: z.string().default(() => new Date().toISOString()),
+});
+
+export type EstimateDossier = z.infer<typeof estimateDossierSchema>;
+</file>
+
+<file path="lib/supabaseClient.ts">
+import { createClient } from "@supabase/supabase-js";
+
+// Pull the secure API keys from the local environment
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+if (!supabaseUrl || !supabaseAnonKey) {
+  throw new Error(
+    "CRITICAL FAILURE: Supabase environment variables are missing.",
+  );
+}
+
+// Initialize and export the client for system-wide use
+export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+</file>
+
+<file path="public/file.svg">
+<svg fill="none" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg"><path d="M14.5 13.5V5.41a1 1 0 0 0-.3-.7L9.8.29A1 1 0 0 0 9.08 0H1.5v13.5A2.5 2.5 0 0 0 4 16h8a2.5 2.5 0 0 0 2.5-2.5m-1.5 0v-7H8v-5H3v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1M9.5 5V2.12L12.38 5zM5.13 5h-.62v1.25h2.12V5zm-.62 3h7.12v1.25H4.5zm.62 3h-.62v1.25h7.12V11z" clip-rule="evenodd" fill="#666" fill-rule="evenodd"/></svg>
+</file>
+
+<file path="public/globe.svg">
+<svg fill="none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><g clip-path="url(#a)"><path fill-rule="evenodd" clip-rule="evenodd" d="M10.27 14.1a6.5 6.5 0 0 0 3.67-3.45q-1.24.21-2.7.34-.31 1.83-.97 3.1M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16m.48-1.52a7 7 0 0 1-.96 0H7.5a4 4 0 0 1-.84-1.32q-.38-.89-.63-2.08a40 40 0 0 0 3.92 0q-.25 1.2-.63 2.08a4 4 0 0 1-.84 1.31zm2.94-4.76q1.66-.15 2.95-.43a7 7 0 0 0 0-2.58q-1.3-.27-2.95-.43a18 18 0 0 1 0 3.44m-1.27-3.54a17 17 0 0 1 0 3.64 39 39 0 0 1-4.3 0 17 17 0 0 1 0-3.64 39 39 0 0 1 4.3 0m1.1-1.17q1.45.13 2.69.34a6.5 6.5 0 0 0-3.67-3.44q.65 1.26.98 3.1M8.48 1.5l.01.02q.41.37.84 1.31.38.89.63 2.08a40 40 0 0 0-3.92 0q.25-1.2.63-2.08a4 4 0 0 1 .85-1.32 7 7 0 0 1 .96 0m-2.75.4a6.5 6.5 0 0 0-3.67 3.44 29 29 0 0 1 2.7-.34q.31-1.83.97-3.1M4.58 6.28q-1.66.16-2.95.43a7 7 0 0 0 0 2.58q1.3.27 2.95.43a18 18 0 0 1 0-3.44m.17 4.71q-1.45-.12-2.69-.34a6.5 6.5 0 0 0 3.67 3.44q-.65-1.27-.98-3.1" fill="#666"/></g><defs><clipPath id="a"><path fill="#fff" d="M0 0h16v16H0z"/></clipPath></defs></svg>
+</file>
+
+<file path="public/next.svg">
+<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 394 80"><path fill="#000" d="M262 0h68.5v12.7h-27.2v66.6h-13.6V12.7H262V0ZM149 0v12.7H94v20.4h44.3v12.6H94v21h55v12.6H80.5V0h68.7zm34.3 0h-17.8l63.8 79.4h17.9l-32-39.7 32-39.6h-17.9l-23 28.6-23-28.6zm18.3 56.7-9-11-27.1 33.7h17.8l18.3-22.7z"/><path fill="#000" d="M81 79.3 17 0H0v79.3h13.6V17l50.2 62.3H81Zm252.6-.4c-1 0-1.8-.4-2.5-1s-1.1-1.6-1.1-2.6.3-1.8 1-2.5 1.6-1 2.6-1 1.8.3 2.5 1a3.4 3.4 0 0 1 .6 4.3 3.7 3.7 0 0 1-3 1.8zm23.2-33.5h6v23.3c0 2.1-.4 4-1.3 5.5a9.1 9.1 0 0 1-3.8 3.5c-1.6.8-3.5 1.3-5.7 1.3-2 0-3.7-.4-5.3-1s-2.8-1.8-3.7-3.2c-.9-1.3-1.4-3-1.4-5h6c.1.8.3 1.6.7 2.2s1 1.2 1.6 1.5c.7.4 1.5.5 2.4.5 1 0 1.8-.2 2.4-.6a4 4 0 0 0 1.6-1.8c.3-.8.5-1.8.5-3V45.5zm30.9 9.1a4.4 4.4 0 0 0-2-3.3 7.5 7.5 0 0 0-4.3-1.1c-1.3 0-2.4.2-3.3.5-.9.4-1.6 1-2 1.6a3.5 3.5 0 0 0-.3 4c.3.5.7.9 1.3 1.2l1.8 1 2 .5 3.2.8c1.3.3 2.5.7 3.7 1.2a13 13 0 0 1 3.2 1.8 8.1 8.1 0 0 1 3 6.5c0 2-.5 3.7-1.5 5.1a10 10 0 0 1-4.4 3.5c-1.8.8-4.1 1.2-6.8 1.2-2.6 0-4.9-.4-6.8-1.2-2-.8-3.4-2-4.5-3.5a10 10 0 0 1-1.7-5.6h6a5 5 0 0 0 3.5 4.6c1 .4 2.2.6 3.4.6 1.3 0 2.5-.2 3.5-.6 1-.4 1.8-1 2.4-1.7a4 4 0 0 0 .8-2.4c0-.9-.2-1.6-.7-2.2a11 11 0 0 0-2.1-1.4l-3.2-1-3.8-1c-2.8-.7-5-1.7-6.6-3.2a7.2 7.2 0 0 1-2.4-5.7 8 8 0 0 1 1.7-5 10 10 0 0 1 4.3-3.5c2-.8 4-1.2 6.4-1.2 2.3 0 4.4.4 6.2 1.2 1.8.8 3.2 2 4.3 3.4 1 1.4 1.5 3 1.5 5h-5.8z"/></svg>
+</file>
+
+<file path="public/vercel.svg">
+<svg fill="none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1155 1000"><path d="m577.3 0 577.4 1000H0z" fill="#fff"/></svg>
+</file>
+
+<file path="public/window.svg">
+<svg fill="none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path fill-rule="evenodd" clip-rule="evenodd" d="M1.5 2.5h13v10a1 1 0 0 1-1 1h-11a1 1 0 0 1-1-1zM0 1h16v11.5a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 0 12.5zm3.75 4.5a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5M7 4.75a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0m1.75.75a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5" fill="#666"/></svg>
+</file>
+
+<file path="utils/supabase/client.ts">
+import { createBrowserClient } from "@supabase/ssr";
+
+export function createClient() {
+  return createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+  );
+}
+</file>
+
+<file path="AGENTS.md">
+<!-- BEGIN:nextjs-agent-rules -->
+# This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` before writing any code. Heed deprecation notices.
+<!-- END:nextjs-agent-rules -->
+</file>
+
+<file path="CLAUDE.md">
+@AGENTS.md
+</file>
+
+<file path="eslint.config.mjs">
+import { defineConfig, globalIgnores } from "eslint/config";
+import nextVitals from "eslint-config-next/core-web-vitals";
+import nextTs from "eslint-config-next/typescript";
+
+const eslintConfig = defineConfig([
+  ...nextVitals,
+  ...nextTs,
+  // Override default ignores of eslint-config-next.
+  globalIgnores([
+    // Default ignores of eslint-config-next:
+    ".next/**",
+    "out/**",
+    "build/**",
+    "next-env.d.ts",
+  ]),
+]);
+
+export default eslintConfig;
+</file>
+
+<file path="next.config.ts">
+import type { NextConfig } from "next";
+
+const nextConfig: NextConfig = {
+  /* config options here */
+};
+
+export default nextConfig;
+</file>
+
+<file path="README.md">
+This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+
+## Getting Started
+
+First, run the development server:
+
+```bash
+npm run dev
+# or
+yarn dev
+# or
+pnpm dev
+# or
+bun dev
+```
+
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+
+You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+
+This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+
+## Learn More
+
+To learn more about Next.js, take a look at the following resources:
+
+- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
+- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+
+You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+
+## Deploy on Vercel
+
+The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+
+Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+</file>
+
+<file path="tsconfig.json">
+{
+  "compilerOptions": {
+    "target": "ES2017",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "react-jsx",
+    "incremental": true,
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "paths": {
+      "@/*": ["./*"]
+    }
+  },
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts",
+    ".next/dev/types/**/*.ts",
+    "**/*.mts"
+  ],
+  "exclude": ["node_modules"]
+}
+</file>
+
+<file path="components/Intake/ClientProfileForm.tsx">
+"use client";
+
+import React from "react";
+
+interface ClientProfileFormProps {
+  onSubmitProfile: (data: {
+    name: string;
+    email: string;
+    phone: string;
+    zipCode: string;
+  }) => void;
+  initialData?: { name: string; email: string; phone: string; zipCode: string };
+}
+
+export default function ClientProfileForm({
+  onSubmitProfile,
+  initialData,
+}: ClientProfileFormProps) {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    onSubmitProfile({
+      name: formData.get("name") as string,
+      email: formData.get("email") as string,
+      phone: formData.get("phone") as string,
+      zipCode: formData.get("zipCode") as string,
+    });
+  };
+
+  return (
+    <div className="bg-brand-surface p-6 rounded-lg border border-brand-primary/20 mb-6">
+      <h3 className="text-xl font-bold text-brand-primary uppercase tracking-wide mb-4">
+        Project Initialization
+      </h3>
+      <p className="text-brand-primary/80 text-sm mb-6">
+        Provide your details below to anchor your project file. This enables
+        auto-fill and connects your consultation directly to your property zone.
+      </p>
+
+      <form
+        onSubmit={handleSubmit}
+        className="grid grid-cols-1 md:grid-cols-2 gap-4"
+      >
+        <div>
+          <label className="block text-xs uppercase tracking-wider text-brand-primary/70 mb-1">
+            Full Name
+          </label>
+          <input
+            type="text"
+            name="name"
+            required
+            defaultValue={initialData?.name}
+            placeholder="Steven Clear"
+            autoComplete="name"
+            className="w-full bg-brand-canvas border border-brand-primary/30 rounded px-3 py-2 text-brand-primary focus:outline-none focus:border-brand-primary"
+          />
+        </div>
+        <div>
+          <label className="block text-xs uppercase tracking-wider text-brand-primary/70 mb-1">
+            Project Zip Code
+          </label>
+          <input
+            type="text"
+            name="zipCode"
+            required
+            defaultValue={initialData?.zipCode}
+            placeholder="46017"
+            autoComplete="postal-code"
+            className="w-full bg-brand-canvas border border-brand-primary/30 rounded px-3 py-2 text-brand-primary focus:outline-none focus:border-brand-primary"
+          />
+        </div>
+        <div>
+          <label className="block text-xs uppercase tracking-wider text-brand-primary/70 mb-1">
+            Email Address
+          </label>
+          <input
+            type="email"
+            name="email"
+            required
+            defaultValue={initialData?.email}
+            placeholder="steven@bscresidential.com"
+            autoComplete="email"
+            className="w-full bg-brand-canvas border border-brand-primary/30 rounded px-3 py-2 text-brand-primary focus:outline-none focus:border-brand-primary"
+          />
+        </div>
+        <div>
+          <label className="block text-xs uppercase tracking-wider text-brand-primary/70 mb-1">
+            Phone Number
+          </label>
+          <input
+            type="tel"
+            name="phone"
+            required
+            defaultValue={initialData?.phone}
+            placeholder="(317) 555-0199"
+            autoComplete="tel"
+            className="w-full bg-brand-canvas border border-brand-primary/30 rounded px-3 py-2 text-brand-primary focus:outline-none focus:border-brand-primary"
+          />
+        </div>
+        <div className="md:col-span-2 mt-4">
+          <button
+            type="submit"
+            className="w-full bg-brand-accent text-brand-primary font-bold uppercase tracking-widest py-3 rounded hover:bg-brand-accent/90 transition-colors"
+          >
+            Lock Profile & Open Consultation Deck
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+}
+</file>
+
+<file path="components/Intake/EstimatorChatBox.tsx">
+/* eslint-disable @next/next/no-img-element */
+"use client";
+
+import React, { useState, useRef, useEffect } from "react";
+
+interface Message {
+  role: "user" | "model";
+  text: string;
+  images?: string[];
+}
+
+interface EstimatorChatBoxProps {
+  onIntakeComplete?: (projectData: any) => void;
+}
+
+export default function EstimatorChatBox({
+  onIntakeComplete,
+}: EstimatorChatBoxProps) {
+  const [messages, setMessages] = useState<Message[]>([
+    {
+      role: "model",
+      text: "I have your property zone anchored. Let's discuss your architectural vision—are we looking at upgrading exterior cladding to premium materials, establishing a custom timber frame, or building out a specialized space like a recording studio? Detail your structural goals and attach up to 3 site photos.",
+    },
+  ]);
+
+  const [input, setInput] = useState("");
+  const [imagePayloads, setImagePayloads] = useState<string[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [readyToCompile, setReadyToCompile] = useState(false);
+  const [compiledData, setCompiledData] = useState<any>(null);
+
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Auto-scroll to the latest transmission
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [messages, isLoading, readyToCompile]);
+
+  // Handle Multi-Image Selection and Base64 Conversion
+  const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+
+    const availableSlots = 3 - imagePayloads.length;
+    const filesToProcess = files.slice(0, availableSlots);
+
+    if (filesToProcess.length < files.length) {
+      alert("Maximum limit of 3 site photos reached.");
+    }
+
+    const base64Promises = filesToProcess.map((file) => {
+      return new Promise<string>((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.readAsDataURL(file);
+      });
+    });
+
+    const newBase64Images = await Promise.all(base64Promises);
+    setImagePayloads((prev) => [...prev, ...newBase64Images]);
+
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const removeStagedImage = (indexToRemove: number) => {
+    setImagePayloads((prev) => prev.filter((_, idx) => idx !== indexToRemove));
+  };
+
+  const handleTransmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if ((!input.trim() && imagePayloads.length === 0) || isLoading) return;
+
+    const userMessage = input.trim();
+    const currentImages = [...imagePayloads];
+
+    setInput("");
+    setImagePayloads([]);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+
+    const newHistory: Message[] = [
+      ...messages,
+      {
+        role: "user",
+        text: userMessage,
+        images: currentImages.length > 0 ? currentImages : undefined,
+      },
+    ];
+    setMessages(newHistory);
+    setIsLoading(true);
+
+    try {
+      const response = await fetch("/api/estimate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ history: newHistory, message: userMessage }),
+      });
+
+      const data = await response.json();
+
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "model",
+          text: data.chatResponse || "Transmission received.",
+        },
+      ]);
+
+      if (data.isComplete && onIntakeComplete) {
+        setCompiledData(data.projectData);
+        setReadyToCompile(true);
+      }
+    } catch (error) {
+      console.error("Transmission Error:", error);
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "model",
+          text: "System Error: Connection disrupted. Please attempt transmission again.",
+        },
+      ]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <div className="bg-brand-surface p-6 rounded-lg border border-brand-primary/20 flex flex-col h-[700px]">
+      <h3 className="text-xl font-bold text-brand-primary uppercase tracking-wide mb-4 shrink-0">
+        Structural Consultation
+      </h3>
+
+      {/* Chat History Window */}
+      <div
+        ref={scrollRef}
+        className="flex-1 overflow-y-auto space-y-4 mb-4 pr-2 scrollbar-thin scrollbar-thumb-brand-primary/30"
+      >
+        {messages.map((msg, idx) => (
+          <div
+            key={idx}
+            className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
+          >
+            <div
+              className={`max-w-[85%] p-4 rounded text-sm leading-relaxed shadow-sm ${
+                msg.role === "user"
+                  ? "bg-brand-primary text-brand-canvas rounded-br-none font-medium"
+                  : "bg-brand-canvas border border-brand-primary/30 text-brand-primary rounded-bl-none"
+              }`}
+            >
+              {msg.images && msg.images.length > 0 && (
+                <div className="flex flex-col gap-2 mb-3">
+                  {msg.images.map((imgSrc, i) => (
+                    <img
+                      key={i}
+                      src={imgSrc}
+                      alt={`Site Upload ${i + 1}`}
+                      className="w-full max-w-sm rounded border border-brand-canvas/20"
+                    />
+                  ))}
+                </div>
+              )}
+              {msg.text && <span>{msg.text}</span>}
+            </div>
+          </div>
+        ))}
+        {isLoading && (
+          <div className="flex justify-start">
+            <div className="max-w-[85%] p-4 rounded text-sm bg-brand-canvas border border-brand-primary/30 text-brand-primary/50 rounded-bl-none animate-pulse">
+              Analyzing structural parameters...
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Input Deck */}
+      <div className="shrink-0 flex flex-col gap-4">
+        {/* Enlarged Multi-Image Preview Stage */}
+        {imagePayloads.length > 0 && (
+          <div className="flex flex-col gap-3 px-4 py-4 bg-brand-primary/10 border border-brand-primary/30 rounded">
+            <div className="flex justify-between items-center text-brand-primary">
+              <span className="text-sm font-bold uppercase tracking-wider">
+                Site Photos Staged ({imagePayloads.length}/3)
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              {imagePayloads.map((imgSrc, idx) => (
+                <div key={idx} className="relative group">
+                  <img
+                    src={imgSrc}
+                    alt={`Staged upload ${idx + 1}`}
+                    className="w-full h-40 object-cover rounded border border-brand-primary/50 shadow-sm"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => removeStagedImage(idx)}
+                    className="absolute top-2 right-2 bg-red-600/90 hover:bg-red-500 text-white font-bold px-2 py-1 uppercase text-xs rounded transition-colors shadow"
+                    title="Remove Image"
+                  >
+                    [X]
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {readyToCompile ? (
+          <div className="flex flex-col gap-3 p-4 bg-brand-primary/10 border border-brand-primary/30 rounded animate-in fade-in duration-300">
+            <button
+              onClick={() => onIntakeComplete && onIntakeComplete(compiledData)}
+              className="w-full py-4 bg-brand-primary text-brand-canvas font-bold uppercase tracking-widest rounded hover:bg-brand-primary/90 transition-colors shadow-sm"
+            >
+              Compile Project Dossier
+            </button>
+            <button
+              onClick={() => {
+                setReadyToCompile(false);
+                setCompiledData(null);
+              }}
+              className="text-xs font-bold text-brand-primary/70 uppercase tracking-wide hover:text-brand-primary transition-colors text-center py-2"
+            >
+              Wait, I need to add more details
+            </button>
+          </div>
+        ) : (
+          <form onSubmit={handleTransmit} className="flex gap-2">
+            <input
+              type="file"
+              accept="image/*"
+              multiple
+              ref={fileInputRef}
+              onChange={handleImageSelect}
+              className="hidden"
+            />
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isLoading || imagePayloads.length >= 3}
+              className="px-4 py-3 border border-brand-primary/30 text-brand-primary rounded hover:bg-brand-primary/10 disabled:opacity-50 transition-colors flex items-center justify-center"
+              title={
+                imagePayloads.length >= 3
+                  ? "Maximum photos attached"
+                  : "Attach Site Photos"
+              }
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="17 8 12 3 7 8"></polyline>
+                <line x1="12" y1="3" x2="12" y2="15"></line>
+              </svg>
+            </button>
+
+            <input
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder="Detail your material preferences and scope..."
+              disabled={isLoading}
+              className="flex-1 bg-brand-canvas border border-brand-primary/30 rounded px-4 py-3 text-brand-primary focus:outline-none focus:border-brand-primary disabled:opacity-50"
+            />
+            <button
+              type="submit"
+              disabled={
+                isLoading || (!input.trim() && imagePayloads.length === 0)
+              }
+              className="px-6 py-3 bg-brand-accent text-brand-primary font-bold uppercase tracking-widest rounded hover:bg-brand-accent/90 disabled:opacity-50 transition-colors"
+            >
+              Transmit
+            </button>
+          </form>
+        )}
+      </div>
+    </div>
+  );
+}
+</file>
+
+<file path="components/Footer.tsx">
+export default function Footer() {
+  const currentYear = new Date().getFullYear();
+
+  return (
+    <footer className="w-full border-t border-brand-surface bg-brand-canvas py-8 mt-auto">
+      <div className="mx-auto flex max-w-7xl flex-col items-center justify-center gap-2 px-6 text-center">
+        <p className="text-sm text-zinc-400">
+          &copy; {currentYear} BSC Residential LLC. All rights reserved.
+        </p>
+        <p className="text-xs text-zinc-500 tracking-wide uppercase mt-2">
+          System Architecture by{" "}
+          <span className="font-semibold text-brand-primary">BSC Builds</span>
+        </p>
+      </div>
+    </footer>
+  );
+}
+</file>
+
+<file path="utils/supabase/server.ts">
+import { createServerClient } from "@supabase/ssr";
+import { cookies } from "next/headers";
+
+export async function createClient() {
+  const cookieStore = await cookies();
+
+  return createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) {
+          return cookieStore.get(name)?.value;
+        },
+        set(name: string, value: string, options: any) {
+          try {
+            cookieStore.set({ name, value, ...options });
+          } catch (error) {
+            // The `set` method was called from a Server Component.
+            // This can be ignored if you have middleware refreshing
+            // user sessions.
+          }
+        },
+        remove(name: string, options: any) {
+          try {
+            cookieStore.set({ name, value: "", ...options });
+          } catch (error) {
+            // The `remove` method was called from a Server Component.
+          }
+        },
+      },
+    },
+  );
+}
+</file>
+
+<file path=".gitignore">
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# dependencies
+/node_modules
+/.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+
+# testing
+/coverage
+
+# next.js
+/.next/
+/out/
+
+# production
+/build
+
+# misc
+.DS_Store
+*.pem
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# env files (can opt-in for committing if needed)
+.env*
+.env.local
+
+# vercel
+.vercel
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
+repomix-output.xml
+</file>
+
+<file path="postcss.config.mjs">
+/** @type {import('postcss-load-config').Config} */
+const config = {
+  plugins: {
+    "@tailwindcss/postcss": {},
+    autoprefixer: {},
+  },
+};
+
+export default config;
+</file>
+
+<file path="app/globals.css">
+@import "tailwindcss";
+
+@theme {
+  /* BSC Residential Color Architecture */
+  --color-brand-canvas: #0b1116; /* 60% Background */
+  --color-brand-surface: #18181b; /* 30% Cards & Panels */
+  --color-brand-primary: #a28d5b; /* 10% Headings & Gold Highlights */
+  --color-brand-accent: #041e42; /* Clickable Items & Interactive States */
+
+  /* Typography Scale & Weights */
+  --font-sans:
+    system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
+
+  --font-weight-light: 300;
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  /* Transitions & Timing */
+  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-smooth: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+</file>
+
+<file path="components/IntroSection.tsx">
+export default function IntroSection() {
+  return (
+    <section className="w-full border-t border-brand-surface bg-brand-canvas py-24">
+      <div className="mx-auto flex max-w-7xl flex-col items-center justify-center px-6 text-center lg:px-8">
+        {/* Primary Introduction Frame */}
+        <div className="max-w-3xl">
+          <h2 className="text-3xl font-bold tracking-tight text-brand-primary sm:text-4xl uppercase">
+            Building Beyond Standard
+          </h2>
+          <p className="mt-6 text-lg leading-8 text-zinc-400">
+            [Placeholder: Introductory company philosophy. We will refine this
+            copy and integrate high-resolution structural photography during the
+            finish phase to reflect the high-end demographic.]
+          </p>
+        </div>
+
+        {/* Feature Grid: Rough-in for future service highlights */}
+        <div className="mt-16 grid w-full grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="flex flex-col items-start border border-brand-surface bg-brand-surface/50 p-8 text-left backdrop-blur-sm rounded-lg">
+            <h3 className="text-xl font-semibold text-zinc-100">
+              Structural Mastery
+            </h3>
+            <p className="mt-3 text-sm text-zinc-400">
+              [Placeholder: Detail on framing, foundation, and 30+ years of
+              domain expertise.]
+            </p>
+          </div>
+
+          <div className="flex flex-col items-start border border-brand-surface bg-brand-surface/50 p-8 text-left backdrop-blur-sm rounded-lg">
+            <h3 className="text-xl font-semibold text-zinc-100">
+              Custom Upgrades
+            </h3>
+            <p className="mt-3 text-sm text-zinc-400">
+              [Placeholder: Detail on boutique cabinetry, trim, and aesthetic
+              modifications.]
+            </p>
+          </div>
+
+          <div className="flex flex-col items-start border border-brand-surface bg-brand-surface/50 p-8 text-left backdrop-blur-sm rounded-lg">
+            <h3 className="text-xl font-semibold text-zinc-100">
+              Systematic Accountability
+            </h3>
+            <p className="mt-3 text-sm text-zinc-400">
+              [Placeholder: Detail on project transparency, client portals, and
+              milestone tracking.]
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+</file>
+
+<file path="components/PortalLogin.tsx">
+"use client";
+
+export default function PortalLogin() {
+  return (
+    <section className="w-full py-24 border-t border-brand-surface bg-brand-canvas flex justify-center">
+      <div className="max-w-md w-full px-6 text-center">
+        <h1 className="text-3xl font-bold tracking-tight text-brand-primary uppercase">
+          Client Gateway
+        </h1>
+        <p className="mt-4 text-sm text-zinc-400">
+          Secure access to your project ledger, daily site logs, and financial
+          milestones.
+        </p>
+
+        {/* Authentication Lockbox */}
+        <div className="mt-10 border border-brand-surface bg-brand-surface/50 p-8 text-left backdrop-blur-sm rounded-lg">
+          <form className="flex flex-col gap-6">
+            <div>
+              <label
+                htmlFor="email"
+                className="block text-sm font-medium text-zinc-300"
+              >
+                Email Address
+              </label>
+              <input
+                type="email"
+                id="email"
+                className="mt-2 block w-full rounded-md border-0 bg-brand-canvas py-2 px-3 text-zinc-50 ring-1 ring-inset ring-brand-surface focus:ring-2 focus:ring-inset focus:ring-brand-primary sm:text-sm sm:leading-6"
+                placeholder="client@example.com"
+              />
+            </div>
+            <div>
+              <label
+                htmlFor="pin"
+                className="block text-sm font-medium text-zinc-300"
+              >
+                Secure PIN
+              </label>
+              <input
+                type="password"
+                id="pin"
+                className="mt-2 block w-full rounded-md border-0 bg-brand-canvas py-2 px-3 text-zinc-50 ring-1 ring-inset ring-brand-surface focus:ring-2 focus:ring-inset focus:ring-brand-primary sm:text-sm sm:leading-6"
+                placeholder="••••••••"
+              />
+            </div>
+            <button
+              type="button"
+              className="mt-4 w-full rounded-md bg-brand-accent px-3 py-2 text-sm font-semibold text-brand-primary shadow-sm hover:opacity-90 transition-opacity"
+            >
+              Access Ledger
+            </button>
+          </form>
+        </div>
+
+        <p className="mt-6 text-xs text-zinc-500">
+          Access is strictly limited to active clients. Unauthorized attempts
+          are logged.
+        </p>
+      </div>
+    </section>
+  );
+}
+</file>
+
+<file path="components/PortfolioSection.tsx">
+interface PortfolioItem {
+  id: string;
+  title: string;
+  category: string;
+  description: string;
+}
+
+const projects: PortfolioItem[] = [
+  {
+    id: "prj-01",
+    title: "8' x 18' Custom Wood-Overlay Garage Door",
+    category: "Structural Installation",
+    description:
+      "Solo structural installation featuring custom wood overlays. Executed precision balancing and high-torque duplex torsion spring winding to ensure flawless mechanical operation.",
+  },
+  {
+    id: "prj-02",
+    title: "Bespoke Architectural Built-ins",
+    category: "Custom Carpentry",
+    description:
+      "High-end interior cabinetry designed, milled, and installed to exact room specifications, elevating the functional living space.",
+  },
+  {
+    id: "prj-03",
+    title: "Load-Bearing Wall Reconfiguration",
+    category: "Structural Modification",
+    description:
+      "Complete engineered removal of a central load-bearing wall, replaced with a flush-mounted steel I-beam to modernize the foundational layout.",
+  },
+];
+
+export default function PortfolioSection() {
+  return (
+    <section className="w-full py-24 border-t border-brand-surface bg-brand-canvas">
+      <div className="mx-auto max-w-7xl px-6 lg:px-8">
+        <div className="mx-auto max-w-2xl text-center">
+          <h1 className="text-4xl font-bold tracking-tight text-brand-primary sm:text-5xl uppercase">
+            The Portfolio
+          </h1>
+          <p className="mt-6 text-lg leading-8 text-zinc-400">
+            A verified ledger of uncompromising custom carpentry and high-end
+            remodeling. Built for structural integrity.
+          </p>
+        </div>
+
+        {/* Project Grid */}
+        <div className="mx-auto mt-16 grid max-w-2xl grid-cols-1 gap-x-8 gap-y-12 lg:max-w-none lg:grid-cols-3">
+          {projects.map((project) => (
+            <div
+              key={project.id}
+              className="flex flex-col border border-brand-surface bg-brand-surface/50 overflow-hidden backdrop-blur-sm group rounded-lg"
+            >
+              {/* Image Placeholder Frame */}
+              <div className="h-64 w-full bg-brand-surface flex items-center justify-center border-b border-brand-surface transition-colors group-hover:bg-zinc-800">
+                <span className="text-zinc-400 text-sm tracking-widest uppercase">
+                  [ Image Frame ]
+                </span>
+              </div>
+
+              <div className="flex flex-1 flex-col p-8 text-left">
+                <span className="text-xs font-semibold uppercase tracking-wider text-brand-primary">
+                  {project.category}
+                </span>
+                <h3 className="mt-2 text-xl font-semibold leading-7 text-zinc-100">
+                  {project.title}
+                </h3>
+                <p className="mt-4 flex-auto text-sm leading-6 text-zinc-400">
+                  {project.description}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+</file>
+
+<file path="components/ServicesSection.tsx">
+import React from "react";
+
+interface ServiceItem {
+  title: string;
+  description: string;
+  features: string[];
+}
+
+const services: ServiceItem[] = [
+  {
+    title: "Structural Modifications",
+    description:
+      "Precision framing, load-bearing alterations, and foundational adjustments designed for long-term stability and architectural integrity.",
+    features: [
+      "Load-Bearing Wall Removal",
+      "Custom Framing",
+      "Subfloor Leveling",
+    ],
+  },
+  {
+    title: "Boutique Carpentry",
+    description:
+      "High-end custom builds and finish work that elevate the aesthetic and functional standard of the environment.",
+    features: [
+      "Custom Cabinetry",
+      "Architectural Millwork",
+      "Hardwood Installations",
+    ],
+  },
+  {
+    title: "Systematic Remodeling",
+    description:
+      "Comprehensive space transformations managed with rigid accountability, from initial demolition to final walkthrough.",
+    features: ["Kitchen Overhauls", "Bathroom Upgrades", "Basement Finishing"],
+  },
+];
+
+export default function ServicesSection() {
+  return (
+    <section className="w-full py-24 border-t border-brand-surface bg-brand-canvas">
+      <div className="mx-auto max-w-7xl px-6 lg:px-8">
+        <div className="mx-auto max-w-2xl text-center">
+          <h1 className="text-4xl font-bold tracking-tight text-brand-primary sm:text-5xl uppercase">
+            Core Capabilities
+          </h1>
+          <p className="mt-6 text-lg leading-8 text-zinc-100">
+            Executed with the precision of a Master Carpenter and the rigorous
+            oversight of a dedicated project manager. We do not compromise on
+            structural tolerances.
+          </p>
+        </div>
+
+        <div className="mx-auto mt-16 max-w-2xl sm:mt-20 lg:mt-24 lg:max-w-none">
+          <dl className="grid max-w-xl grid-cols-1 gap-x-8 gap-y-16 lg:max-w-none lg:grid-cols-3">
+            {services.map((service) => (
+              <div
+                key={service.title}
+                className="flex flex-col items-start border border-brand-surface bg-brand-surface/50 p-8 text-left backdrop-blur-sm rounded-lg"
+              >
+                <dt className="text-xl font-semibold leading-7 text-zinc-100 uppercase">
+                  {service.title}
+                </dt>
+                <dd className="mt-4 flex flex-auto flex-col text-base leading-7 text-zinc-400">
+                  <p className="flex-auto">{service.description}</p>
+                  <ul className="mt-6 space-y-2">
+                    {service.features.map((feature) => (
+                      <li
+                        key={feature}
+                        className="flex gap-x-3 text-sm text-zinc-300"
+                      >
+                        <span aria-hidden="true" className="text-brand-primary">
+                          ▹
+                        </span>
+                        {feature}
+                      </li>
+                    ))}
+                  </ul>
+                </dd>
+              </div>
+            ))}
+          </dl>
+        </div>
+      </div>
+    </section>
+  );
+}
+</file>
+
+<file path="package.json">
+{
+  "name": "bsc-residential",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint"
+  },
+  "dependencies": {
+    "@google/genai": "^2.13.0",
+    "@google/generative-ai": "^0.24.1",
+    "@hookform/resolvers": "^5.4.0",
+    "@supabase/ssr": "^0.12.3",
+    "@supabase/supabase-js": "^2.110.8",
+    "next": "16.2.11",
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
+    "react-hook-form": "^7.82.0",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.3.3",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "autoprefixer": "^10.5.4",
+    "eslint": "^9",
+    "eslint-config-next": "16.2.11",
+    "postcss": "^8.5.22",
+    "tailwindcss": "^4.3.3",
+    "typescript": "^5"
+  }
+}
+</file>
+
+<file path="app/layout.tsx">
+import type { Metadata } from "next";
+import "./globals.css";
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
+
+export const metadata: Metadata = {
+  title: "BSC Residential LLC",
+  description: "Precision in Every Detail.",
+};
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <html lang="en">
+      <body className="bg-brand-canvas text-brand-primary min-h-screen flex flex-col antialiased">
+        <Navbar />
+        {/* flex-1 ensures this container expands to fill available space */}
+        <main className="flex-1">{children}</main>
+        <Footer />
+      </body>
+    </html>
+  );
+}
+</file>
+
+<file path="components/HeroSection.tsx">
+export default function HeroSection() {
+  return (
+    <section className="mx-auto flex w-full flex-col items-center text-center py-24 lg:py-32 px-6 bg-brand-canvas">
+      <div className="max-w-4xl">
+        <h1 className="text-5xl font-extrabold tracking-tight sm:text-7xl text-brand-primary">
+          Precision in Every Detail.
+        </h1>
+        <p className="mt-6 mx-auto max-w-2xl text-lg text-zinc-100 leading-8">
+          Uncompromising custom carpentry, architectural upgrades, and high-end
+          remodeling. Built for those who demand structural integrity and
+          flawless execution.
+        </p>
+      </div>
+    </section>
+  );
+}
+</file>
+
+<file path="components/Navbar.tsx">
+"use client";
+
+import Link from "next/link";
+import { useState } from "react";
+
+export default function Navbar() {
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  return (
+    <nav
+      className="relative flex items-center justify-between p-6 lg:px-8 border-b border-brand-surface bg-brand-canvas w-full z-50"
+      aria-label="Global Navigation"
+    >
+      {/* Brand Identity */}
+      <div className="flex lg:flex-1">
+        <Link href="/" className="-m-1.5 p-1.5 flex items-center gap-2 group">
+          <span className="sr-only ">BSC Residential LLC</span>
+          <span className="text-xl font-bold tracking-widest text-zinc-100 uppercase group-hover:text-brand-primary transition-colors">
+            BSC Residential LLC
+          </span>
+        </Link>
+      </div>
+
+      {/* Mobile Hamburger Button */}
+      <div className="flex lg:hidden">
+        <button
+          type="button"
+          className="-m-2.5 inline-flex items-center justify-center rounded-md p-2.5 text-zinc-400 hover:text-zinc-50 transition-colors"
+          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+        >
+          <span className="sr-only">Toggle main menu</span>
+          {/* SVG Icon for Hamburger/Close */}
+          {isMobileMenuOpen ? (
+            <svg
+              className="h-6 w-6"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth="1.5"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          ) : (
+            <svg
+              className="h-6 w-6"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth="1.5"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"
+              />
+            </svg>
+          )}
+        </button>
+      </div>
+
+      {/* Desktop Navigation Links */}
+      <div className="hidden lg:flex lg:gap-x-12">
+        <Link
+          href="/"
+          className="text-sm font-semibold leading-6 text-zinc-300 hover:text-brand-primary transition-colors"
+        >
+          Home
+        </Link>
+        <Link
+          href="/portfolio"
+          className="text-sm font-semibold leading-6 text-zinc-300 hover:text-brand-primary transition-colors"
+        >
+          Portfolio
+        </Link>
+        <Link
+          href="/services"
+          className="text-sm font-semibold leading-6 text-zinc-300 hover:text-brand-primary transition-colors"
+        >
+          Services
+        </Link>
+        <Link
+          href="/portal"
+          className="text-sm font-semibold leading-6 text-zinc-300 hover:text-brand-primary transition-colors"
+        >
+          Client Portal
+        </Link>
+      </div>
+
+      {/* Mobile Dropdown Panel */}
+      {isMobileMenuOpen && (
+        <div className="absolute top-full left-0 w-full bg-brand-surface border-b border-brand-surface lg:hidden flex flex-col px-6 py-8 gap-6 shadow-2xl">
+          <Link
+            href="/"
+            onClick={() => setIsMobileMenuOpen(false)}
+            className="text-lg font-semibold text-zinc-50 hover:text-brand-primary transition-colors"
+          >
+            Home
+          </Link>
+          <Link
+            href="/portfolio"
+            onClick={() => setIsMobileMenuOpen(false)}
+            className="text-lg font-semibold text-zinc-50 hover:text-brand-primary transition-colors"
+          >
+            Portfolio
+          </Link>
+          <Link
+            href="/services"
+            onClick={() => setIsMobileMenuOpen(false)}
+            className="text-lg font-semibold text-zinc-50 hover:text-brand-primary transition-colors"
+          >
+            Services
+          </Link>
+          <Link
+            href="/portal"
+            onClick={() => setIsMobileMenuOpen(false)}
+            className="text-lg font-semibold text-zinc-50 hover:text-brand-primary transition-colors"
+          >
+            Client Portal
+          </Link>
+        </div>
+      )}
+    </nav>
+  );
+}
+</file>
+
+<file path="app/page.tsx">
+import HeroSection from "@/components/HeroSection";
+import IntroSection from "@/components/IntroSection";
+import ChatEstimator from "@/components/Intake/ChatEstimator";
+
+export default function Home() {
+  return (
+    <main className="flex min-h-screen flex-col items-center justify-start bg-brand-canvas">
+      <HeroSection />
+      <IntroSection />
+
+      {/* Automated Intake / Filter Section */}
+      <section
+        id="estimate"
+        className="w-full py-20 px-4 md:px-8 border-t border-brand-surface"
+      >
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold uppercase tracking-widest">
+              Automated Intake
+            </h2>
+            <p className="mt-4">
+              Submit your project constraints for an immediate feasibility
+              check.
+            </p>
+          </div>
+
+          {/* The isolated Phase 2 component is mounted here */}
+          <ChatEstimator />
+        </div>
+      </section>
+    </main>
+  );
+}
+</file>
+
+</files>

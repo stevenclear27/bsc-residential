@@ -8,7 +8,7 @@ export default function Navbar() {
 
   return (
     <nav
-      className="relative flex items-center justify-between p-6 lg:px-8 border-b border-brand-surface bg-brand-canvas w-full z-50"
+      className="relative flex items-center justify-between p-6 lg:px-8 border-b border-brand-primary bg-brand-surface w-full z-50"
       aria-label="Global Navigation"
     >
       {/* Brand Identity */}

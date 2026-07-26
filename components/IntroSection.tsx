@@ -7,7 +7,7 @@ export default function IntroSection() {
           <h2 className="text-3xl font-bold tracking-tight text-brand-primary sm:text-4xl uppercase">
             Building Beyond Standard
           </h2>
-          <p className="mt-6 text-lg leading-8 text-zinc-400">
+          <p className="mt-6 text-lg leading-8 text-zinc-200">
             [Placeholder: Introductory company philosophy. We will refine this
             copy and integrate high-resolution structural photography during the
             finish phase to reflect the high-end demographic.]
@@ -17,30 +17,30 @@ export default function IntroSection() {
         {/* Feature Grid: Rough-in for future service highlights */}
         <div className="mt-16 grid w-full grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
           <div className="flex flex-col items-start border border-brand-surface bg-brand-surface/50 p-8 text-left backdrop-blur-sm rounded-lg">
-            <h3 className="text-xl font-semibold text-zinc-100">
+            <h3 className="text-xl font-semibold text-brand-primary">
               Structural Mastery
             </h3>
-            <p className="mt-3 text-sm text-zinc-400">
+            <p className="mt-3 text-sm text-zinc-200">
               [Placeholder: Detail on framing, foundation, and 30+ years of
               domain expertise.]
             </p>
           </div>
 
           <div className="flex flex-col items-start border border-brand-surface bg-brand-surface/50 p-8 text-left backdrop-blur-sm rounded-lg">
-            <h3 className="text-xl font-semibold text-zinc-100">
+            <h3 className="text-xl font-semibold text-brand-primary">
               Custom Upgrades
             </h3>
-            <p className="mt-3 text-sm text-zinc-400">
+            <p className="mt-3 text-sm text-zinc-200">
               [Placeholder: Detail on boutique cabinetry, trim, and aesthetic
               modifications.]
             </p>
           </div>
 
           <div className="flex flex-col items-start border border-brand-surface bg-brand-surface/50 p-8 text-left backdrop-blur-sm rounded-lg">
-            <h3 className="text-xl font-semibold text-zinc-100">
+            <h3 className="text-xl font-semibold text-brand-primary">
               Systematic Accountability
             </h3>
-            <p className="mt-3 text-sm text-zinc-400">
+            <p className="mt-3 text-sm text-zinc-200">
               [Placeholder: Detail on project transparency, client portals, and
               milestone tracking.]
             </p>
