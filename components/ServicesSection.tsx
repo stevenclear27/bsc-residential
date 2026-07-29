@@ -1,4 +1,5 @@
 import React from "react";
+import OperatorProfile from "./OperatorProfile";
 
 interface ServiceItem {
   title: string;
@@ -79,6 +80,9 @@ export default function ServicesSection() {
               </div>
             ))}
           </dl>
+        </div>
+        <div className="mt-24 border-t border-brand-primary/20 pt-8">
+          <OperatorProfile />
         </div>
       </div>
     </section>
