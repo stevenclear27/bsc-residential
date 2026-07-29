@@ -1,70 +1,108 @@
+import Image from "next/image";
+
+// 1. STRICT DATA CONTRACT
+// Defines the exact shape of a project and its associated image array.
+interface PortfolioImage {
+  src: string;
+  alt: string;
+}
+
 interface PortfolioItem {
   id: string;
   title: string;
   category: string;
   description: string;
+  images: PortfolioImage[];
 }
 
+// 2. THE LEDGER (Database Placeholder)
+// You can stack additional projects into this array as your portfolio grows.
 const projects: PortfolioItem[] = [
   {
-    id: "prj-01",
-    title: "8' x 18' Custom Wood-Overlay Garage Door",
-    category: "Structural Installation",
+    id: "prj-gibson",
+    title: "Structural Patio Enclosure",
+    category: "Architectural Upgrade",
     description:
-      "Solo structural installation featuring custom wood overlays. Executed precision balancing and high-torque duplex torsion spring winding to ensure flawless mechanical operation.",
+      "Complete structural enclosure engineered to exact tolerances. Progression from initial vapor barrier and sheathing to final window and trim installation.",
+    images: [
+      {
+        src: "/portfolio/projects/gibson/patio-enclosure-vapor-barrier.webp",
+        alt: "Gibson project vapor barrier installation",
+      },
+      {
+        src: "/portfolio/projects/gibson/patio-enclosure-sheathing.webp",
+        alt: "Gibson project exterior sheathing",
+      },
+      {
+        src: "/portfolio/projects/gibson/patio-enclosure-trim-windows.webp",
+        alt: "Gibson project window and trim integration",
+      },
+      {
+        src: "/portfolio/projects/gibson/patio-enclosure-doors.webp",
+        alt: "Gibson project final door installation",
+      },
+    ],
   },
-  {
-    id: "prj-02",
-    title: "Bespoke Architectural Built-ins",
-    category: "Custom Carpentry",
-    description:
-      "High-end interior cabinetry designed, milled, and installed to exact room specifications, elevating the functional living space.",
-  },
-  {
-    id: "prj-03",
-    title: "Load-Bearing Wall Reconfiguration",
-    category: "Structural Modification",
-    description:
-      "Complete engineered removal of a central load-bearing wall, replaced with a flush-mounted steel I-beam to modernize the foundational layout.",
-  },
+  // Add future projects here...
 ];
 
 export default function PortfolioSection() {
   return (
-    <section className="w-full py-24 border-t border-brand-surface bg-brand-canvas">
-      <div className="mx-auto max-w-7xl px-6 lg:px-8">
-        <div className="mx-auto max-w-2xl text-center">
-          <h1 className="text-4xl font-bold tracking-tight text-brand-primary sm:text-5xl uppercase">
-            The Portfolio
-          </h1>
-          <p className="mt-6 text-lg leading-8 text-zinc-200">
+    <section className="w-full bg-brand-canvas py-24" id="portfolio">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        {/* HEADER */}
+        <div className="text-center mb-16">
+          <h2 className="text-4xl font-extrabold tracking-tight text-brand-primary sm:text-5xl">
+            THE PORTFOLIO
+          </h2>
+          <div className="mt-4 mx-auto h-1 w-24 bg-brand-primary rounded-full"></div>
+          <p className="mt-6 text-lg text-zinc-300 max-w-2xl mx-auto">
             A verified ledger of uncompromising custom carpentry and high-end
             remodeling. Built for structural integrity.
           </p>
         </div>
 
-        {/* Project Grid */}
-        <div className="mx-auto mt-16 grid max-w-2xl grid-cols-1 gap-x-8 gap-y-12 lg:max-w-none lg:grid-cols-3">
+        {/* PROJECT STACK */}
+        <div className="space-y-20">
           {projects.map((project) => (
             <div
               key={project.id}
-              className="flex flex-col border border-brand-surface bg-brand-surface/50 overflow-hidden backdrop-blur-sm group rounded-lg"
+              className="flex flex-col border border-brand-primary/10 rounded-2xl overflow-hidden bg-brand-canvas shadow-xl"
             >
-              {/* Image Placeholder Frame */}
-              <div className="h-64 w-full bg-brand-surface flex items-center justify-center border-b border-brand-surface transition-colors group-hover:bg-zinc-800">
-                <span className="text-zinc-400 text-sm tracking-widest uppercase">
-                  [ Image Frame ]
-                </span>
+              {/* IMAGE GALLERY (CSS Scroll Snap) */}
+              {/* 'overflow-x-auto' enables horizontal scrolling. 'snap-x' forces the swipe to lock onto the next image perfectly. */}
+              <div className="flex w-full overflow-x-auto snap-x snap-mandatory custom-scrollbar pb-4 border-b border-brand-primary/10">
+                {project.images.map((image, index) => (
+                  <div
+                    key={index}
+                    className="relative flex-none w-full sm:w-[85%] md:w-[70%] lg:w-[60%] aspect-[4/3] snap-center sm:snap-start first:ml-0"
+                  >
+                    <Image
+                      src={image.src}
+                      alt={image.alt}
+                      fill
+                      unoptimized
+                      className="object-cover"
+                    />
+                    {/* Image Counter Overlay */}
+                    <div className="absolute bottom-4 right-4 bg-brand-canvas/80 backdrop-blur-md px-3 py-1 rounded-full border border-brand-primary/30">
+                      <span className="text-xs font-bold text-brand-primary">
+                        {index + 1} / {project.images.length}
+                      </span>
+                    </div>
+                  </div>
+                ))}
               </div>
 
-              <div className="flex flex-1 flex-col p-8 text-left">
-                <span className="text-xs font-semibold uppercase tracking-wider text-brand-primary">
+              {/* PROJECT DOSSIER */}
+              <div className="p-8 md:p-10">
+                <span className="text-xs font-black uppercase tracking-widest text-brand-primary/80 mb-2 block">
                   {project.category}
                 </span>
-                <h3 className="mt-2 text-xl font-semibold leading-7 text-zinc-200">
+                <h3 className="text-2xl md:text-3xl font-bold text-zinc-100 mb-4">
                   {project.title}
                 </h3>
-                <p className="mt-4 flex-auto text-sm leading-6 text-zinc-200">
+                <p className="text-base md:text-lg text-zinc-400 leading-relaxed max-w-4xl">
                   {project.description}
                 </p>
               </div>
