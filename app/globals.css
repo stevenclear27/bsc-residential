@@ -2,15 +2,14 @@
 
 @theme {
   /* BSC Residential Color Architecture */
-  --color-brand-canvas: #0b1116; /* 60% Background */
-  --color-brand-surface: #18181b; /* 30% Cards & Panels */
-  --color-brand-primary: #a28d5b; /* 10% Headings & Gold Highlights */
+  --color-brand-canvas: #12161a; /* 60% Background */
+  --color-brand-surface: #1f242a; /* 30% Cards & Panels */
+  --color-brand-primary: #d4af37; /* 10% Headings & Gold Highlights */
   --color-brand-accent: #041e42; /* Clickable Items & Interactive States */
 
   /* Typography Scale & Weights */
-  --font-sans:
-    system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-    "Helvetica Neue", Arial, sans-serif;
+  --font-sans: var(--font-sans), sans-serif;
+  --font-serif: var(--font-serif), serif;
 
   --font-weight-light: 300;
   --font-weight-normal: 400;

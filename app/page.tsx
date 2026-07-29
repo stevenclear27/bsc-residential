@@ -16,11 +16,13 @@ export default function Home() {
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold uppercase tracking-widest">
-              Automated Quote Generator
+              INSTANT PROJECT FEASIBILITY & ESTIMATOR
             </h2>
-            <p className="mt-4">
-              Submit your project goals for an immediate scope of work and
-              ballpark price range.
+            <p className="mt-4 text-zinc-200">
+              Submit project specs and site photos to receive an immediate
+              preliminary scope and target investment tier. Qualified
+              submissions receive direct portal access to schedule an on-site
+              structural consultation.
             </p>
           </div>
 

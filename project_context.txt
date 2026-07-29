@@ -1,7 +1,5 @@
 This file is a merged representation of the entire codebase, combined into a single document by Repomix.
 
-npx repomix --output project_context.txt
-
 <file_summary>
 This section contains a summary of this file.
 
@@ -54,17 +52,16 @@ app/
     page.tsx
   services/
     page.tsx
-  favicon.ico
   globals.css
+  icon.png
   layout.tsx
   page.tsx
 components/
   Intake/
+    AuthGateway.tsx
     ChatEstimator.tsx
-    ClientProfileForm.tsx
     DossierSummaryCard.tsx
     EstimatorChatBox.tsx
-  AuthGateway.tsx
   Footer.tsx
   HeroSection.tsx
   IntroSection.tsx
@@ -79,6 +76,7 @@ lib/
 public/
   file.svg
   globe.svg
+  logo-v2.png
   next.svg
   vercel.svg
   window.svg
@@ -93,93 +91,13 @@ eslint.config.mjs
 next.config.ts
 package.json
 postcss.config.mjs
+prcommands.md
 README.md
 tsconfig.json
 </directory_structure>
 
 <files>
 This section contains the contents of the repository's files.
-
-<file path="app/api/estimate/route.ts">
-import { NextResponse } from "next/server";
-import { GoogleGenAI } from "@google/genai";
-
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-
-export async function POST(request: Request) {
-  try {
-    const body = await request.json();
-    const { history, message } = body;
-
-    const systemInstruction = `
-      You are the master carpentry consultant and senior intake estimator for BSC Residential LLC. 
-      Your tone is clinical, candid, architectural, and deeply focused on material integrity and custom craftsmanship.
-      
-      DO NOT aggressively interrogate clients for raw dollar amounts. Focus on architectural vision, material selection, project scope, and timeline.
-      
-      When you have enough architectural data to formulate a comprehensive project scope, set 'isComplete' to true and summarize the specifications.
-      CRITICAL: When setting 'isComplete' to true, your 'chatResponse' MUST be a variation of this exact sentiment: "I have the structural parameters anchored. Do you have any final details to add before I compile your preliminary estimate?"
-      
-      Return your answer strictly in a JSON format containing:
-      {
-        "chatResponse": "your conversational response here",
-        "isComplete": boolean,
-        "projectData": {
-          "projectScope": "string summary if complete",
-          "materialTier": "string gathered from conversation",
-          "timeline": "string if gathered"
-        }
-      }
-    `;
-
-    const formattedContents = history.map((msg: any) => ({
-      role: msg.role === "user" ? "user" : "model",
-      parts: [{ text: msg.text }],
-    }));
-
-    // Target the current production-stable model ID
-    const response = await ai.models.generateContent({
-      model: "gemini-3.6-flash",
-      contents: formattedContents,
-      config: {
-        systemInstruction: systemInstruction,
-        responseMimeType: "application/json",
-      },
-    });
-
-    // Extract text safely using the official SDK response structure
-    const rawText =
-      response.text ||
-      (response as any).candidates?.[0]?.content?.parts?.[0]?.text ||
-      "{}";
-    const parsedResponse = JSON.parse(rawText);
-
-    return NextResponse.json({
-      chatResponse:
-        parsedResponse.chatResponse ||
-        "Transmission received. Elaborate on your structural requirements.",
-      isComplete: parsedResponse.isComplete || false,
-      projectData: parsedResponse.projectData || null,
-    });
-  } catch (error: any) {
-    console.error("AI Processing Critical Failure Detail:", error);
-
-    const isRateLimited =
-      error?.status === 429 ||
-      error?.message?.includes("429") ||
-      error?.message?.includes("quota");
-
-    const userMessage = isRateLimited
-      ? "System Notice: API rate limit reached. Please allow a brief cooldown window before transmitting again."
-      : "Failed to process AI transmission. Verify system logs.";
-
-    return NextResponse.json(
-      { chatResponse: userMessage, isComplete: false, projectData: null },
-      { status: 200 },
-    );
-  }
-}
-</file>
 
 <file path="app/api/generate-concept/route.ts">
 import { NextResponse } from "next/server";
@@ -267,160 +185,54 @@ export default function ServicesPage() {
 }
 </file>
 
-<file path="components/Intake/ChatEstimator.tsx">
+<file path="components/Intake/AuthGateway.tsx">
 "use client";
 
 import React, { useState } from "react";
-import ClientProfileForm from "./ClientProfileForm";
-import EstimatorChatBox from "./EstimatorChatBox";
-import DossierSummaryCard from "./DossierSummaryCard";
-
-export default function ChatEstimator() {
-  // 1. Establish System State (Memory)
-  const [intakeStep, setIntakeStep] = useState<1 | 2 | 3>(1);
-  const [clientData, setClientData] = useState<any>(null);
-
-  // 2. Logic Handlers
-  const handleProfileSubmit = (data: any) => {
-    setClientData(data);
-    setIntakeStep(2); // Advance to AI Chat
-  };
-
-  const handleIntakeComplete = (projectData: any) => {
-    console.log("Architectural parameters locked:", projectData);
-    setClientData((prev: any) => ({ ...prev, ...projectData }));
-    setIntakeStep(3); // Advance to Dossier Summary
-  };
-
-  const handleDossierAcknowledge = () => {
-    console.log("Dossier acknowledged by:", clientData);
-    // Future logic: Push to Supabase database here
-  };
-
-  // 3. Render the correct module based on the current step
-  return (
-    <section className="w-full max-w-4xl mx-auto my-12 px-4">
-      {/* Progress Indicator */}
-      <div className="flex gap-2 mb-6">
-        <div
-          className={`h-2 flex-1 rounded ${intakeStep >= 1 ? "bg-brand-primary" : "bg-brand-primary/20"}`}
-        />
-        <div
-          className={`h-2 flex-1 rounded ${intakeStep >= 2 ? "bg-brand-primary" : "bg-brand-primary/20"}`}
-        />
-        <div
-          className={`h-2 flex-1 rounded ${intakeStep === 3 ? "bg-brand-primary" : "bg-brand-primary/20"}`}
-        />
-      </div>
-
-      {/* Component Routing Floor */}
-      {intakeStep === 1 && (
-        <ClientProfileForm onSubmitProfile={handleProfileSubmit} />
-      )}
-
-      {/* ... previous code ... */}
-      {intakeStep === 2 && (
-        <div className="flex flex-col gap-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
-          <EstimatorChatBox onIntakeComplete={handleIntakeComplete} />
-        </div>
-      )}
-
-      {intakeStep === 3 && (
-        <div className="flex flex-col gap-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
-          <EstimatorChatBox />
-          <DossierSummaryCard onAcknowledge={handleDossierAcknowledge} />
-        </div>
-      )}
-    </section>
-  );
-}
-</file>
-
-<file path="components/Intake/DossierSummaryCard.tsx">
-"use client";
-
-import React from "react";
-
-interface DossierSummaryCardProps {
-  onAcknowledge: () => void;
-}
-
-export default function DossierSummaryCard({
-  onAcknowledge,
-}: DossierSummaryCardProps) {
-  return (
-    <div className="p-6 border-t border-brand-primary/20 bg-brand-surface/50 flex flex-col md:flex-row items-center justify-between gap-4 mt-6 rounded-b-lg">
-      <div>
-        <h4 className="text-sm font-bold text-brand-primary uppercase tracking-wider">
-          Project Dossier Compiled
-        </h4>
-        <p className="text-xs text-brand-primary/80">
-          Ready for Master Carpenter physical verification.
-        </p>
-      </div>
-      <button
-        onClick={onAcknowledge}
-        className="px-6 py-3 bg-brand-primary text-brand-canvas rounded hover:bg-brand-primary/90 font-bold uppercase tracking-widest transition-colors"
-      >
-        Acknowledge Terms & Schedule
-      </button>
-    </div>
-  );
-}
-</file>
-
-<file path="components/AuthGateway.tsx">
-"use client";
-
-import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
 
 interface AuthGatewayProps {
-  onSuccess: () => void;
-  // Optional: Pass the verified dossier payload here if you want to write it
-  // to the database immediately after successful account creation.
-  dossierPayload?: any;
+  // We pass the dossier payload into this component so we can write it
+  // to the database the exact moment the account is successfully created.
+  projectPayload: any;
 }
 
-export default function AuthGateway({
-  onSuccess,
-  dossierPayload,
-}: AuthGatewayProps) {
+export default function AuthGateway({ projectPayload }: AuthGatewayProps) {
+  const router = useRouter();
   const supabase = createClient();
+
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [termsAccepted, setTermsAccepted] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  const handleSignUp = async (e: React.FormEvent) => {
+  const handleAccountProvisioning = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsProcessing(true);
     setErrorMsg(null);
 
-    if (!termsAccepted) {
-      setErrorMsg("You must accept the terms of service to proceed.");
-      return;
-    }
-
-    setIsProcessing(true);
-
     try {
-      // Provision the secure user account
-      const { data, error } = await supabase.auth.signUp({
+      // 1. Provision the secure user account via Supabase Auth
+      const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          // In a production environment, you would configure email verification routing here.
-          emailRedirectTo: `${location.origin}/portal`,
+          data: {
+            full_name: name, // Store the name in the Auth metadata
+          },
         },
       });
 
-      if (error) throw error;
+      if (authError) throw authError;
 
-      // Note: If you passed the dossierPayload, you would execute the database insert here,
-      // now that the user is authenticated and RLS policies can bind the data to their ID.
+      // 2. Future Execution: Anchor the projectPayload to the new user's UUID in your database tables here.
+      // Database Security: All Supabase tables must have Row Level Security (RLS) enabled. A user must only ever be able to read/write their own project data[cite: 3].
+      console.log("Payload ready for database injection:", projectPayload);
 
-      onSuccess();
+      // 3. Redirect the user to the Client Portal
+      router.push("/portal");
     } catch (error: any) {
       console.error("Auth Provisioning Error:", error);
       setErrorMsg(error.message || "Failed to establish a secure connection.");
@@ -430,20 +242,43 @@ export default function AuthGateway({
   };
 
   return (
-    <div className="w-full max-w-md mx-auto p-6 bg-brand-surface rounded-lg shadow-2xl border border-brand-primary/20">
-      <div className="mb-6">
-        <h3 className="text-lg font-bold text-brand-primary uppercase tracking-widest">
-          Client Portal Activation
+    <div className="bg-brand-surface p-8 rounded-lg border border-brand-primary/20 mb-6 shadow-xl">
+      <div className="mb-8 border-b border-brand-primary/20 pb-6">
+        <h3 className="text-2xl font-bold text-brand-primary uppercase tracking-wide mb-3">
+          Secure Portal Activation
         </h3>
-        <p className="text-xs text-brand-primary/80 mt-2">
-          Establish your secure account to save your project dossier and
-          schedule the Master Carpenter diagnostic visit.
+        <p className="text-zinc-300 text-sm leading-relaxed mb-4">
+          Your preliminary project dossier is ready. To save your structural
+          parameters and schedule an onsite verification, you must establish a
+          secure account.
+        </p>
+        <p className="text-zinc-400 text-xs leading-relaxed">
+          This account provisions your Client Portal. Once your build commences,
+          this portal serves as your single source of truth for scheduling,
+          daily site logs, and milestone tracking.
         </p>
       </div>
 
-      <form onSubmit={handleSignUp} className="space-y-4">
+      <form
+        onSubmit={handleAccountProvisioning}
+        className="grid grid-cols-1 md:grid-cols-2 gap-6"
+      >
+        <div className="md:col-span-2">
+          <label className="block text-[10px] font-bold uppercase tracking-widest text-brand-primary mb-2">
+            Full Name
+          </label>
+          <input
+            type="text"
+            required
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="e.g. Steven Clear"
+            className="w-full bg-brand-canvas border border-brand-primary/30 rounded px-4 py-3 text-zinc-100 focus:outline-none focus:border-brand-primary transition-colors"
+          />
+        </div>
+
         <div>
-          <label className="block text-xs font-bold text-brand-primary uppercase mb-1">
+          <label className="block text-[10px] font-bold uppercase tracking-widest text-brand-primary mb-2">
             Email Address
           </label>
           <input
@@ -451,13 +286,13 @@ export default function AuthGateway({
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full bg-brand-canvas border-0 ring-1 ring-inset ring-brand-primary/30 focus:ring-2 focus:ring-brand-primary rounded-md px-4 py-2 text-sm text-brand-primary"
-            disabled={isProcessing}
+            placeholder="client@example.com"
+            className="w-full bg-brand-canvas border border-brand-primary/30 rounded px-4 py-3 text-zinc-100 focus:outline-none focus:border-brand-primary transition-colors"
           />
         </div>
 
         <div>
-          <label className="block text-xs font-bold text-brand-primary uppercase mb-1">
+          <label className="block text-[10px] font-bold uppercase tracking-widest text-brand-primary mb-2">
             Secure Password
           </label>
           <input
@@ -466,44 +301,28 @@ export default function AuthGateway({
             minLength={8}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full bg-brand-canvas border-0 ring-1 ring-inset ring-brand-primary/30 focus:ring-2 focus:ring-brand-primary rounded-md px-4 py-2 text-sm text-brand-primary"
-            disabled={isProcessing}
+            placeholder="••••••••"
+            className="w-full bg-brand-canvas border border-brand-primary/30 rounded px-4 py-3 text-zinc-100 focus:outline-none focus:border-brand-primary transition-colors"
           />
-        </div>
-
-        <div className="flex items-start gap-3 pt-4 border-t border-brand-primary/20">
-          <input
-            type="checkbox"
-            id="terms"
-            checked={termsAccepted}
-            onChange={(e) => setTermsAccepted(e.target.checked)}
-            className="mt-1 h-4 w-4 rounded border-brand-primary/30 bg-brand-canvas text-brand-primary focus:ring-brand-primary"
-            disabled={isProcessing}
-          />
-          <label
-            htmlFor="terms"
-            className="text-xs text-brand-primary/80 leading-relaxed"
-          >
-            I acknowledge that all structural work requires a paid on-site
-            physical inspection to produce a binding contract. I agree that the
-            initial diagnostic fee will be credited toward my final project
-            deposit.
-          </label>
         </div>
 
         {errorMsg && (
-          <div className="p-3 bg-red-900/20 border border-red-500/50 rounded text-xs text-red-400">
+          <div className="md:col-span-2 p-3 bg-red-900/20 border border-red-500/50 rounded text-xs text-red-400">
             {errorMsg}
           </div>
         )}
 
-        <button
-          type="submit"
-          disabled={isProcessing || !termsAccepted || !email || !password}
-          className="w-full mt-4 px-6 py-3 bg-brand-primary text-brand-canvas rounded-md font-bold text-sm uppercase shadow-lg hover:opacity-90 transition-opacity disabled:opacity-50"
-        >
-          {isProcessing ? "Provisioning..." : "Activate Secure Portal"}
-        </button>
+        <div className="md:col-span-2 mt-4 pt-4 border-t border-brand-primary/10">
+          <button
+            type="submit"
+            disabled={isProcessing}
+            className="w-full bg-brand-accent text-brand-primary font-bold uppercase tracking-widest py-4 rounded hover:bg-brand-accent/90 disabled:opacity-50 transition-colors shadow-lg"
+          >
+            {isProcessing
+              ? "Provisioning Ledger..."
+              : "Create Account & Save Dossier"}
+          </button>
+        </div>
       </form>
     </div>
   );
@@ -631,6 +450,10 @@ const nextConfig: NextConfig = {
 export default nextConfig;
 </file>
 
+<file path="prcommands.md">
+npx repomix --output project_context.txt
+</file>
+
 <file path="README.md">
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
@@ -707,122 +530,347 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 }
 </file>
 
-<file path="components/Intake/ClientProfileForm.tsx">
+<file path="app/api/estimate/route.ts">
+import { NextResponse } from "next/server";
+import { GoogleGenAI } from "@google/genai";
+
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+
+export async function POST(request: Request) {
+  try {
+    const body = await request.json();
+    const { history, message } = body;
+
+    const systemInstruction = `
+  You are the Master Carpentry Consultant and Senior Estimator for BSC Residential LLC.
+  Your objective is to validate the client's architectural vision, build excitement about high-end craftsmanship, and establish structural intent.
+  
+  DO NOT ask the user for their zip code or project timeline. That logistical data is captured via the user interface.
+  DO NOT interrogate the client for raw dollar amounts.
+  
+  Instead, focus on the details of their build. If they want a custom entertainment center, match their excitement, suggest premium materials (e.g., solid hardwoods, integrated LED channeling), and confirm the scale of the work.
+  
+  When you have enough architectural data to formulate a comprehensive project scope (understanding the *what* and the *how*), set 'isComplete' to true.
+  
+  CRITICAL: When setting 'isComplete' to true, your 'chatResponse' MUST be a variation of this exact sentiment: "I have the structural parameters anchored. The vision is solid. Are you ready for me to compile your preliminary estimate?"
+  
+  Return your answer strictly in a JSON format containing:
+  {
+    "chatResponse": "your conversational, engaging response here",
+    "isComplete": boolean,
+    "projectData": {
+      "projectScope": "string summary of the physical build if complete",
+      "materialTier": "string summarizing the quality of materials discussed"
+    }
+  }
+`;
+
+    const formattedContents = history.map((msg: any) => ({
+      role: msg.role === "user" ? "user" : "model",
+      parts: [{ text: msg.text }],
+    }));
+
+    // Target the current production-stable model ID
+    const response = await ai.models.generateContent({
+      model: "gemini-3.6-flash",
+      contents: formattedContents,
+      config: {
+        systemInstruction: systemInstruction,
+        responseMimeType: "application/json",
+      },
+    });
+
+    // Extract text safely using the official SDK response structure
+    const rawText =
+      response.text ||
+      (response as any).candidates?.[0]?.content?.parts?.[0]?.text ||
+      "{}";
+    const parsedResponse = JSON.parse(rawText);
+
+    return NextResponse.json({
+      chatResponse:
+        parsedResponse.chatResponse ||
+        "Transmission received. Elaborate on your structural requirements.",
+      isComplete: parsedResponse.isComplete || false,
+      projectData: parsedResponse.projectData || null,
+    });
+  } catch (error: any) {
+    console.error("AI Processing Critical Failure Detail:", error);
+
+    const isRateLimited =
+      error?.status === 429 ||
+      error?.message?.includes("429") ||
+      error?.message?.includes("quota");
+
+    const userMessage = isRateLimited
+      ? "System Notice: API rate limit reached. Please allow a brief cooldown window before transmitting again."
+      : "Failed to process AI transmission. Verify system logs.";
+
+    return NextResponse.json(
+      { chatResponse: userMessage, isComplete: false, projectData: null },
+      { status: 200 },
+    );
+  }
+}
+</file>
+
+<file path="components/Intake/ChatEstimator.tsx">
+"use client"; // Required for state management at this leaf node
+
+import React, { useState } from "react";
+import EstimatorChatBox from "./EstimatorChatBox";
+import DossierSummaryCard from "./DossierSummaryCard";
+import AuthGateway from "./AuthGateway";
+
+export default function ChatEstimator() {
+  // 1. Establish System State (Memory)
+  const [intakeStep, setIntakeStep] = useState<1 | 2 | 3>(1);
+
+  // We use a unified state object to hold all data across the pipeline
+  const [projectPayload, setProjectPayload] = useState<any>({
+    projectData: null,
+    clientData: null,
+  });
+
+  // 2. Logic Handlers for the State Machine
+
+  // Fires when the AI finishes the scope
+  const handleIntakeComplete = (data: any) => {
+    setProjectPayload((prev: any) => ({ ...prev, projectData: data }));
+    setIntakeStep(2); // Advance to Dossier Summary
+  };
+
+  // Fires when the user reviews the dossier and wants to proceed
+  const handleDossierAcknowledge = () => {
+    setIntakeStep(3); // Advance to Lead Capture
+  };
+
+  // Fires when the user submits their contact info
+  const handleProfileSubmit = (data: any) => {
+    const finalPayload = {
+      ...projectPayload,
+      clientData: data,
+    };
+    setProjectPayload(finalPayload);
+
+    // Future Execution: This is where we will fire the Supabase mutation
+    // to anchor the dossier to the client in the database.
+    console.log("FINAL PIPELINE PAYLOAD READY FOR DATABASE:", finalPayload);
+    alert("Dossier Locked. Redirecting to scheduling matrix...");
+  };
+
+  // 3. Render the correct module based on the current step
+  return (
+    <section className="w-full max-w-4xl mx-auto my-12 px-4">
+      {/* Progress Indicator */}
+      <div className="flex gap-2 mb-6">
+        <div
+          className={`h-2 flex-1 rounded transition-colors duration-500 ${intakeStep >= 1 ? "bg-brand-primary" : "bg-brand-primary/20"}`}
+        />
+        <div
+          className={`h-2 flex-1 rounded transition-colors duration-500 ${intakeStep >= 2 ? "bg-brand-primary" : "bg-brand-primary/20"}`}
+        />
+        <div
+          className={`h-2 flex-1 rounded transition-colors duration-500 ${intakeStep === 3 ? "bg-brand-primary" : "bg-brand-primary/20"}`}
+        />
+      </div>
+
+      {/* Component Routing Floor */}
+      {intakeStep === 1 && (
+        <div className="animate-in fade-in duration-500">
+          <EstimatorChatBox onIntakeComplete={handleIntakeComplete} />
+        </div>
+      )}
+
+      {intakeStep === 2 && (
+        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <DossierSummaryCard
+            projectData={projectPayload.projectData}
+            onAcknowledge={handleDossierAcknowledge}
+          />
+        </div>
+      )}
+
+      {intakeStep === 3 && (
+        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <AuthGateway projectPayload={projectPayload} />
+        </div>
+      )}
+    </section>
+  );
+}
+</file>
+
+<file path="components/Intake/DossierSummaryCard.tsx">
 "use client";
 
 import React from "react";
 
-interface ClientProfileFormProps {
-  onSubmitProfile: (data: {
-    name: string;
-    email: string;
-    phone: string;
-    zipCode: string;
-  }) => void;
-  initialData?: { name: string; email: string; phone: string; zipCode: string };
+// 1. Define the exact shape of the data we expect to receive
+interface DossierSummaryCardProps {
+  onAcknowledge: () => void;
+  projectData: {
+    name?: string;
+    projectScope?: string;
+    materialTier?: string;
+    timeline?: string;
+    ballparkEstimate?: string; // e.g., "$15,000 - $22,000"
+  };
 }
 
-export default function ClientProfileForm({
-  onSubmitProfile,
-  initialData,
-}: ClientProfileFormProps) {
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const formData = new FormData(e.currentTarget);
-    onSubmitProfile({
-      name: formData.get("name") as string,
-      email: formData.get("email") as string,
-      phone: formData.get("phone") as string,
-      zipCode: formData.get("zipCode") as string,
-    });
-  };
+export default function DossierSummaryCard({
+  onAcknowledge,
+  projectData,
+}: DossierSummaryCardProps) {
+  // 2. Fallback check: If data hasn't loaded, don't crash the system
+  if (!projectData) return null;
 
   return (
-    <div className="bg-brand-surface p-6 rounded-lg border border-brand-primary/20 mb-6">
-      <h3 className="text-xl font-bold text-brand-primary uppercase tracking-wide mb-4">
-        Project Initialization
-      </h3>
-      <p className="text-brand-primary/80 text-sm mb-6">
-        Provide your details below to anchor your project file. This enables
-        auto-fill and connects your consultation directly to your property zone.
-      </p>
+    <div className="bg-brand-surface border border-brand-primary/20 rounded-lg overflow-hidden mt-6">
+      <div className="p-6 border-b border-brand-primary/20 bg-brand-canvas">
+        <h3 className="text-xl font-bold text-brand-primary uppercase tracking-wide">
+          Preliminary Project Dossier
+        </h3>
+        <p className="text-sm text-brand-primary/80 mt-1">
+          Review the initial parameters before locking in your onsite
+          verification.
+        </p>
+      </div>
 
-      <form
-        onSubmit={handleSubmit}
-        className="grid grid-cols-1 md:grid-cols-2 gap-4"
-      >
+      <div className="p-6 space-y-6">
         <div>
-          <label className="block text-xs uppercase tracking-wider text-brand-primary/70 mb-1">
-            Full Name
-          </label>
-          <input
-            type="text"
-            name="name"
-            required
-            defaultValue={initialData?.name}
-            placeholder="Steven Clear"
-            autoComplete="name"
-            className="w-full bg-brand-canvas border border-brand-primary/30 rounded px-3 py-2 text-brand-primary focus:outline-none focus:border-brand-primary"
-          />
+          <h4 className="text-xs font-bold text-brand-primary uppercase tracking-widest mb-2">
+            Scope of Work
+          </h4>
+          <p className="text-sm text-zinc-300 leading-relaxed bg-brand-canvas/50 p-4 rounded border border-brand-primary/10">
+            {projectData.projectScope || "Scope parameters pending..."}
+          </p>
         </div>
-        <div>
-          <label className="block text-xs uppercase tracking-wider text-brand-primary/70 mb-1">
-            Project Zip Code
-          </label>
-          <input
-            type="text"
-            name="zipCode"
-            required
-            defaultValue={initialData?.zipCode}
-            placeholder="46017"
-            autoComplete="postal-code"
-            className="w-full bg-brand-canvas border border-brand-primary/30 rounded px-3 py-2 text-brand-primary focus:outline-none focus:border-brand-primary"
-          />
+
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <h4 className="text-xs font-bold text-brand-primary uppercase tracking-widest mb-1">
+              Material Tier
+            </h4>
+            <p className="text-sm text-zinc-300">
+              {projectData.materialTier || "TBD"}
+            </p>
+          </div>
+          <div>
+            <h4 className="text-xs font-bold text-brand-primary uppercase tracking-widest mb-1">
+              Target Timeline
+            </h4>
+            <p className="text-sm text-zinc-300">
+              {projectData.timeline || "TBD"}
+            </p>
+          </div>
         </div>
-        <div>
-          <label className="block text-xs uppercase tracking-wider text-brand-primary/70 mb-1">
-            Email Address
-          </label>
-          <input
-            type="email"
-            name="email"
-            required
-            defaultValue={initialData?.email}
-            placeholder="steven@bscresidential.com"
-            autoComplete="email"
-            className="w-full bg-brand-canvas border border-brand-primary/30 rounded px-3 py-2 text-brand-primary focus:outline-none focus:border-brand-primary"
-          />
+
+        <div className="pt-6 border-t border-brand-primary/20">
+          <h4 className="text-xs font-bold text-brand-primary uppercase tracking-widest mb-2">
+            Estimated Ballpark Range
+          </h4>
+          <p className="text-3xl font-black text-brand-primary tracking-tighter">
+            {projectData.ballparkEstimate || "Requires Onsite Diagnostic"}
+          </p>
+          <p className="text-xs text-zinc-500 mt-2 max-w-xl">
+            *This is an algorithmic approximation based on the structural
+            parameters provided. A fixed-price contract requires physical site
+            verification and exact material takeoffs.
+          </p>
         </div>
-        <div>
-          <label className="block text-xs uppercase tracking-wider text-brand-primary/70 mb-1">
-            Phone Number
-          </label>
-          <input
-            type="tel"
-            name="phone"
-            required
-            defaultValue={initialData?.phone}
-            placeholder="(317) 555-0199"
-            autoComplete="tel"
-            className="w-full bg-brand-canvas border border-brand-primary/30 rounded px-3 py-2 text-brand-primary focus:outline-none focus:border-brand-primary"
-          />
-        </div>
-        <div className="md:col-span-2 mt-4">
-          <button
-            type="submit"
-            className="w-full bg-brand-accent text-brand-primary font-bold uppercase tracking-widest py-3 rounded hover:bg-brand-accent/90 transition-colors"
-          >
-            Lock Profile & Open Consultation Deck
-          </button>
-        </div>
-      </form>
+      </div>
+
+      <div className="p-6 bg-brand-canvas flex justify-end border-t border-brand-primary/20">
+        <button
+          onClick={onAcknowledge}
+          className="px-6 py-3 bg-brand-accent text-brand-primary rounded font-bold uppercase tracking-widest hover:opacity-90 transition-opacity"
+        >
+          Acknowledge & Schedule Onsite
+        </button>
+      </div>
     </div>
   );
 }
 </file>
 
+<file path="utils/supabase/server.ts">
+import { createServerClient } from "@supabase/ssr";
+import { cookies } from "next/headers";
+
+export async function createClient() {
+  const cookieStore = await cookies();
+
+  return createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) {
+          return cookieStore.get(name)?.value;
+        },
+        set(name: string, value: string, options: any) {
+          try {
+            cookieStore.set({ name, value, ...options });
+          } catch (error) {
+            // The `set` method was called from a Server Component.
+            // This can be ignored if you have middleware refreshing
+            // user sessions.
+          }
+        },
+        remove(name: string, options: any) {
+          try {
+            cookieStore.set({ name, value: "", ...options });
+          } catch (error) {
+            // The `remove` method was called from a Server Component.
+          }
+        },
+      },
+    },
+  );
+}
+</file>
+
+<file path="postcss.config.mjs">
+/** @type {import('postcss-load-config').Config} */
+const config = {
+  plugins: {
+    "@tailwindcss/postcss": {},
+    autoprefixer: {},
+  },
+};
+
+export default config;
+</file>
+
+<file path="app/globals.css">
+@import "tailwindcss";
+
+@theme {
+  /* BSC Residential Color Architecture */
+  --color-brand-canvas: #0b1116; /* 60% Background */
+  --color-brand-surface: #18181b; /* 30% Cards & Panels */
+  --color-brand-primary: #a28d5b; /* 10% Headings & Gold Highlights */
+  --color-brand-accent: #041e42; /* Clickable Items & Interactive States */
+
+  /* Typography Scale & Weights */
+  --font-sans:
+    system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
+
+  --font-weight-light: 300;
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  /* Transitions & Timing */
+  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-smooth: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+</file>
+
 <file path="components/Intake/EstimatorChatBox.tsx">
-/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
@@ -840,13 +888,17 @@ interface EstimatorChatBoxProps {
 export default function EstimatorChatBox({
   onIntakeComplete,
 }: EstimatorChatBoxProps) {
+  // --- Logistical State ---
+  const [zipCode, setZipCode] = useState("");
+  const [timeline, setTimeline] = useState("flexible");
+
+  // --- Chat State ---
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "model",
-      text: "I have your property zone anchored. Let's discuss your architectural vision—are we looking at upgrading exterior cladding to premium materials, establishing a custom timber frame, or building out a specialized space like a recording studio? Detail your structural goals and attach up to 3 site photos.",
+      text: "Let's discuss your architectural vision. Are we upgrading exterior patio space, transforming a custom home office, or building a highly specialized bespoke cabinet system? Detail your goals and attach up to 3 site photos.",
     },
   ]);
-
   const [input, setInput] = useState("");
   const [imagePayloads, setImagePayloads] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -856,24 +908,18 @@ export default function EstimatorChatBox({
   const scrollRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Auto-scroll to the latest transmission
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages, isLoading, readyToCompile]);
 
-  // Handle Multi-Image Selection and Base64 Conversion
   const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     if (!files.length) return;
 
     const availableSlots = 3 - imagePayloads.length;
     const filesToProcess = files.slice(0, availableSlots);
-
-    if (filesToProcess.length < files.length) {
-      alert("Maximum limit of 3 site photos reached.");
-    }
 
     const base64Promises = filesToProcess.map((file) => {
       return new Promise<string>((resolve) => {
@@ -885,7 +931,6 @@ export default function EstimatorChatBox({
 
     const newBase64Images = await Promise.all(base64Promises);
     setImagePayloads((prev) => [...prev, ...newBase64Images]);
-
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
@@ -916,10 +961,15 @@ export default function EstimatorChatBox({
     setIsLoading(true);
 
     try {
+      // Transmit the chat history PLUS the logistical parameters
       const response = await fetch("/api/estimate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ history: newHistory, message: userMessage }),
+        body: JSON.stringify({
+          history: newHistory,
+          message: userMessage,
+          logistics: { zipCode, timeline },
+        }),
       });
 
       const data = await response.json();
@@ -933,7 +983,12 @@ export default function EstimatorChatBox({
       ]);
 
       if (data.isComplete && onIntakeComplete) {
-        setCompiledData(data.projectData);
+        // Merge the AI's extracted data with the hardcoded logistics
+        setCompiledData({
+          ...data.projectData,
+          zipCode,
+          timeline,
+        });
         setReadyToCompile(true);
       }
     } catch (error) {
@@ -951,12 +1006,38 @@ export default function EstimatorChatBox({
   };
 
   return (
-    <div className="bg-brand-surface p-6 rounded-lg border border-brand-primary/20 flex flex-col h-[700px]">
-      <h3 className="text-xl font-bold text-brand-primary uppercase tracking-wide mb-4 shrink-0">
-        Structural Consultation
-      </h3>
+    <div className="bg-brand-surface p-6 rounded-lg border border-brand-primary/20 flex flex-col h-[750px]">
+      {/* Logistical Parameter Deck */}
+      <div className="shrink-0 mb-4 flex flex-col sm:flex-row gap-4 p-4 bg-brand-canvas border border-brand-primary/10 rounded">
+        <div className="flex-1">
+          <label className="block text-[10px] font-bold text-brand-primary uppercase tracking-widest mb-1">
+            Project Zip Code
+          </label>
+          <input
+            type="text"
+            value={zipCode}
+            onChange={(e) => setZipCode(e.target.value)}
+            placeholder="e.g. 46017"
+            className="w-full bg-brand-surface border border-brand-primary/30 rounded px-3 py-2 text-sm text-zinc-100 focus:border-brand-primary focus:outline-none"
+          />
+        </div>
+        <div className="flex-1">
+          <label className="block text-[10px] font-bold text-brand-primary uppercase tracking-widest mb-1">
+            Target Timeline
+          </label>
+          <select
+            value={timeline}
+            onChange={(e) => setTimeline(e.target.value)}
+            className="w-full bg-brand-surface border border-brand-primary/30 rounded px-3 py-2 text-sm text-zinc-100 focus:border-brand-primary focus:outline-none"
+          >
+            <option value="asap">As soon as possible</option>
+            <option value="1_to_3_months">1 - 3 Months</option>
+            <option value="3_to_6_months">3 - 6 Months</option>
+            <option value="flexible">Flexible / Planning Phase</option>
+          </select>
+        </div>
+      </div>
 
-      {/* Chat History Window */}
       <div
         ref={scrollRef}
         className="flex-1 overflow-y-auto space-y-4 mb-4 pr-2 scrollbar-thin scrollbar-thumb-brand-primary/30"
@@ -1000,7 +1081,6 @@ export default function EstimatorChatBox({
 
       {/* Input Deck */}
       <div className="shrink-0 flex flex-col gap-4">
-        {/* Enlarged Multi-Image Preview Stage */}
         {imagePayloads.length > 0 && (
           <div className="flex flex-col gap-3 px-4 py-4 bg-brand-primary/10 border border-brand-primary/30 rounded">
             <div className="flex justify-between items-center text-brand-primary">
@@ -1008,7 +1088,6 @@ export default function EstimatorChatBox({
                 Site Photos Staged ({imagePayloads.length}/3)
               </span>
             </div>
-
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               {imagePayloads.map((imgSrc, idx) => (
                 <div key={idx} className="relative group">
@@ -1021,7 +1100,6 @@ export default function EstimatorChatBox({
                     type="button"
                     onClick={() => removeStagedImage(idx)}
                     className="absolute top-2 right-2 bg-red-600/90 hover:bg-red-500 text-white font-bold px-2 py-1 uppercase text-xs rounded transition-colors shadow"
-                    title="Remove Image"
                   >
                     [X]
                   </button>
@@ -1064,11 +1142,6 @@ export default function EstimatorChatBox({
               onClick={() => fileInputRef.current?.click()}
               disabled={isLoading || imagePayloads.length >= 3}
               className="px-4 py-3 border border-brand-primary/30 text-brand-primary rounded hover:bg-brand-primary/10 disabled:opacity-50 transition-colors flex items-center justify-center"
-              title={
-                imagePayloads.length >= 3
-                  ? "Maximum photos attached"
-                  : "Attach Site Photos"
-              }
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -1091,9 +1164,9 @@ export default function EstimatorChatBox({
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Detail your material preferences and scope..."
+              placeholder="Detail your architectural goals..."
               disabled={isLoading}
-              className="flex-1 bg-brand-canvas border border-brand-primary/30 rounded px-4 py-3 text-brand-primary focus:outline-none focus:border-brand-primary disabled:opacity-50"
+              className="flex-1 bg-brand-canvas border border-brand-primary/30 rounded px-4 py-3 text-zinc-100 focus:outline-none focus:border-brand-primary disabled:opacity-50"
             />
             <button
               type="submit"
@@ -1117,54 +1190,17 @@ export default function Footer() {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="w-full border-t border-brand-surface bg-brand-canvas py-8 mt-auto">
+    <footer className="w-full border-t border-brand-primary bg-brand-surface py-8 mt-auto">
       <div className="mx-auto flex max-w-7xl flex-col items-center justify-center gap-2 px-6 text-center">
-        <p className="text-sm text-zinc-400">
+        <p className="text-sm text-zinc-200">
           &copy; {currentYear} BSC Residential LLC. All rights reserved.
         </p>
-        <p className="text-xs text-zinc-500 tracking-wide uppercase mt-2">
+        <p className="text-xs text-zinc-200 tracking-wide uppercase mt-2">
           System Architecture by{" "}
-          <span className="font-semibold text-brand-primary">BSC Builds</span>
+          <span className="font-semibold text-brand-primary"> BSC Builds</span>
         </p>
       </div>
     </footer>
-  );
-}
-</file>
-
-<file path="utils/supabase/server.ts">
-import { createServerClient } from "@supabase/ssr";
-import { cookies } from "next/headers";
-
-export async function createClient() {
-  const cookieStore = await cookies();
-
-  return createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name: string) {
-          return cookieStore.get(name)?.value;
-        },
-        set(name: string, value: string, options: any) {
-          try {
-            cookieStore.set({ name, value, ...options });
-          } catch (error) {
-            // The `set` method was called from a Server Component.
-            // This can be ignored if you have middleware refreshing
-            // user sessions.
-          }
-        },
-        remove(name: string, options: any) {
-          try {
-            cookieStore.set({ name, value: "", ...options });
-          } catch (error) {
-            // The `remove` method was called from a Server Component.
-          }
-        },
-      },
-    },
   );
 }
 </file>
@@ -1214,334 +1250,6 @@ yarn-error.log*
 next-env.d.ts
 
 repomix-output.xml
-</file>
-
-<file path="postcss.config.mjs">
-/** @type {import('postcss-load-config').Config} */
-const config = {
-  plugins: {
-    "@tailwindcss/postcss": {},
-    autoprefixer: {},
-  },
-};
-
-export default config;
-</file>
-
-<file path="app/globals.css">
-@import "tailwindcss";
-
-@theme {
-  /* BSC Residential Color Architecture */
-  --color-brand-canvas: #0b1116; /* 60% Background */
-  --color-brand-surface: #18181b; /* 30% Cards & Panels */
-  --color-brand-primary: #a28d5b; /* 10% Headings & Gold Highlights */
-  --color-brand-accent: #041e42; /* Clickable Items & Interactive States */
-
-  /* Typography Scale & Weights */
-  --font-sans:
-    system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-    "Helvetica Neue", Arial, sans-serif;
-
-  --font-weight-light: 300;
-  --font-weight-normal: 400;
-  --font-weight-medium: 500;
-  --font-weight-semibold: 600;
-  --font-weight-bold: 700;
-
-  /* Transitions & Timing */
-  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-smooth: 300ms cubic-bezier(0.4, 0, 0.2, 1);
-}
-</file>
-
-<file path="components/IntroSection.tsx">
-export default function IntroSection() {
-  return (
-    <section className="w-full border-t border-brand-surface bg-brand-canvas py-24">
-      <div className="mx-auto flex max-w-7xl flex-col items-center justify-center px-6 text-center lg:px-8">
-        {/* Primary Introduction Frame */}
-        <div className="max-w-3xl">
-          <h2 className="text-3xl font-bold tracking-tight text-brand-primary sm:text-4xl uppercase">
-            Building Beyond Standard
-          </h2>
-          <p className="mt-6 text-lg leading-8 text-zinc-400">
-            [Placeholder: Introductory company philosophy. We will refine this
-            copy and integrate high-resolution structural photography during the
-            finish phase to reflect the high-end demographic.]
-          </p>
-        </div>
-
-        {/* Feature Grid: Rough-in for future service highlights */}
-        <div className="mt-16 grid w-full grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
-          <div className="flex flex-col items-start border border-brand-surface bg-brand-surface/50 p-8 text-left backdrop-blur-sm rounded-lg">
-            <h3 className="text-xl font-semibold text-zinc-100">
-              Structural Mastery
-            </h3>
-            <p className="mt-3 text-sm text-zinc-400">
-              [Placeholder: Detail on framing, foundation, and 30+ years of
-              domain expertise.]
-            </p>
-          </div>
-
-          <div className="flex flex-col items-start border border-brand-surface bg-brand-surface/50 p-8 text-left backdrop-blur-sm rounded-lg">
-            <h3 className="text-xl font-semibold text-zinc-100">
-              Custom Upgrades
-            </h3>
-            <p className="mt-3 text-sm text-zinc-400">
-              [Placeholder: Detail on boutique cabinetry, trim, and aesthetic
-              modifications.]
-            </p>
-          </div>
-
-          <div className="flex flex-col items-start border border-brand-surface bg-brand-surface/50 p-8 text-left backdrop-blur-sm rounded-lg">
-            <h3 className="text-xl font-semibold text-zinc-100">
-              Systematic Accountability
-            </h3>
-            <p className="mt-3 text-sm text-zinc-400">
-              [Placeholder: Detail on project transparency, client portals, and
-              milestone tracking.]
-            </p>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
-</file>
-
-<file path="components/PortalLogin.tsx">
-"use client";
-
-export default function PortalLogin() {
-  return (
-    <section className="w-full py-24 border-t border-brand-surface bg-brand-canvas flex justify-center">
-      <div className="max-w-md w-full px-6 text-center">
-        <h1 className="text-3xl font-bold tracking-tight text-brand-primary uppercase">
-          Client Gateway
-        </h1>
-        <p className="mt-4 text-sm text-zinc-400">
-          Secure access to your project ledger, daily site logs, and financial
-          milestones.
-        </p>
-
-        {/* Authentication Lockbox */}
-        <div className="mt-10 border border-brand-surface bg-brand-surface/50 p-8 text-left backdrop-blur-sm rounded-lg">
-          <form className="flex flex-col gap-6">
-            <div>
-              <label
-                htmlFor="email"
-                className="block text-sm font-medium text-zinc-300"
-              >
-                Email Address
-              </label>
-              <input
-                type="email"
-                id="email"
-                className="mt-2 block w-full rounded-md border-0 bg-brand-canvas py-2 px-3 text-zinc-50 ring-1 ring-inset ring-brand-surface focus:ring-2 focus:ring-inset focus:ring-brand-primary sm:text-sm sm:leading-6"
-                placeholder="client@example.com"
-              />
-            </div>
-            <div>
-              <label
-                htmlFor="pin"
-                className="block text-sm font-medium text-zinc-300"
-              >
-                Secure PIN
-              </label>
-              <input
-                type="password"
-                id="pin"
-                className="mt-2 block w-full rounded-md border-0 bg-brand-canvas py-2 px-3 text-zinc-50 ring-1 ring-inset ring-brand-surface focus:ring-2 focus:ring-inset focus:ring-brand-primary sm:text-sm sm:leading-6"
-                placeholder="••••••••"
-              />
-            </div>
-            <button
-              type="button"
-              className="mt-4 w-full rounded-md bg-brand-accent px-3 py-2 text-sm font-semibold text-brand-primary shadow-sm hover:opacity-90 transition-opacity"
-            >
-              Access Ledger
-            </button>
-          </form>
-        </div>
-
-        <p className="mt-6 text-xs text-zinc-500">
-          Access is strictly limited to active clients. Unauthorized attempts
-          are logged.
-        </p>
-      </div>
-    </section>
-  );
-}
-</file>
-
-<file path="components/PortfolioSection.tsx">
-interface PortfolioItem {
-  id: string;
-  title: string;
-  category: string;
-  description: string;
-}
-
-const projects: PortfolioItem[] = [
-  {
-    id: "prj-01",
-    title: "8' x 18' Custom Wood-Overlay Garage Door",
-    category: "Structural Installation",
-    description:
-      "Solo structural installation featuring custom wood overlays. Executed precision balancing and high-torque duplex torsion spring winding to ensure flawless mechanical operation.",
-  },
-  {
-    id: "prj-02",
-    title: "Bespoke Architectural Built-ins",
-    category: "Custom Carpentry",
-    description:
-      "High-end interior cabinetry designed, milled, and installed to exact room specifications, elevating the functional living space.",
-  },
-  {
-    id: "prj-03",
-    title: "Load-Bearing Wall Reconfiguration",
-    category: "Structural Modification",
-    description:
-      "Complete engineered removal of a central load-bearing wall, replaced with a flush-mounted steel I-beam to modernize the foundational layout.",
-  },
-];
-
-export default function PortfolioSection() {
-  return (
-    <section className="w-full py-24 border-t border-brand-surface bg-brand-canvas">
-      <div className="mx-auto max-w-7xl px-6 lg:px-8">
-        <div className="mx-auto max-w-2xl text-center">
-          <h1 className="text-4xl font-bold tracking-tight text-brand-primary sm:text-5xl uppercase">
-            The Portfolio
-          </h1>
-          <p className="mt-6 text-lg leading-8 text-zinc-400">
-            A verified ledger of uncompromising custom carpentry and high-end
-            remodeling. Built for structural integrity.
-          </p>
-        </div>
-
-        {/* Project Grid */}
-        <div className="mx-auto mt-16 grid max-w-2xl grid-cols-1 gap-x-8 gap-y-12 lg:max-w-none lg:grid-cols-3">
-          {projects.map((project) => (
-            <div
-              key={project.id}
-              className="flex flex-col border border-brand-surface bg-brand-surface/50 overflow-hidden backdrop-blur-sm group rounded-lg"
-            >
-              {/* Image Placeholder Frame */}
-              <div className="h-64 w-full bg-brand-surface flex items-center justify-center border-b border-brand-surface transition-colors group-hover:bg-zinc-800">
-                <span className="text-zinc-400 text-sm tracking-widest uppercase">
-                  [ Image Frame ]
-                </span>
-              </div>
-
-              <div className="flex flex-1 flex-col p-8 text-left">
-                <span className="text-xs font-semibold uppercase tracking-wider text-brand-primary">
-                  {project.category}
-                </span>
-                <h3 className="mt-2 text-xl font-semibold leading-7 text-zinc-100">
-                  {project.title}
-                </h3>
-                <p className="mt-4 flex-auto text-sm leading-6 text-zinc-400">
-                  {project.description}
-                </p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-</file>
-
-<file path="components/ServicesSection.tsx">
-import React from "react";
-
-interface ServiceItem {
-  title: string;
-  description: string;
-  features: string[];
-}
-
-const services: ServiceItem[] = [
-  {
-    title: "Structural Modifications",
-    description:
-      "Precision framing, load-bearing alterations, and foundational adjustments designed for long-term stability and architectural integrity.",
-    features: [
-      "Load-Bearing Wall Removal",
-      "Custom Framing",
-      "Subfloor Leveling",
-    ],
-  },
-  {
-    title: "Boutique Carpentry",
-    description:
-      "High-end custom builds and finish work that elevate the aesthetic and functional standard of the environment.",
-    features: [
-      "Custom Cabinetry",
-      "Architectural Millwork",
-      "Hardwood Installations",
-    ],
-  },
-  {
-    title: "Systematic Remodeling",
-    description:
-      "Comprehensive space transformations managed with rigid accountability, from initial demolition to final walkthrough.",
-    features: ["Kitchen Overhauls", "Bathroom Upgrades", "Basement Finishing"],
-  },
-];
-
-export default function ServicesSection() {
-  return (
-    <section className="w-full py-24 border-t border-brand-surface bg-brand-canvas">
-      <div className="mx-auto max-w-7xl px-6 lg:px-8">
-        <div className="mx-auto max-w-2xl text-center">
-          <h1 className="text-4xl font-bold tracking-tight text-brand-primary sm:text-5xl uppercase">
-            Core Capabilities
-          </h1>
-          <p className="mt-6 text-lg leading-8 text-zinc-100">
-            Executed with the precision of a Master Carpenter and the rigorous
-            oversight of a dedicated project manager. We do not compromise on
-            structural tolerances.
-          </p>
-        </div>
-
-        <div className="mx-auto mt-16 max-w-2xl sm:mt-20 lg:mt-24 lg:max-w-none">
-          <dl className="grid max-w-xl grid-cols-1 gap-x-8 gap-y-16 lg:max-w-none lg:grid-cols-3">
-            {services.map((service) => (
-              <div
-                key={service.title}
-                className="flex flex-col items-start border border-brand-surface bg-brand-surface/50 p-8 text-left backdrop-blur-sm rounded-lg"
-              >
-                <dt className="text-xl font-semibold leading-7 text-zinc-100 uppercase">
-                  {service.title}
-                </dt>
-                <dd className="mt-4 flex flex-auto flex-col text-base leading-7 text-zinc-400">
-                  <p className="flex-auto">{service.description}</p>
-                  <ul className="mt-6 space-y-2">
-                    {service.features.map((feature) => (
-                      <li
-                        key={feature}
-                        className="flex gap-x-3 text-sm text-zinc-300"
-                      >
-                        <span aria-hidden="true" className="text-brand-primary">
-                          ▹
-                        </span>
-                        {feature}
-                      </li>
-                    ))}
-                  </ul>
-                </dd>
-              </div>
-            ))}
-          </dl>
-        </div>
-      </div>
-    </section>
-  );
-}
 </file>
 
 <file path="package.json">
@@ -1630,6 +1338,294 @@ export default function HeroSection() {
 }
 </file>
 
+<file path="components/IntroSection.tsx">
+export default function IntroSection() {
+  return (
+    <section className="w-full border-t border-brand-surface bg-brand-canvas py-24">
+      <div className="mx-auto flex max-w-7xl flex-col items-center justify-center px-6 text-center lg:px-8">
+        {/* Primary Introduction Frame */}
+        <div className="max-w-3xl">
+          <h2 className="text-3xl font-bold tracking-tight text-brand-primary sm:text-4xl uppercase">
+            Building Beyond Standard
+          </h2>
+          <p className="mt-6 text-lg leading-8 text-zinc-200">
+            [Placeholder: Introductory company philosophy. We will refine this
+            copy and integrate high-resolution structural photography during the
+            finish phase to reflect the high-end demographic.]
+          </p>
+        </div>
+
+        {/* Feature Grid: Rough-in for future service highlights */}
+        <div className="mt-16 grid w-full grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="flex flex-col items-start border border-brand-surface bg-brand-surface/50 p-8 text-left backdrop-blur-sm rounded-lg">
+            <h3 className="text-xl font-semibold text-brand-primary">
+              Structural Mastery
+            </h3>
+            <p className="mt-3 text-sm text-zinc-200">
+              [Placeholder: Detail on framing, foundation, and 30+ years of
+              domain expertise.]
+            </p>
+          </div>
+
+          <div className="flex flex-col items-start border border-brand-surface bg-brand-surface/50 p-8 text-left backdrop-blur-sm rounded-lg">
+            <h3 className="text-xl font-semibold text-brand-primary">
+              Custom Upgrades
+            </h3>
+            <p className="mt-3 text-sm text-zinc-200">
+              [Placeholder: Detail on boutique cabinetry, trim, and aesthetic
+              modifications.]
+            </p>
+          </div>
+
+          <div className="flex flex-col items-start border border-brand-surface bg-brand-surface/50 p-8 text-left backdrop-blur-sm rounded-lg">
+            <h3 className="text-xl font-semibold text-brand-primary">
+              Systematic Accountability
+            </h3>
+            <p className="mt-3 text-sm text-zinc-200">
+              [Placeholder: Detail on project transparency, client portals, and
+              milestone tracking.]
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+</file>
+
+<file path="components/PortalLogin.tsx">
+"use client";
+
+export default function PortalLogin() {
+  return (
+    <section className="w-full py-24 border-t border-brand-surface bg-brand-canvas flex justify-center">
+      <div className="max-w-md w-full px-6 text-center">
+        <h1 className="text-3xl font-bold tracking-tight text-brand-primary uppercase">
+          Client Gateway
+        </h1>
+        <p className="mt-4 text-sm text-zinc-200">
+          Secure access to your project ledger, daily site logs, and financial
+          milestones.
+        </p>
+
+        {/* Authentication Lockbox */}
+        <div className="mt-10 border border-brand-surface bg-brand-surface/50 p-8 text-left backdrop-blur-sm rounded-lg">
+          <form className="flex flex-col gap-6">
+            <div>
+              <label
+                htmlFor="email"
+                className="block text-sm font-medium text-zinc-300"
+              >
+                Email Address
+              </label>
+              <input
+                type="email"
+                id="email"
+                className="mt-2 block w-full rounded-md border-0 bg-brand-canvas py-2 px-3 text-zinc-50 ring-1 ring-inset ring-brand-surface focus:ring-2 focus:ring-inset focus:ring-brand-primary sm:text-sm sm:leading-6"
+                placeholder="client@example.com"
+              />
+            </div>
+            <div>
+              <label
+                htmlFor="pin"
+                className="block text-sm font-medium text-zinc-300"
+              >
+                Secure PIN
+              </label>
+              <input
+                type="password"
+                id="pin"
+                className="mt-2 block w-full rounded-md border-0 bg-brand-canvas py-2 px-3 text-zinc-50 ring-1 ring-inset ring-brand-surface focus:ring-2 focus:ring-inset focus:ring-brand-primary sm:text-sm sm:leading-6"
+                placeholder="••••••••"
+              />
+            </div>
+            <button
+              type="button"
+              className="mt-4 w-full rounded-md bg-brand-accent px-3 py-2 text-sm font-semibold text-brand-primary shadow-sm hover:opacity-900 transition-opacity"
+            >
+              Access Ledger
+            </button>
+          </form>
+        </div>
+
+        <p className="mt-6 text-xs text-brand-primary">
+          Access is strictly limited to active clients.
+        </p>
+      </div>
+    </section>
+  );
+}
+</file>
+
+<file path="components/PortfolioSection.tsx">
+interface PortfolioItem {
+  id: string;
+  title: string;
+  category: string;
+  description: string;
+}
+
+const projects: PortfolioItem[] = [
+  {
+    id: "prj-01",
+    title: "8' x 18' Custom Wood-Overlay Garage Door",
+    category: "Structural Installation",
+    description:
+      "Solo structural installation featuring custom wood overlays. Executed precision balancing and high-torque duplex torsion spring winding to ensure flawless mechanical operation.",
+  },
+  {
+    id: "prj-02",
+    title: "Bespoke Architectural Built-ins",
+    category: "Custom Carpentry",
+    description:
+      "High-end interior cabinetry designed, milled, and installed to exact room specifications, elevating the functional living space.",
+  },
+  {
+    id: "prj-03",
+    title: "Load-Bearing Wall Reconfiguration",
+    category: "Structural Modification",
+    description:
+      "Complete engineered removal of a central load-bearing wall, replaced with a flush-mounted steel I-beam to modernize the foundational layout.",
+  },
+];
+
+export default function PortfolioSection() {
+  return (
+    <section className="w-full py-24 border-t border-brand-surface bg-brand-canvas">
+      <div className="mx-auto max-w-7xl px-6 lg:px-8">
+        <div className="mx-auto max-w-2xl text-center">
+          <h1 className="text-4xl font-bold tracking-tight text-brand-primary sm:text-5xl uppercase">
+            The Portfolio
+          </h1>
+          <p className="mt-6 text-lg leading-8 text-zinc-200">
+            A verified ledger of uncompromising custom carpentry and high-end
+            remodeling. Built for structural integrity.
+          </p>
+        </div>
+
+        {/* Project Grid */}
+        <div className="mx-auto mt-16 grid max-w-2xl grid-cols-1 gap-x-8 gap-y-12 lg:max-w-none lg:grid-cols-3">
+          {projects.map((project) => (
+            <div
+              key={project.id}
+              className="flex flex-col border border-brand-surface bg-brand-surface/50 overflow-hidden backdrop-blur-sm group rounded-lg"
+            >
+              {/* Image Placeholder Frame */}
+              <div className="h-64 w-full bg-brand-surface flex items-center justify-center border-b border-brand-surface transition-colors group-hover:bg-zinc-800">
+                <span className="text-zinc-400 text-sm tracking-widest uppercase">
+                  [ Image Frame ]
+                </span>
+              </div>
+
+              <div className="flex flex-1 flex-col p-8 text-left">
+                <span className="text-xs font-semibold uppercase tracking-wider text-brand-primary">
+                  {project.category}
+                </span>
+                <h3 className="mt-2 text-xl font-semibold leading-7 text-zinc-200">
+                  {project.title}
+                </h3>
+                <p className="mt-4 flex-auto text-sm leading-6 text-zinc-200">
+                  {project.description}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+</file>
+
+<file path="components/ServicesSection.tsx">
+import React from "react";
+
+interface ServiceItem {
+  title: string;
+  description: string;
+  features: string[];
+}
+
+const services: ServiceItem[] = [
+  {
+    title: "Structural Modifications",
+    description:
+      "Precision framing, load-bearing alterations, and foundational adjustments designed for long-term stability and architectural integrity.",
+    features: [
+      "Load-Bearing Wall Removal",
+      "Custom Framing",
+      "Subfloor Leveling",
+    ],
+  },
+  {
+    title: "Boutique Carpentry",
+    description:
+      "High-end custom builds and finish work that elevate the aesthetic and functional standard of the environment.",
+    features: [
+      "Custom Cabinetry",
+      "Architectural Millwork",
+      "Hardwood Installations",
+    ],
+  },
+  {
+    title: "Systematic Remodeling",
+    description:
+      "Comprehensive space transformations managed with rigid accountability, from initial demolition to final walkthrough.",
+    features: ["Kitchen Overhauls", "Bathroom Upgrades", "Basement Finishing"],
+  },
+];
+
+export default function ServicesSection() {
+  return (
+    <section className="w-full py-24 border-t border-brand-surface bg-brand-canvas">
+      <div className="mx-auto max-w-7xl px-6 lg:px-8">
+        <div className="mx-auto max-w-2xl text-center">
+          <h1 className="text-4xl font-bold tracking-tight text-brand-primary sm:text-5xl uppercase">
+            Core Capabilities
+          </h1>
+          <p className="mt-6 text-lg leading-8 text-zinc-200">
+            Executed with the precision of a Master Carpenter and the rigorous
+            oversight of a dedicated project manager. We do not compromise on
+            structural tolerances.
+          </p>
+        </div>
+
+        <div className="mx-auto mt-16 max-w-2xl sm:mt-20 lg:mt-24 lg:max-w-none">
+          <dl className="grid max-w-xl grid-cols-1 gap-x-8 gap-y-16 lg:max-w-none lg:grid-cols-3">
+            {services.map((service) => (
+              <div
+                key={service.title}
+                className="flex flex-col items-start border border-brand-surface bg-brand-surface/50 p-8 text-left backdrop-blur-sm rounded-lg"
+              >
+                <dt className="text-xl font-semibold leading-7 text-brand-primary uppercase">
+                  {service.title}
+                </dt>
+                <dd className="mt-4 flex flex-auto flex-col text-base leading-7 text-zinc-200">
+                  <p className="flex-auto">{service.description}</p>
+                  <ul className="mt-6 space-y-2">
+                    {service.features.map((feature) => (
+                      <li
+                        key={feature}
+                        className="flex gap-x-3 text-sm text-zinc-200"
+                      >
+                        <span aria-hidden="true" className="text-brand-primary">
+                          ▹
+                        </span>
+                        {feature}
+                      </li>
+                    ))}
+                  </ul>
+                </dd>
+              </div>
+            ))}
+          </dl>
+        </div>
+      </div>
+    </section>
+  );
+}
+</file>
+
 <file path="components/Navbar.tsx">
 "use client";
 
@@ -1641,7 +1637,7 @@ export default function Navbar() {
 
   return (
     <nav
-      className="relative flex items-center justify-between p-6 lg:px-8 border-b border-brand-surface bg-brand-canvas w-full z-50"
+      className="relative flex items-center justify-between p-6 lg:px-8 border-b border-brand-primary bg-brand-surface w-full z-50"
       aria-label="Global Navigation"
     >
       {/* Brand Identity */}
@@ -1780,11 +1776,11 @@ export default function Home() {
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold uppercase tracking-widest">
-              Automated Intake
+              Automated Quote Generator
             </h2>
             <p className="mt-4">
-              Submit your project constraints for an immediate feasibility
-              check.
+              Submit your project goals for an immediate scope of work and
+              ballpark price range.
             </p>
           </div>
 

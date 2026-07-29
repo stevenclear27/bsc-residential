@@ -8,9 +8,10 @@ export default function IntroSection() {
             Building Beyond Standard
           </h2>
           <p className="mt-6 text-lg leading-8 text-zinc-200">
-            [Placeholder: Introductory company philosophy. We will refine this
-            copy and integrate high-resolution structural photography during the
-            finish phase to reflect the high-end demographic.]
+            High-end construction fails when communication breaks down and
+            tolerances are ignored. BSC Residential operates as a single-point
+            master craftsman model: zero sub-contractor hand-offs, rigid
+            structural compliance, and full client portal visibility.
           </p>
         </div>
 
