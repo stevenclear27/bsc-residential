@@ -23,23 +23,58 @@ const projects: PortfolioItem[] = [
     title: "Structural Patio Enclosure",
     category: "Architectural Upgrade",
     description:
-      "Complete structural enclosure engineered to exact tolerances. Progression from initial vapor barrier and sheathing to final window and trim installation.",
+      "Complete structural enclosure engineered to exact tolerances focused on matching the existing asthetic. Progression from initial framing to final interior and exterior finish, trim, and paint.",
     images: [
       {
+        src: "/portfolio/projects/gibson/patio-enclosure-before-north.webp",
+        alt: "Gibson project before structural modifications north view",
+      },
+
+      {
+        src: "/portfolio/projects/gibson/patio-enclosure-framing.webp",
+        alt: "Gibson project structural framing installation",
+      },
+      {
         src: "/portfolio/projects/gibson/patio-enclosure-vapor-barrier.webp",
-        alt: "Gibson project vapor barrier installation",
+        alt: "Gibson project vapor barrier application",
       },
       {
         src: "/portfolio/projects/gibson/patio-enclosure-sheathing.webp",
-        alt: "Gibson project exterior sheathing",
+        alt: "Gibson project exterior sheathing installation",
       },
       {
         src: "/portfolio/projects/gibson/patio-enclosure-trim-windows.webp",
         alt: "Gibson project window and trim integration",
       },
       {
+        src: "/portfolio/projects/gibson/patio-enclosure-before-south.webp",
+        alt: "Gibson project before structural modifications south view",
+      },
+      {
         src: "/portfolio/projects/gibson/patio-enclosure-doors.webp",
         alt: "Gibson project final door installation",
+      },
+
+      {
+        src: "/portfolio/projects/gibson/patio-enclosure-insulation.webp",
+        alt: "Gibson project internal insulation phase",
+      },
+      {
+        src: "/portfolio/projects/gibson/patio-enclosure-drywall.webp",
+        alt: "Gibson project drywall hanging and finishing",
+      },
+      {
+        src: "/portfolio/projects/gibson/patio-enclosure-interior-north.webp",
+        alt: "Gibson project finished interior north view",
+      },
+
+      {
+        src: "/portfolio/projects/gibson/patio-enclosure-interior-south.webp",
+        alt: "Gibson project finished interior south view",
+      },
+      {
+        src: "/portfolio/projects/gibson/patio-enclosure-interior-furnished.webp",
+        alt: "Gibson project completed and furnished interior",
       },
     ],
   },
