@@ -83,7 +83,7 @@ export default function Navbar() {
           Services
         </Link>
         <Link
-          href="/portal"
+          href="/portal-login"
           className="text-sm font-semibold leading-6 text-zinc-300 hover:text-brand-primary transition-colors"
         >
           Client Portal
