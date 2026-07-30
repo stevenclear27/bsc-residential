@@ -36,7 +36,7 @@ export default function OperatorProfile() {
           {/* Headshot Asset */}
           <div className="relative h-80 w-full overflow-hidden rounded-xl shadow-lg border border-brand-primary/20">
             <Image
-              src="/operator/operator-profile-headshot.webp"
+              src="/operator/operator-profile-headshot-business.webp"
               alt="Master Carpenter on a structural build site"
               fill
               unoptimized
