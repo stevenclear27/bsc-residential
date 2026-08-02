@@ -1,67 +1,67 @@
-"use client"; // Required for state management at this leaf node
+"use client";
 
 import React, { useState } from "react";
+import ZipCodeGate from "./ZipCodeGate";
 import EstimatorChatBox from "./EstimatorChatBox";
 import DossierSummaryCard from "./DossierSummaryCard";
 import AuthGateway from "./AuthGateway";
 
 export default function ChatEstimator() {
   // 1. Establish System State (Memory)
-  const [intakeStep, setIntakeStep] = useState<1 | 2 | 3>(1);
+  // Step 0: Zip Verification | Step 1: Chat | Step 2: Summary | Step 3: Auth
+  const [intakeStep, setIntakeStep] = useState<0 | 1 | 2 | 3>(0);
 
-  // We use a unified state object to hold all data across the pipeline
   const [projectPayload, setProjectPayload] = useState<any>({
     projectData: null,
     clientData: null,
+    verifiedZip: null,
   });
 
   // 2. Logic Handlers for the State Machine
+  const handleZipVerification = (zip: string) => {
+    setProjectPayload((prev: any) => ({ ...prev, verifiedZip: zip }));
+    setIntakeStep(1); // Unlock the Chatbot
+  };
 
-  // Fires when the AI finishes the scope
   const handleIntakeComplete = (data: any) => {
     setProjectPayload((prev: any) => ({ ...prev, projectData: data }));
-    setIntakeStep(2); // Advance to Dossier Summary
+    setIntakeStep(2);
   };
 
-  // Fires when the user reviews the dossier and wants to proceed
   const handleDossierAcknowledge = () => {
-    setIntakeStep(3); // Advance to Lead Capture
+    setIntakeStep(3);
   };
 
-  // Fires when the user submits their contact info
-  const handleProfileSubmit = (data: any) => {
-    const finalPayload = {
-      ...projectPayload,
-      clientData: data,
-    };
-    setProjectPayload(finalPayload);
-
-    // Future Execution: This is where we will fire the Supabase mutation
-    // to anchor the dossier to the client in the database.
-    console.log("FINAL PIPELINE PAYLOAD READY FOR DATABASE:", finalPayload);
-    alert("Dossier Locked. Redirecting to scheduling matrix...");
-  };
-
-  // 3. Render the correct module based on the current step
   return (
     <section className="w-full max-w-4xl mx-auto my-12 px-4">
       {/* Progress Indicator */}
-      <div className="flex gap-2 mb-6">
-        <div
-          className={`h-2 flex-1 rounded transition-colors duration-500 ${intakeStep >= 1 ? "bg-brand-primary" : "bg-brand-primary/20"}`}
-        />
-        <div
-          className={`h-2 flex-1 rounded transition-colors duration-500 ${intakeStep >= 2 ? "bg-brand-primary" : "bg-brand-primary/20"}`}
-        />
-        <div
-          className={`h-2 flex-1 rounded transition-colors duration-500 ${intakeStep === 3 ? "bg-brand-primary" : "bg-brand-primary/20"}`}
-        />
-      </div>
+      {intakeStep > 0 && (
+        <div className="flex gap-2 mb-6">
+          <div
+            className={`h-2 flex-1 rounded transition-colors duration-500 ${intakeStep >= 1 ? "bg-brand-primary" : "bg-brand-primary/20"}`}
+          />
+          <div
+            className={`h-2 flex-1 rounded transition-colors duration-500 ${intakeStep >= 2 ? "bg-brand-primary" : "bg-brand-primary/20"}`}
+          />
+          <div
+            className={`h-2 flex-1 rounded transition-colors duration-500 ${intakeStep === 3 ? "bg-brand-primary" : "bg-brand-primary/20"}`}
+          />
+        </div>
+      )}
 
       {/* Component Routing Floor */}
+      {intakeStep === 0 && (
+        <div className="animate-in fade-in duration-500">
+          <ZipCodeGate onVerified={handleZipVerification} />
+        </div>
+      )}
+
       {intakeStep === 1 && (
         <div className="animate-in fade-in duration-500">
-          <EstimatorChatBox onIntakeComplete={handleIntakeComplete} />
+          <EstimatorChatBox
+            zipCode={projectPayload.verifiedZip}
+            onIntakeComplete={handleIntakeComplete}
+          />
         </div>
       )}
 

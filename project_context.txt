@@ -41,21 +41,26 @@ The content is organized as follows:
 
 <directory_structure>
 app/
+  (marketing)/
+    portal-login/
+      page.tsx
+    portfolio/
+      page.tsx
+    services/
+      page.tsx
+    page.tsx
+  (portal)/
+    dashboard/
+      page.tsx
+    layout.tsx
   api/
     estimate/
       route.ts
     generate-concept/
       route.ts
-  portal/
-    page.tsx
-  portfolio/
-    page.tsx
-  services/
-    page.tsx
   globals.css
   icon.png
   layout.tsx
-  page.tsx
 components/
   Intake/
     AuthGateway.tsx
@@ -66,20 +71,41 @@ components/
   HeroSection.tsx
   IntroSection.tsx
   Navbar.tsx
+  OperatorProfile.tsx
   PortalLogin.tsx
   PortfolioSection.tsx
   ServicesSection.tsx
 lib/
   schemas/
     estimateDossierSchema.ts
+  portfolioData.ts
   supabaseClient.ts
 public/
-  file.svg
-  globe.svg
-  logo-v2.png
-  next.svg
-  vercel.svg
-  window.svg
+  brand/
+    logo-v2.png
+  operator/
+    headshot.webp
+    mobile-workshop-rig.webp
+    operator-profile-headshot-business.webp
+    operator-profile-headshot-winter.webp
+    operator-profile-headshot.webp
+  portfolio/
+    projects/
+      gibson/
+        patio-enclosure-before-north.webp
+        patio-enclosure-before-south.webp
+        patio-enclosure-doors.webp
+        patio-enclosure-drywall.webp
+        patio-enclosure-framing.webp
+        patio-enclosure-insulation.webp
+        patio-enclosure-interior-furnished.webp
+        patio-enclosure-interior-north.webp
+        patio-enclosure-interior-south.webp
+        patio-enclosure-sheathing.webp
+        patio-enclosure-trim-windows.webp
+        patio-enclosure-vapor-barrier.webp
+    remodels/
+      hero-patio.webp
 utils/
   supabase/
     client.ts
@@ -92,12 +118,163 @@ next.config.ts
 package.json
 postcss.config.mjs
 prcommands.md
+proxy.ts
 README.md
 tsconfig.json
 </directory_structure>
 
 <files>
 This section contains the contents of the repository's files.
+
+<file path="app/(marketing)/portal-login/page.tsx">
+import PortalLogin from "@/components/PortalLogin";
+
+export default function PortalLoginPage() {
+  return <PortalLogin />;
+}
+</file>
+
+<file path="app/(marketing)/portfolio/page.tsx">
+import PortfolioSection from "@/components/PortfolioSection";
+
+export default function PortfolioPage() {
+  return (
+    <main className="flex min-h-screen flex-col items-center justify-start w-full">
+      <PortfolioSection />
+    </main>
+  );
+}
+</file>
+
+<file path="app/(marketing)/services/page.tsx">
+import ServicesSection from "@/components/ServicesSection";
+
+export default function ServicesPage() {
+  return (
+    <main className="flex min-h-screen flex-col items-center justify-start w-full">
+      <ServicesSection />
+    </main>
+  );
+}
+</file>
+
+<file path="app/(marketing)/page.tsx">
+import HeroSection from "@/components/HeroSection";
+import IntroSection from "@/components/IntroSection";
+import ChatEstimator from "@/components/Intake/ChatEstimator";
+
+export default function Home() {
+  return (
+    <main className="flex min-h-screen flex-col items-center justify-start bg-brand-canvas">
+      <HeroSection />
+      <IntroSection />
+
+      {/* Automated Intake / Filter Section */}
+      <section
+        id="estimate"
+        className="w-full py-20 px-4 md:px-8 border-t border-brand-surface"
+      >
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold uppercase tracking-widest">
+              INSTANT PROJECT FEASIBILITY & ESTIMATOR
+            </h2>
+            <p className="mt-4 text-zinc-200">
+              Submit project specs and site photos to receive an immediate
+              preliminary scope and target investment tier. Qualified
+              submissions receive direct portal access to schedule an on-site
+              structural consultation.
+            </p>
+          </div>
+
+          {/* The isolated Phase 2 component is mounted here */}
+          <ChatEstimator />
+        </div>
+      </section>
+    </main>
+  );
+}
+</file>
+
+<file path="app/(portal)/dashboard/page.tsx">
+export default function DashboardOverview() {
+  return (
+    <div className="space-y-6">
+      <h1 className="text-3xl font-bold text-zinc-100 border-b border-brand-primary/20 pb-4">
+        Project Ledger
+      </h1>
+      <p className="text-zinc-400">
+        System initialized. Awaiting database payload.
+      </p>
+    </div>
+  );
+}
+</file>
+
+<file path="app/(portal)/layout.tsx">
+import Link from "next/link";
+import { ReactNode } from "react";
+
+export default function PortalLayout({ children }: { children: ReactNode }) {
+  return (
+    <div className="flex h-screen w-full bg-brand-canvas text-zinc-100">
+      {/* SIDEBAR COMPONENT (Isolated Navigation) */}
+      <aside className="w-64 border-r border-brand-primary/20 bg-brand-canvas/50 flex flex-col hidden md:flex">
+        <div className="p-6 border-b border-brand-primary/20">
+          <h2 className="text-xl font-bold tracking-widest text-brand-primary uppercase">
+            BSC Portal
+          </h2>
+          <span className="text-xs text-zinc-500 uppercase tracking-widest">
+            Accountability Ledger
+          </span>
+        </div>
+
+        <nav className="flex-1 p-4 space-y-2">
+          <Link
+            href="/dashboard"
+            className="block px-4 py-3 rounded-md hover:bg-brand-primary/10 hover:text-brand-primary transition-colors"
+          >
+            Active Projects
+          </Link>
+          <Link
+            href="/dashboard/messages"
+            className="block px-4 py-3 rounded-md hover:bg-brand-primary/10 hover:text-brand-primary transition-colors"
+          >
+            Direct Comm
+          </Link>
+          <Link
+            href="/dashboard/logs"
+            className="block px-4 py-3 rounded-md hover:bg-brand-primary/10 hover:text-brand-primary transition-colors"
+          >
+            Site Logs
+          </Link>
+        </nav>
+
+        <div className="p-4 border-t border-brand-primary/20">
+          {/* Logout functionality will be wired here */}
+          <button className="w-full text-left px-4 py-2 text-sm text-zinc-400 hover:text-brand-primary transition-colors">
+            Sign Out
+          </button>
+        </div>
+      </aside>
+
+      {/* MAIN CONTENT AREA */}
+      <main className="flex-1 overflow-y-auto">
+        {/* Mobile Header fallback */}
+        <header className="md:hidden border-b border-brand-primary/20 p-4 flex justify-between items-center bg-brand-canvas">
+          <h2 className="text-lg font-bold text-brand-primary">BSC Portal</h2>
+          <button className="text-brand-primary border border-brand-primary/30 px-3 py-1 rounded text-sm">
+            Menu
+          </button>
+        </header>
+
+        {/* Children (Specific Pages) load here */}
+        <div className="p-6 md:p-10">{children}</div>
+      </main>
+    </div>
+  );
+}
+</file>
 
 <file path="app/api/generate-concept/route.ts">
 import { NextResponse } from "next/server";
@@ -146,42 +323,6 @@ export async function POST(request: Request) {
       { status: 500 },
     );
   }
-}
-</file>
-
-<file path="app/portal/page.tsx">
-import PortalLogin from "@/components/PortalLogin";
-
-export default function PortalPage() {
-  return (
-    <main className="flex min-h-screen flex-col items-center justify-start w-full">
-      <PortalLogin />
-    </main>
-  );
-}
-</file>
-
-<file path="app/portfolio/page.tsx">
-import PortfolioSection from "@/components/PortfolioSection";
-
-export default function PortfolioPage() {
-  return (
-    <main className="flex min-h-screen flex-col items-center justify-start w-full">
-      <PortfolioSection />
-    </main>
-  );
-}
-</file>
-
-<file path="app/services/page.tsx">
-import ServicesSection from "@/components/ServicesSection";
-
-export default function ServicesPage() {
-  return (
-    <main className="flex min-h-screen flex-col items-center justify-start w-full">
-      <ServicesSection />
-    </main>
-  );
 }
 </file>
 
@@ -359,6 +500,38 @@ export const estimateDossierSchema = z.object({
 export type EstimateDossier = z.infer<typeof estimateDossierSchema>;
 </file>
 
+<file path="lib/portfolioData.ts">
+export interface PortfolioProject {
+  id: string;
+  title: string;
+  description: string;
+  imagePath: string;
+  category:
+    | "Architectural Upgrade"
+    | "Custom Carpentry"
+    | "High-End Remodeling";
+}
+
+export const portfolioProjects: PortfolioProject[] = [
+  {
+    id: "patio-enclosure-01",
+    title: "Structural Patio Enclosure",
+    description:
+      "Precision framing and finishing for a seamless indoor-outdoor architectural transition.",
+    imagePath: "/portfolio/remodels/hero-patio.webp",
+    category: "Architectural Upgrade",
+  },
+  {
+    id: "custom-garage-01",
+    title: "Custom Wood-Overlay Garage Door",
+    description:
+      "8' x 18' structural installation featuring high-torque duplex torsion spring calibration and custom wood facing.",
+    imagePath: "/portfolio/carpentry/wood-garage.webp", // Ensure this file exists in your public folder
+    category: "Custom Carpentry",
+  },
+];
+</file>
+
 <file path="lib/supabaseClient.ts">
 import { createClient } from "@supabase/supabase-js";
 
@@ -374,26 +547,6 @@ if (!supabaseUrl || !supabaseAnonKey) {
 
 // Initialize and export the client for system-wide use
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
-</file>
-
-<file path="public/file.svg">
-<svg fill="none" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg"><path d="M14.5 13.5V5.41a1 1 0 0 0-.3-.7L9.8.29A1 1 0 0 0 9.08 0H1.5v13.5A2.5 2.5 0 0 0 4 16h8a2.5 2.5 0 0 0 2.5-2.5m-1.5 0v-7H8v-5H3v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1M9.5 5V2.12L12.38 5zM5.13 5h-.62v1.25h2.12V5zm-.62 3h7.12v1.25H4.5zm.62 3h-.62v1.25h7.12V11z" clip-rule="evenodd" fill="#666" fill-rule="evenodd"/></svg>
-</file>
-
-<file path="public/globe.svg">
-<svg fill="none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><g clip-path="url(#a)"><path fill-rule="evenodd" clip-rule="evenodd" d="M10.27 14.1a6.5 6.5 0 0 0 3.67-3.45q-1.24.21-2.7.34-.31 1.83-.97 3.1M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16m.48-1.52a7 7 0 0 1-.96 0H7.5a4 4 0 0 1-.84-1.32q-.38-.89-.63-2.08a40 40 0 0 0 3.92 0q-.25 1.2-.63 2.08a4 4 0 0 1-.84 1.31zm2.94-4.76q1.66-.15 2.95-.43a7 7 0 0 0 0-2.58q-1.3-.27-2.95-.43a18 18 0 0 1 0 3.44m-1.27-3.54a17 17 0 0 1 0 3.64 39 39 0 0 1-4.3 0 17 17 0 0 1 0-3.64 39 39 0 0 1 4.3 0m1.1-1.17q1.45.13 2.69.34a6.5 6.5 0 0 0-3.67-3.44q.65 1.26.98 3.1M8.48 1.5l.01.02q.41.37.84 1.31.38.89.63 2.08a40 40 0 0 0-3.92 0q.25-1.2.63-2.08a4 4 0 0 1 .85-1.32 7 7 0 0 1 .96 0m-2.75.4a6.5 6.5 0 0 0-3.67 3.44 29 29 0 0 1 2.7-.34q.31-1.83.97-3.1M4.58 6.28q-1.66.16-2.95.43a7 7 0 0 0 0 2.58q1.3.27 2.95.43a18 18 0 0 1 0-3.44m.17 4.71q-1.45-.12-2.69-.34a6.5 6.5 0 0 0 3.67 3.44q-.65-1.27-.98-3.1" fill="#666"/></g><defs><clipPath id="a"><path fill="#fff" d="M0 0h16v16H0z"/></clipPath></defs></svg>
-</file>
-
-<file path="public/next.svg">
-<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 394 80"><path fill="#000" d="M262 0h68.5v12.7h-27.2v66.6h-13.6V12.7H262V0ZM149 0v12.7H94v20.4h44.3v12.6H94v21h55v12.6H80.5V0h68.7zm34.3 0h-17.8l63.8 79.4h17.9l-32-39.7 32-39.6h-17.9l-23 28.6-23-28.6zm18.3 56.7-9-11-27.1 33.7h17.8l18.3-22.7z"/><path fill="#000" d="M81 79.3 17 0H0v79.3h13.6V17l50.2 62.3H81Zm252.6-.4c-1 0-1.8-.4-2.5-1s-1.1-1.6-1.1-2.6.3-1.8 1-2.5 1.6-1 2.6-1 1.8.3 2.5 1a3.4 3.4 0 0 1 .6 4.3 3.7 3.7 0 0 1-3 1.8zm23.2-33.5h6v23.3c0 2.1-.4 4-1.3 5.5a9.1 9.1 0 0 1-3.8 3.5c-1.6.8-3.5 1.3-5.7 1.3-2 0-3.7-.4-5.3-1s-2.8-1.8-3.7-3.2c-.9-1.3-1.4-3-1.4-5h6c.1.8.3 1.6.7 2.2s1 1.2 1.6 1.5c.7.4 1.5.5 2.4.5 1 0 1.8-.2 2.4-.6a4 4 0 0 0 1.6-1.8c.3-.8.5-1.8.5-3V45.5zm30.9 9.1a4.4 4.4 0 0 0-2-3.3 7.5 7.5 0 0 0-4.3-1.1c-1.3 0-2.4.2-3.3.5-.9.4-1.6 1-2 1.6a3.5 3.5 0 0 0-.3 4c.3.5.7.9 1.3 1.2l1.8 1 2 .5 3.2.8c1.3.3 2.5.7 3.7 1.2a13 13 0 0 1 3.2 1.8 8.1 8.1 0 0 1 3 6.5c0 2-.5 3.7-1.5 5.1a10 10 0 0 1-4.4 3.5c-1.8.8-4.1 1.2-6.8 1.2-2.6 0-4.9-.4-6.8-1.2-2-.8-3.4-2-4.5-3.5a10 10 0 0 1-1.7-5.6h6a5 5 0 0 0 3.5 4.6c1 .4 2.2.6 3.4.6 1.3 0 2.5-.2 3.5-.6 1-.4 1.8-1 2.4-1.7a4 4 0 0 0 .8-2.4c0-.9-.2-1.6-.7-2.2a11 11 0 0 0-2.1-1.4l-3.2-1-3.8-1c-2.8-.7-5-1.7-6.6-3.2a7.2 7.2 0 0 1-2.4-5.7 8 8 0 0 1 1.7-5 10 10 0 0 1 4.3-3.5c2-.8 4-1.2 6.4-1.2 2.3 0 4.4.4 6.2 1.2 1.8.8 3.2 2 4.3 3.4 1 1.4 1.5 3 1.5 5h-5.8z"/></svg>
-</file>
-
-<file path="public/vercel.svg">
-<svg fill="none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1155 1000"><path d="m577.3 0 577.4 1000H0z" fill="#fff"/></svg>
-</file>
-
-<file path="public/window.svg">
-<svg fill="none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path fill-rule="evenodd" clip-rule="evenodd" d="M1.5 2.5h13v10a1 1 0 0 1-1 1h-11a1 1 0 0 1-1-1zM0 1h16v11.5a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 0 12.5zm3.75 4.5a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5M7 4.75a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0m1.75.75a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5" fill="#666"/></svg>
 </file>
 
 <file path="utils/supabase/client.ts">
@@ -452,6 +605,61 @@ export default nextConfig;
 
 <file path="prcommands.md">
 npx repomix --output project_context.txt
+</file>
+
+<file path="proxy.ts">
+import { createServerClient } from "@supabase/ssr";
+import { NextResponse, type NextRequest } from "next/server";
+
+export async function proxy(request: NextRequest) {
+  let supabaseResponse = NextResponse.next({
+    request,
+  });
+
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll();
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value, options }) =>
+            request.cookies.set(name, value),
+          );
+          supabaseResponse = NextResponse.next({
+            request,
+          });
+          cookiesToSet.forEach(({ name, value, options }) =>
+            supabaseResponse.cookies.set(name, value, options),
+          );
+        },
+      },
+    },
+  );
+
+  // Verify the active session
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  // If there is no user and they are trying to access the portal, boot them to login
+  if (!user && request.nextUrl.pathname.startsWith("/dashboard")) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/portal-login"; // Adjust to your actual login route
+    return NextResponse.redirect(url);
+  }
+
+  return supabaseResponse;
+}
+
+// Ensure the middleware only runs on relevant routes to save processing bandwidth
+export const config = {
+  matcher: [
+    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+  ],
+};
 </file>
 
 <file path="README.md">
@@ -794,6 +1002,70 @@ export default function DossierSummaryCard({
 }
 </file>
 
+<file path="components/OperatorProfile.tsx">
+import Image from "next/image";
+
+export default function OperatorProfile() {
+  return (
+    // 1. COMPONENT WRAPPER
+    // Inherits background from the global cascade, maintaining semantic token alignment.
+    <section className="relative mx-auto w-full max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
+      <div className="grid grid-cols-1 gap-16 lg:grid-cols-2 lg:items-center">
+        {/* 2. OPERATOR DOSSIER (Text Column) */}
+        <div className="flex flex-col space-y-6">
+          <h2 className="text-4xl font-extrabold tracking-tight text-brand-primary sm:text-5xl">
+            The Master Craftsman Model
+          </h2>
+          <div className="h-1 w-20 bg-brand-primaryrounded-full"></div>
+          <div className="space-y-5 text-zinc-200 text-lg leading-relaxed opacity-90">
+            <p>
+              The traditional general contractor model fails when communication
+              breaks down across multiple specialized trades. We eliminate that
+              risk by removing the variables.
+            </p>
+            <p>
+              Every build is framed, managed, and finished by a Master Carpenter
+              with over 30 years of domain expertise. Complex structural
+              execution requires high autonomy, rigorous risk-mitigation, and
+              trust-verification.
+            </p>
+            <p className="font-semibold tracking-wide text-brand-primary opacity-100">
+              You are not hiring a management firm; you are hiring the operator.
+              No subcontractor hand-offs. No compromised standards.
+            </p>
+          </div>
+        </div>
+
+        {/* 3. ASSET GRID (Image Column) */}
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+          {/* Headshot Asset */}
+          <div className="relative h-80 w-full overflow-hidden rounded-xl shadow-lg border border-brand-primary/20">
+            <Image
+              src="/operator/operator-profile-headshot-business.webp"
+              alt="Master Carpenter on a structural build site"
+              fill
+              unoptimized
+              className="object-cover object-center"
+            />
+          </div>
+
+          {/* Mobile Workshop Rig Asset */}
+          <div className="relative h-80 w-full overflow-hidden rounded-xl shadow-lg border border-brand-primary/20 sm:mt-12">
+            <Image
+              src="/operator/mobile-workshop-rig.webp"
+              alt="BSC Residential Mobile Workshop Rig"
+              fill
+              unoptimized
+              className="object-cover object-center"
+            />
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+</file>
+
 <file path="utils/supabase/server.ts">
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
@@ -841,33 +1113,6 @@ const config = {
 };
 
 export default config;
-</file>
-
-<file path="app/globals.css">
-@import "tailwindcss";
-
-@theme {
-  /* BSC Residential Color Architecture */
-  --color-brand-canvas: #0b1116; /* 60% Background */
-  --color-brand-surface: #18181b; /* 30% Cards & Panels */
-  --color-brand-primary: #a28d5b; /* 10% Headings & Gold Highlights */
-  --color-brand-accent: #041e42; /* Clickable Items & Interactive States */
-
-  /* Typography Scale & Weights */
-  --font-sans:
-    system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-    "Helvetica Neue", Arial, sans-serif;
-
-  --font-weight-light: 300;
-  --font-weight-normal: 400;
-  --font-weight-medium: 500;
-  --font-weight-semibold: 600;
-  --font-weight-bold: 700;
-
-  /* Transitions & Timing */
-  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-smooth: 300ms cubic-bezier(0.4, 0, 0.2, 1);
-}
 </file>
 
 <file path="components/Intake/EstimatorChatBox.tsx">
@@ -1290,113 +1535,67 @@ repomix-output.xml
 }
 </file>
 
-<file path="app/layout.tsx">
-import type { Metadata } from "next";
-import "./globals.css";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
-
-export const metadata: Metadata = {
-  title: "BSC Residential LLC",
-  description: "Precision in Every Detail.",
-};
-
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  return (
-    <html lang="en">
-      <body className="bg-brand-canvas text-brand-primary min-h-screen flex flex-col antialiased">
-        <Navbar />
-        {/* flex-1 ensures this container expands to fill available space */}
-        <main className="flex-1">{children}</main>
-        <Footer />
-      </body>
-    </html>
-  );
-}
-</file>
-
-<file path="components/HeroSection.tsx">
-export default function HeroSection() {
-  return (
-    <section className="mx-auto flex w-full flex-col items-center text-center py-24 lg:py-32 px-6 bg-brand-canvas">
-      <div className="max-w-4xl">
-        <h1 className="text-5xl font-extrabold tracking-tight sm:text-7xl text-brand-primary">
-          Precision in Every Detail.
-        </h1>
-        <p className="mt-6 mx-auto max-w-2xl text-lg text-zinc-100 leading-8">
-          Uncompromising custom carpentry, architectural upgrades, and high-end
-          remodeling. Built for those who demand structural integrity and
-          flawless execution.
-        </p>
-      </div>
-    </section>
-  );
-}
-</file>
-
-<file path="components/IntroSection.tsx">
-export default function IntroSection() {
-  return (
-    <section className="w-full border-t border-brand-surface bg-brand-canvas py-24">
-      <div className="mx-auto flex max-w-7xl flex-col items-center justify-center px-6 text-center lg:px-8">
-        {/* Primary Introduction Frame */}
-        <div className="max-w-3xl">
-          <h2 className="text-3xl font-bold tracking-tight text-brand-primary sm:text-4xl uppercase">
-            Building Beyond Standard
-          </h2>
-          <p className="mt-6 text-lg leading-8 text-zinc-200">
-            [Placeholder: Introductory company philosophy. We will refine this
-            copy and integrate high-resolution structural photography during the
-            finish phase to reflect the high-end demographic.]
-          </p>
-        </div>
-
-        {/* Feature Grid: Rough-in for future service highlights */}
-        <div className="mt-16 grid w-full grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
-          <div className="flex flex-col items-start border border-brand-surface bg-brand-surface/50 p-8 text-left backdrop-blur-sm rounded-lg">
-            <h3 className="text-xl font-semibold text-brand-primary">
-              Structural Mastery
-            </h3>
-            <p className="mt-3 text-sm text-zinc-200">
-              [Placeholder: Detail on framing, foundation, and 30+ years of
-              domain expertise.]
-            </p>
-          </div>
-
-          <div className="flex flex-col items-start border border-brand-surface bg-brand-surface/50 p-8 text-left backdrop-blur-sm rounded-lg">
-            <h3 className="text-xl font-semibold text-brand-primary">
-              Custom Upgrades
-            </h3>
-            <p className="mt-3 text-sm text-zinc-200">
-              [Placeholder: Detail on boutique cabinetry, trim, and aesthetic
-              modifications.]
-            </p>
-          </div>
-
-          <div className="flex flex-col items-start border border-brand-surface bg-brand-surface/50 p-8 text-left backdrop-blur-sm rounded-lg">
-            <h3 className="text-xl font-semibold text-brand-primary">
-              Systematic Accountability
-            </h3>
-            <p className="mt-3 text-sm text-zinc-200">
-              [Placeholder: Detail on project transparency, client portals, and
-              milestone tracking.]
-            </p>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
-</file>
-
 <file path="components/PortalLogin.tsx">
 "use client";
 
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { createClient } from "@/utils/supabase/client";
+
 export default function PortalLogin() {
+  const router = useRouter();
+  const supabase = createClient();
+
+  // INJECT THE PROBE HERE (Logic Phase)
+  console.log("System Audit - URL:", process.env.NEXT_PUBLIC_SUPABASE_URL);
+
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // 1. STANDARD LOGIN FLOW
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error) {
+      setError(error.message);
+      setLoading(false);
+    } else {
+      router.push("/dashboard");
+      router.refresh(); // Forces the middleware to recognize the new session
+    }
+  };
+
+  // 2. DEVELOPER BYPASS FLOW
+  const handleDevBypass = async () => {
+    setLoading(true);
+    setError(null);
+
+    // NOTE: You must create this specific user in your Supabase Auth dashboard
+    const { error } = await supabase.auth.signInWithPassword({
+      email: "dev@bscresidential.com",
+      password: "bsc-dev-password",
+    });
+
+    if (error) {
+      setError(
+        `Dev Auth Failed: ${error.message}. Ensure this user exists in Supabase.`,
+      );
+      setLoading(false);
+    } else {
+      router.push("/dashboard");
+      router.refresh();
+    }
+  };
+
   return (
     <section className="w-full py-24 border-t border-brand-surface bg-brand-canvas flex justify-center">
       <div className="max-w-md w-full px-6 text-center">
@@ -1407,10 +1606,16 @@ export default function PortalLogin() {
           Secure access to your project ledger, daily site logs, and financial
           milestones.
         </p>
-
         {/* Authentication Lockbox */}
         <div className="mt-10 border border-brand-surface bg-brand-surface/50 p-8 text-left backdrop-blur-sm rounded-lg">
-          <form className="flex flex-col gap-6">
+          <form className="flex flex-col gap-6" onSubmit={handleLogin}>
+            {/* Error Ledger */}
+            {error && (
+              <div className="p-3 border border-red-500/50 bg-red-500/10 rounded-md text-red-400 text-sm">
+                {error}
+              </div>
+            )}
+
             <div>
               <label
                 htmlFor="email"
@@ -1421,33 +1626,58 @@ export default function PortalLogin() {
               <input
                 type="email"
                 id="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
                 className="mt-2 block w-full rounded-md border-0 bg-brand-canvas py-2 px-3 text-zinc-50 ring-1 ring-inset ring-brand-surface focus:ring-2 focus:ring-inset focus:ring-brand-primary sm:text-sm sm:leading-6"
                 placeholder="client@example.com"
               />
             </div>
+
             <div>
               <label
-                htmlFor="pin"
+                htmlFor="password"
                 className="block text-sm font-medium text-zinc-300"
               >
                 Secure PIN
               </label>
               <input
                 type="password"
-                id="pin"
+                id="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
                 className="mt-2 block w-full rounded-md border-0 bg-brand-canvas py-2 px-3 text-zinc-50 ring-1 ring-inset ring-brand-surface focus:ring-2 focus:ring-inset focus:ring-brand-primary sm:text-sm sm:leading-6"
                 placeholder="••••••••"
               />
             </div>
+
             <button
-              type="button"
-              className="mt-4 w-full rounded-md bg-brand-accent px-3 py-2 text-sm font-semibold text-brand-primary shadow-sm hover:opacity-900 transition-opacity"
+              type="submit"
+              disabled={loading}
+              className="mt-4 w-full rounded-md bg-brand-primary px-3 py-2 text-sm font-semibold text-brand-canvas shadow-sm hover:opacity-90 transition-opacity disabled:opacity-50"
             >
-              Access Ledger
+              {loading ? "Authenticating..." : "Access Ledger"}
             </button>
           </form>
-        </div>
 
+          {/* ISOLATED DEV ENVIRONMENT RENDER */}
+          {process.env.NODE_ENV === "development" && (
+            <div className="mt-8 border-t border-brand-surface pt-6">
+              <button
+                type="button"
+                onClick={handleDevBypass}
+                disabled={loading}
+                className="flex w-full justify-center rounded-md border border-brand-primary/30 px-3 py-1.5 text-sm font-semibold text-brand-primary hover:bg-brand-primary/10 transition-colors disabled:opacity-50"
+              >
+                [DEV] Auto-Inject Credentials
+              </button>
+              <p className="mt-2 text-center text-xs text-zinc-500">
+                Bypasses standard entry for local dashboard engineering.
+              </p>
+            </div>
+          )}
+        </div>
         <p className="mt-6 text-xs text-brand-primary">
           Access is strictly limited to active clients.
         </p>
@@ -1457,80 +1687,148 @@ export default function PortalLogin() {
 }
 </file>
 
-<file path="components/PortfolioSection.tsx">
-interface PortfolioItem {
-  id: string;
-  title: string;
-  category: string;
-  description: string;
+<file path="app/globals.css">
+@import "tailwindcss";
+
+@theme {
+  /* BSC Residential Color Architecture */
+  --color-brand-canvas: #12161a; /* 60% Background */
+  --color-brand-surface: #1f242a; /* 30% Cards & Panels */
+  --color-brand-primary: #d4af37; /* 10% Headings & Gold Highlights */
+  --color-brand-accent: #041e42; /* Clickable Items & Interactive States */
+
+  /* Typography Scale & Weights */
+  --font-sans: var(--font-sans), sans-serif;
+  --font-serif: var(--font-serif), serif;
+
+  --font-weight-light: 300;
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  /* Transitions & Timing */
+  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-smooth: 300ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-const projects: PortfolioItem[] = [
-  {
-    id: "prj-01",
-    title: "8' x 18' Custom Wood-Overlay Garage Door",
-    category: "Structural Installation",
-    description:
-      "Solo structural installation featuring custom wood overlays. Executed precision balancing and high-torque duplex torsion spring winding to ensure flawless mechanical operation.",
-  },
-  {
-    id: "prj-02",
-    title: "Bespoke Architectural Built-ins",
-    category: "Custom Carpentry",
-    description:
-      "High-end interior cabinetry designed, milled, and installed to exact room specifications, elevating the functional living space.",
-  },
-  {
-    id: "prj-03",
-    title: "Load-Bearing Wall Reconfiguration",
-    category: "Structural Modification",
-    description:
-      "Complete engineered removal of a central load-bearing wall, replaced with a flush-mounted steel I-beam to modernize the foundational layout.",
-  },
-];
+/* 2. CUSTOM UTILITIES & OVERRIDES */
+/* Engineered Scrollbar for Desktop Gallery Navigation */
 
-export default function PortfolioSection() {
+.custom-scrollbar::-webkit-scrollbar {
+  height: 8px; /* Slim, unobtrusive track */
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05); /* Very faint track background */
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: var(
+    --color-brand-primary
+  ); /* Pulls from your theme variable */
+  border-radius: 10px;
+  border: 2px solid transparent; /* Adds negative space around the thumb */
+  background-clip: padding-box;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: #eab308; /* A brighter yellow for interaction feedback */
+}
+</file>
+
+<file path="app/layout.tsx">
+import type { Metadata } from "next";
+import { Plus_Jakarta_Sans, Cormorant_Garamond } from "next/font/google";
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
+import "./globals.css";
+
+// High-legibility sans-serif for body text & UI elements
+const plusJakartaSans = Plus_Jakarta_Sans({
+  subsets: ["latin"],
+  variable: "--font-sans",
+  display: "swap",
+});
+
+// Refined architectural serif for primary headings
+const cormorantGaramond = Cormorant_Garamond({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-serif",
+  display: "swap",
+});
+
+export const metadata: Metadata = {
+  title: "BSC Residential LLC | Custom Remodeling & Master Carpentry",
+  description:
+    "Boutique residential construction, structural renovations, and architectural millwork built on transparency and precision engineering.",
+  metadataBase: new URL("https://www.bscresidential.com"),
+  openGraph: {
+    title: "BSC Residential LLC | Master Carpentry",
+    description: "Boutique residential construction & high-end millwork.",
+    url: "https://www.bscresidential.com",
+    siteName: "BSC Residential LLC",
+    locale: "en_US",
+    type: "website",
+  },
+};
+
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
   return (
-    <section className="w-full py-24 border-t border-brand-surface bg-brand-canvas">
-      <div className="mx-auto max-w-7xl px-6 lg:px-8">
-        <div className="mx-auto max-w-2xl text-center">
-          <h1 className="text-4xl font-bold tracking-tight text-brand-primary sm:text-5xl uppercase">
-            The Portfolio
-          </h1>
-          <p className="mt-6 text-lg leading-8 text-zinc-200">
-            A verified ledger of uncompromising custom carpentry and high-end
-            remodeling. Built for structural integrity.
-          </p>
-        </div>
+    <html
+      lang="en"
+      className={`${plusJakartaSans.variable} ${cormorantGaramond.variable}`}
+    >
+      <body className="bg-brand-canvas text-brand-primary min-h-screen flex flex-col font-sans antialiased selection:bg-brand-accent selection:text-brand-canvas">
+        {/* Global Navigation Header */}
+        <Navbar />
 
-        {/* Project Grid */}
-        <div className="mx-auto mt-16 grid max-w-2xl grid-cols-1 gap-x-8 gap-y-12 lg:max-w-none lg:grid-cols-3">
-          {projects.map((project) => (
-            <div
-              key={project.id}
-              className="flex flex-col border border-brand-surface bg-brand-surface/50 overflow-hidden backdrop-blur-sm group rounded-lg"
-            >
-              {/* Image Placeholder Frame */}
-              <div className="h-64 w-full bg-brand-surface flex items-center justify-center border-b border-brand-surface transition-colors group-hover:bg-zinc-800">
-                <span className="text-zinc-400 text-sm tracking-widest uppercase">
-                  [ Image Frame ]
-                </span>
-              </div>
+        {/* Dynamic Route Content Wrapper */}
+        <main className="flex-1">{children}</main>
 
-              <div className="flex flex-1 flex-col p-8 text-left">
-                <span className="text-xs font-semibold uppercase tracking-wider text-brand-primary">
-                  {project.category}
-                </span>
-                <h3 className="mt-2 text-xl font-semibold leading-7 text-zinc-200">
-                  {project.title}
-                </h3>
-                <p className="mt-4 flex-auto text-sm leading-6 text-zinc-200">
-                  {project.description}
-                </p>
-              </div>
-            </div>
-          ))}
-        </div>
+        {/* Global Structural Footer */}
+        <Footer />
+      </body>
+    </html>
+  );
+}
+</file>
+
+<file path="components/HeroSection.tsx">
+import Image from "next/image";
+import Link from "next/link";
+
+export default function HeroSection() {
+  return (
+    // 1. PARENT CONTAINER
+    // Maintained the widescreen 45vh constraints.
+    <section className="relative mx-auto flex w-full min-h-[45vh] flex-col overflow-hidden">
+      {/* 2. BACKGROUND IMAGE LAYER */}
+      <Image
+        src="/portfolio/remodels/hero-patio.webp"
+        alt="Custom carpentry and architectural remodeling"
+        fill
+        priority
+        unoptimized
+        className="object-cover object-[center_65%] z-0"
+      />
+
+      {/* 3. CLIENT PORTAL ACTION (Isolated & Anchored) 
+          Using absolute positioning to pin the button to the bottom-right corner.
+      */}
+      <div className="absolute bottom-6 right-6 z-20">
+        <Link
+          href="/portal"
+          className="inline-flex items-center justify-center px-6 py-3 text-sm font-bold tracking-wide uppercase transition-colors duration-200 shadow-lg bg-brand-accent/90 text-brand-primary border border-brand-primary hover:bg-brand-canvas hover:border-brand-primary backdrop-blur-md"
+        >
+          Client Portal
+        </Link>
       </div>
     </section>
   );
@@ -1539,6 +1837,7 @@ export default function PortfolioSection() {
 
 <file path="components/ServicesSection.tsx">
 import React from "react";
+import OperatorProfile from "./OperatorProfile";
 
 interface ServiceItem {
   title: string;
@@ -1619,6 +1918,80 @@ export default function ServicesSection() {
               </div>
             ))}
           </dl>
+        </div>
+        <div className="mt-24 border-t border-brand-primary/20 pt-8">
+          <OperatorProfile />
+        </div>
+      </div>
+    </section>
+  );
+}
+</file>
+
+<file path="components/IntroSection.tsx">
+export default function IntroSection() {
+  return (
+    <section className="w-full border-t border-brand-surface bg-brand-canvas py-24">
+      <div className="mx-auto flex max-w-7xl flex-col items-center justify-center px-6 text-center lg:px-8">
+        {/* Primary Introduction Frame */}
+        <div className="max-w-3xl">
+          <h2 className="text-3xl mb-8 font-bold tracking-tight text-brand-primary sm:text-4xl uppercase">
+            Building Beyond Standard
+          </h2>
+          <div className="space-y-4 text-lg text-zinc-100 leading-relaxed">
+            <p>
+              High-end residential construction demands more than premium
+              materials; it requires structural integrity and absolute
+              transparency.
+            </p>
+            <p>
+              BSC Residential engineers custom home upgrades and architectural
+              modifications with rigid compliance. By operating on a
+              single-point accountability system, we eliminate the friction of
+              subcontractor hand-offs.
+            </p>
+            <p>
+              From initial demolition to final walkthrough, clients maintain
+              full visibility through a dedicated digital portal—ensuring every
+              tolerance is met, and every deadline is tracked.
+            </p>
+          </div>
+        </div>
+
+        {/* Feature Grid: Rough-in for future service highlights */}
+        <div className="mt-16 grid w-full grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="flex flex-col items-start border border-brand-surface bg-brand-surface/50 p-8 text-left backdrop-blur-sm rounded-lg">
+            <h3 className="text-xl font-semibold text-brand-primary">
+              Structural Mastery
+            </h3>
+            <p className="mt-3 text-sm text-zinc-200">
+              Forged through 30+ years of domain expertise. We execute precise
+              custom framing and load-bearing alterations to guarantee
+              uncompromised foundational stability.
+            </p>
+          </div>
+
+          <div className="flex flex-col items-start border border-brand-surface bg-brand-surface/50 p-8 text-left backdrop-blur-sm rounded-lg">
+            <h3 className="text-xl font-semibold text-brand-primary">
+              Custom Upgrades
+            </h3>
+            <p className="mt-3 text-sm text-zinc-200">
+              Boutique cabinetry, architectural millwork, and high-end
+              remodeling. Every aesthetic modification is built to exact
+              tolerances to elevate your environment.
+            </p>
+          </div>
+
+          <div className="flex flex-col items-start border border-brand-surface bg-brand-surface/50 p-8 text-left backdrop-blur-sm rounded-lg">
+            <h3 className="text-xl font-semibold text-brand-primary">
+              Systematic Accountability
+            </h3>
+            <p className="mt-3 text-sm text-zinc-200">
+              Zero subcontractor hand-offs and complete project transparency.
+              Track milestone progress and site updates directly through your
+              dedicated client portal.
+            </p>
+          </div>
         </div>
       </div>
     </section>
@@ -1712,7 +2085,7 @@ export default function Navbar() {
           Services
         </Link>
         <Link
-          href="/portal"
+          href="/portal-login"
           className="text-sm font-semibold leading-6 text-zinc-300 hover:text-brand-primary transition-colors"
         >
           Client Portal
@@ -1757,38 +2130,155 @@ export default function Navbar() {
 }
 </file>
 
-<file path="app/page.tsx">
-import HeroSection from "@/components/HeroSection";
-import IntroSection from "@/components/IntroSection";
-import ChatEstimator from "@/components/Intake/ChatEstimator";
+<file path="components/PortfolioSection.tsx">
+import Image from "next/image";
 
-export default function Home() {
+// 1. STRICT DATA CONTRACT
+// Defines the exact shape of a project and its associated image array.
+interface PortfolioImage {
+  src: string;
+  alt: string;
+}
+
+interface PortfolioItem {
+  id: string;
+  title: string;
+  category: string;
+  description: string;
+  images: PortfolioImage[];
+}
+
+// 2. THE LEDGER (Database Placeholder)
+// You can stack additional projects into this array as your portfolio grows.
+const projects: PortfolioItem[] = [
+  {
+    id: "prj-gibson",
+    title: "Structural Patio Enclosure",
+    category: "Architectural Upgrade",
+    description:
+      "Complete structural enclosure engineered to exact tolerances focused on matching the existing asthetic. Progression from initial framing to final interior and exterior finish, trim, and paint.",
+    images: [
+      {
+        src: "/portfolio/projects/gibson/patio-enclosure-before-north.webp",
+        alt: "Gibson project before structural modifications north view",
+      },
+
+      {
+        src: "/portfolio/projects/gibson/patio-enclosure-framing.webp",
+        alt: "Gibson project structural framing installation",
+      },
+      {
+        src: "/portfolio/projects/gibson/patio-enclosure-vapor-barrier.webp",
+        alt: "Gibson project vapor barrier application",
+      },
+      {
+        src: "/portfolio/projects/gibson/patio-enclosure-sheathing.webp",
+        alt: "Gibson project exterior sheathing installation",
+      },
+      {
+        src: "/portfolio/projects/gibson/patio-enclosure-trim-windows.webp",
+        alt: "Gibson project window and trim integration",
+      },
+      {
+        src: "/portfolio/projects/gibson/patio-enclosure-before-south.webp",
+        alt: "Gibson project before structural modifications south view",
+      },
+      {
+        src: "/portfolio/projects/gibson/patio-enclosure-doors.webp",
+        alt: "Gibson project final door installation",
+      },
+
+      {
+        src: "/portfolio/projects/gibson/patio-enclosure-insulation.webp",
+        alt: "Gibson project internal insulation phase",
+      },
+      {
+        src: "/portfolio/projects/gibson/patio-enclosure-drywall.webp",
+        alt: "Gibson project drywall hanging and finishing",
+      },
+      {
+        src: "/portfolio/projects/gibson/patio-enclosure-interior-north.webp",
+        alt: "Gibson project finished interior north view",
+      },
+
+      {
+        src: "/portfolio/projects/gibson/patio-enclosure-interior-south.webp",
+        alt: "Gibson project finished interior south view",
+      },
+      {
+        src: "/portfolio/projects/gibson/patio-enclosure-interior-furnished.webp",
+        alt: "Gibson project completed and furnished interior",
+      },
+    ],
+  },
+  // Add future projects here...
+];
+
+export default function PortfolioSection() {
   return (
-    <main className="flex min-h-screen flex-col items-center justify-start bg-brand-canvas">
-      <HeroSection />
-      <IntroSection />
-
-      {/* Automated Intake / Filter Section */}
-      <section
-        id="estimate"
-        className="w-full py-20 px-4 md:px-8 border-t border-brand-surface"
-      >
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold uppercase tracking-widest">
-              Automated Quote Generator
-            </h2>
-            <p className="mt-4">
-              Submit your project goals for an immediate scope of work and
-              ballpark price range.
-            </p>
-          </div>
-
-          {/* The isolated Phase 2 component is mounted here */}
-          <ChatEstimator />
+    <section className="w-full bg-brand-canvas py-24" id="portfolio">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        {/* HEADER */}
+        <div className="text-center mb-16">
+          <h2 className="text-4xl font-extrabold tracking-tight text-brand-primary sm:text-5xl">
+            THE PORTFOLIO
+          </h2>
+          <div className="mt-4 mx-auto h-1 w-24 bg-brand-primary rounded-full"></div>
+          <p className="mt-6 text-lg text-zinc-300 max-w-2xl mx-auto">
+            A verified ledger of uncompromising custom carpentry and high-end
+            remodeling. Built for structural integrity.
+          </p>
         </div>
-      </section>
-    </main>
+
+        {/* PROJECT STACK */}
+        <div className="space-y-20">
+          {projects.map((project) => (
+            <div
+              key={project.id}
+              className="flex flex-col border border-brand-primary/10 rounded-2xl overflow-hidden bg-brand-canvas shadow-xl"
+            >
+              {/* IMAGE GALLERY (CSS Scroll Snap) */}
+              {/* 'overflow-x-auto' enables horizontal scrolling. 'snap-x' forces the swipe to lock onto the next image perfectly. */}
+              <div className="flex w-full overflow-x-auto snap-x snap-mandatory custom-scrollbar pb-4 border-b border-brand-primary/10">
+                {project.images.map((image, index) => (
+                  <div
+                    key={index}
+                    className="relative flex-none w-full sm:w-[85%] md:w-[70%] lg:w-[60%] aspect-[4/3] snap-center sm:snap-start first:ml-0"
+                  >
+                    <Image
+                      src={image.src}
+                      alt={image.alt}
+                      fill
+                      unoptimized
+                      className="object-cover"
+                    />
+                    {/* Image Counter Overlay */}
+                    <div className="absolute bottom-4 right-4 bg-brand-canvas/80 backdrop-blur-md px-3 py-1 rounded-full border border-brand-primary/30">
+                      <span className="text-xs font-bold text-brand-primary">
+                        {index + 1} / {project.images.length}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* PROJECT DOSSIER */}
+              <div className="p-8 md:p-10">
+                <span className="text-xs font-black uppercase tracking-widest text-brand-primary/80 mb-2 block">
+                  {project.category}
+                </span>
+                <h3 className="text-2xl md:text-3xl font-bold text-zinc-100 mb-4">
+                  {project.title}
+                </h3>
+                <p className="text-base md:text-lg text-zinc-400 leading-relaxed max-w-4xl">
+                  {project.description}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
   );
 }
 </file>

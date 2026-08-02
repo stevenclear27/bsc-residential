@@ -15,7 +15,7 @@ const plusJakartaSans = Plus_Jakarta_Sans({
 const cormorantGaramond = Cormorant_Garamond({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
-  variable: "--font-serif",
+  variable: "--font-cormorant",
   display: "swap",
 });
 

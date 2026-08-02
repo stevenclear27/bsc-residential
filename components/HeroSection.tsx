@@ -21,7 +21,7 @@ export default function HeroSection() {
       */}
       <div className="absolute bottom-6 right-6 z-20">
         <Link
-          href="/portal"
+          href="/portal-login"
           className="inline-flex items-center justify-center px-6 py-3 text-sm font-bold tracking-wide uppercase transition-colors duration-200 shadow-lg bg-brand-accent/90 text-brand-primary border border-brand-primary hover:bg-brand-canvas hover:border-brand-primary backdrop-blur-md"
         >
           Client Portal

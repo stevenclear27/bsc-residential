@@ -8,15 +8,18 @@ interface Message {
   images?: string[];
 }
 
+// 1. STRICT DATA CONTRACT: Require zipCode as a prop
 interface EstimatorChatBoxProps {
+  zipCode: string;
   onIntakeComplete?: (projectData: any) => void;
 }
 
 export default function EstimatorChatBox({
+  zipCode,
   onIntakeComplete,
 }: EstimatorChatBoxProps) {
   // --- Logistical State ---
-  const [zipCode, setZipCode] = useState("");
+  // The zip code state is removed; it is now an immutable prop.
   const [timeline, setTimeline] = useState("flexible");
 
   // --- Chat State ---
@@ -88,7 +91,6 @@ export default function EstimatorChatBox({
     setIsLoading(true);
 
     try {
-      // Transmit the chat history PLUS the logistical parameters
       const response = await fetch("/api/estimate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -110,7 +112,6 @@ export default function EstimatorChatBox({
       ]);
 
       if (data.isComplete && onIntakeComplete) {
-        // Merge the AI's extracted data with the hardcoded logistics
         setCompiledData({
           ...data.projectData,
           zipCode,
@@ -138,15 +139,12 @@ export default function EstimatorChatBox({
       <div className="shrink-0 mb-4 flex flex-col sm:flex-row gap-4 p-4 bg-brand-canvas border border-brand-primary/10 rounded">
         <div className="flex-1">
           <label className="block text-[10px] font-bold text-brand-primary uppercase tracking-widest mb-1">
-            Project Zip Code
+            Verified Zone
           </label>
-          <input
-            type="text"
-            value={zipCode}
-            onChange={(e) => setZipCode(e.target.value)}
-            placeholder="e.g. 46017"
-            className="w-full bg-brand-surface border border-brand-primary/30 rounded px-3 py-2 text-sm text-zinc-100 focus:border-brand-primary focus:outline-none"
-          />
+          {/* 2. LOCKED UI ELEMENT: Displays the fixed prop */}
+          <div className="w-full bg-brand-surface/50 border border-brand-primary/10 rounded px-3 py-2 text-sm text-zinc-500 cursor-not-allowed">
+            {zipCode} (Locked)
+          </div>
         </div>
         <div className="flex-1">
           <label className="block text-[10px] font-bold text-brand-primary uppercase tracking-widest mb-1">
