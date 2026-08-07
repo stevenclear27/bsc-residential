@@ -4,14 +4,15 @@ export default function OperatorProfile() {
   return (
     // 1. COMPONENT WRAPPER
     // Inherits background from the global cascade, maintaining semantic token alignment.
-    <section className="relative mx-auto w-full max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
+    <section className="relative mx-auto w-full max-w-7xl px-4 py-20 sm:px-6 lg:px-8 space-y-20">
+      {/* ZONE 1: OPERATOR DOSSIER & HEADSHOT */}
       <div className="grid grid-cols-1 gap-16 lg:grid-cols-2 lg:items-center">
-        {/* 2. OPERATOR DOSSIER (Text Column) */}
+        {/* Text Column */}
         <div className="flex flex-col space-y-6">
           <h2 className="text-4xl font-extrabold tracking-tight text-brand-primary sm:text-5xl">
             The Master Craftsman Model
           </h2>
-          <div className="h-1 w-20 bg-brand-primaryrounded-full"></div>
+          <div className="h-1 w-20 bg-brand-primary rounded-full"></div>
           <div className="space-y-5 text-zinc-200 text-lg leading-relaxed opacity-90">
             <p>
               The traditional general contractor model fails when communication
@@ -31,29 +32,32 @@ export default function OperatorProfile() {
           </div>
         </div>
 
-        {/* 3. ASSET GRID (Image Column) */}
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-          {/* Headshot Asset */}
-          <div className="relative h-80 w-full overflow-hidden rounded-xl shadow-lg border border-brand-primary/20">
-            <Image
-              src="/operator/operator-profile-headshot-business.webp"
-              alt="Master Carpenter on a structural build site"
-              fill
-              unoptimized
-              className="object-cover object-center"
-            />
-          </div>
+        {/* Headshot Asset Column */}
+        <div className="relative h-[450px] w-full overflow-hidden rounded-xl shadow-lg border border-brand-primary/20">
+          <Image
+            src="/operator/operator-profile-headshot-business.webp"
+            alt="Master Carpenter on a structural build site"
+            fill
+            unoptimized
+            className="object-cover object-center"
+          />
+        </div>
+      </div>
 
-          {/* Mobile Workshop Rig Asset */}
-          <div className="relative h-80 w-full overflow-hidden rounded-xl shadow-lg border border-brand-primary/20 sm:mt-12">
-            <Image
-              src="/operator/mobile-workshop-rig.webp"
-              alt="BSC Residential Mobile Workshop Rig"
-              fill
-              unoptimized
-              className="object-cover object-center"
-            />
-          </div>
+      {/* ZONE 2: WIDESCREEN ASSET (Mobile Workshop Rig) */}
+      <div className="relative w-full h-[350px] sm:h-[500px] lg:h-[700px] overflow-hidden rounded-xl shadow-2xl border border-brand-primary/20">
+        <Image
+          src="/operator/mobile-workshop-rig.webp"
+          alt="BSC Residential Mobile Workshop Rig"
+          fill
+          unoptimized
+          className="object-cover object-center"
+        />
+        {/* Optional Contextual Overlay */}
+        <div className="absolute bottom-4 left-4 bg-brand-canvas/90 backdrop-blur-sm px-4 py-2 rounded-md border border-brand-primary/30">
+          <span className="text-xs font-bold uppercase tracking-widest text-brand-primary">
+            Autonomous Mobile Workshop
+          </span>
         </div>
       </div>
     </section>

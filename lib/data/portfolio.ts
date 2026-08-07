@@ -76,7 +76,7 @@ export const projects: PortfolioItem[] = [
   {
     id: "prj-pope",
     title: "Architectural Metal Siding Installation",
-    category: "Remodel",
+    category: "New Construction",
     projectScale: "custom-build",
     description:
       "Comprehensive structural and aesthetic residential metal siding installation, documenting progress from naked structure to final finish.",
@@ -105,6 +105,32 @@ export const projects: PortfolioItem[] = [
       {
         src: "/portfolio/projects/pope/on-the-job.webp",
         alt: "Pope project on the job active construction",
+      },
+    ],
+  },
+  {
+    id: "prj-ideal-garage-door",
+    title: "Custom Ideal Overhead Garage Door",
+    category: "Small Projects",
+    projectScale: "service-agreement",
+    description:
+      "Manual installation and precision balance of a high-torque duplex torsion spring system on a custom 8' x 18' Ideal overhead garage door. Executed as an independent short-duration contract to ensure exact mechanical tolerances.",
+    images: [
+      {
+        src: "/portfolio/projects/garage-door/overhead-garage-door-opening.webp",
+        alt: "Custom overhead garage door track and opening mechanism",
+      },
+      {
+        src: "/portfolio/projects/garage-door/overhead-garage-door-interior.webp",
+        alt: "Custom overhead garage door interior high-torque torsion spring system",
+      },
+      {
+        src: "/portfolio/projects/garage-door/overhead-garage-door-exterior.webp",
+        alt: "Custom overhead garage door exterior installation view",
+      },
+      {
+        src: "/portfolio/projects/garage-door/overhead-garage-door-after.webp",
+        alt: "Custom overhead garage door finished installation and mechanical balance",
       },
     ],
   },
