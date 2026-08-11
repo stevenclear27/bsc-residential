@@ -1,90 +1,62 @@
-"use client";
+"use client"; // Required for the onAcknowledge button interaction
 
 import React from "react";
 
-// 1. Define the exact shape of the data we expect to receive
-interface DossierSummaryCardProps {
-  onAcknowledge: () => void;
-  projectData: {
-    name?: string;
-    projectScope?: string;
-    materialTier?: string;
-    timeline?: string;
-    ballparkEstimate?: string; // e.g., "$15,000 - $22,000"
+// STRICT DATA CONTRACT: We maintain the old interface structure to prevent
+// compiler errors if the backend still sends the extra data, but we only render what we need.
+export interface DossierSummaryCardProps {
+  dossier: {
+    projectTitle: string;
+    assumedScope: string;
   };
+  onAcknowledge: () => void;
 }
 
 export default function DossierSummaryCard({
+  dossier,
   onAcknowledge,
-  projectData,
 }: DossierSummaryCardProps) {
-  // 2. Fallback check: If data hasn't loaded, don't crash the system
-  if (!projectData) return null;
-
   return (
-    <div className="bg-brand-surface border border-brand-primary/20 rounded-lg overflow-hidden mt-6">
-      <div className="p-6 border-b border-brand-primary/20 bg-brand-canvas">
-        <h3 className="text-xl font-bold text-brand-primary uppercase tracking-wide">
-          Preliminary Project Dossier
+    <div className="bg-brand-canvas border border-brand-primary/30 p-8 rounded-lg shadow-2xl flex flex-col gap-8 max-w-3xl mx-auto">
+      {/* HEADER: Acknowledging the completion of the consultation */}
+      <header className="border-b border-zinc-800 pb-4 text-center">
+        <h2 className="text-sm uppercase tracking-widest text-brand-primary mb-2">
+          Design Consultation Complete
+        </h2>
+        <h3 className="text-3xl font-light text-white">
+          {dossier.projectTitle}
         </h3>
-        <p className="text-sm text-brand-primary/80 mt-1">
-          Review the initial parameters before locking in your onsite
-          verification.
+      </header>
+
+      {/* THE VISION: Reflecting their idea back to them professionally */}
+      <section className="bg-zinc-900/50 p-6 rounded border border-zinc-800">
+        <h4 className="text-xs uppercase tracking-wider text-zinc-500 mb-3">
+          Proposed Scope of Work
+        </h4>
+        <p className="text-zinc-300 leading-relaxed text-lg">
+          {dossier.assumedScope}
         </p>
-      </div>
+      </section>
 
-      <div className="p-6 space-y-6">
-        <div>
-          <h4 className="text-xs font-bold text-brand-primary uppercase tracking-widest mb-2">
-            Scope of Work
-          </h4>
-          <p className="text-sm text-zinc-300 leading-relaxed bg-brand-canvas/50 p-4 rounded border border-brand-primary/10">
-            {projectData.projectScope || "Scope parameters pending..."}
-          </p>
-        </div>
+      {/* THE HOOK: The Value Exchange & Call to Action */}
+      <section className="bg-brand-primary/10 p-8 rounded border border-brand-primary/30 text-center">
+        <h4 className="text-xl text-brand-primary mb-3 font-medium">
+          Secure Your Project Blueprint
+        </h4>
+        <p className="text-sm text-zinc-300 mb-8 max-w-lg mx-auto">
+          Your preliminary design data has been synthesized. To permanently save
+          this dossier, unlock direct messaging with our Master Carpenter, and
+          schedule your on-site structural consultation, initialize your secure
+          client portal below.
+        </p>
 
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <h4 className="text-xs font-bold text-brand-primary uppercase tracking-widest mb-1">
-              Material Tier
-            </h4>
-            <p className="text-sm text-zinc-300">
-              {projectData.materialTier || "TBD"}
-            </p>
-          </div>
-          <div>
-            <h4 className="text-xs font-bold text-brand-primary uppercase tracking-widest mb-1">
-              Target Timeline
-            </h4>
-            <p className="text-sm text-zinc-300">
-              {projectData.timeline || "TBD"}
-            </p>
-          </div>
-        </div>
-
-        <div className="pt-6 border-t border-brand-primary/20">
-          <h4 className="text-xs font-bold text-brand-primary uppercase tracking-widest mb-2">
-            Estimated Ballpark Range
-          </h4>
-          <p className="text-3xl font-black text-brand-primary tracking-tighter">
-            {projectData.ballparkEstimate || "Requires Onsite Diagnostic"}
-          </p>
-          <p className="text-xs text-zinc-500 mt-2 max-w-xl">
-            *This is an algorithmic approximation based on the structural
-            parameters provided. A fixed-price contract requires physical site
-            verification and exact material takeoffs.
-          </p>
-        </div>
-      </div>
-
-      <div className="p-6 bg-brand-canvas flex justify-end border-t border-brand-primary/20">
         <button
           onClick={onAcknowledge}
-          className="px-6 py-3 bg-brand-accent text-brand-primary rounded font-bold uppercase tracking-widest hover:opacity-90 transition-opacity"
+          className="w-full px-8 py-5 bg-brand-primary text-brand-canvas font-bold uppercase tracking-widest hover:bg-white transition-colors rounded shadow-lg text-sm"
         >
-          Acknowledge & Schedule Onsite
+          Initialize Client Portal
         </button>
-      </div>
+      </section>
     </div>
   );
 }

@@ -1,81 +1,48 @@
+// /src/app/api/estimate/route.ts
 import { NextResponse } from "next/server";
-import { GoogleGenAI } from "@google/genai";
-
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+import {
+  generateTurnkeyProposal,
+  HomeownerInputPayload,
+} from "@/lib/pricing/estimator";
 
 export async function POST(request: Request) {
   try {
+    // 1. INGESTION: Parse the incoming JSON payload from the frontend Chatbot
     const body = await request.json();
-    const { history, message } = body;
 
-    const systemInstruction = `
-  You are the Master Carpentry Consultant and Senior Estimator for BSC Residential LLC.
-  Your objective is to validate the client's architectural vision, build excitement about high-end craftsmanship, and establish structural intent.
-  
-  DO NOT ask the user for their zip code or project timeline. That logistical data is captured via the user interface.
-  DO NOT interrogate the client for raw dollar amounts.
-  
-  Instead, focus on the details of their build. If they want a custom entertainment center, match their excitement, suggest premium materials (e.g., solid hardwoods, integrated LED channeling), and confirm the scale of the work.
-  
-  When you have enough architectural data to formulate a comprehensive project scope (understanding the *what* and the *how*), set 'isComplete' to true.
-  
-  CRITICAL: When setting 'isComplete' to true, your 'chatResponse' MUST be a variation of this exact sentiment: "I have the structural parameters anchored. The vision is solid. Are you ready for me to compile your preliminary estimate?"
-  
-  Return your answer strictly in a JSON format containing:
-  {
-    "chatResponse": "your conversational, engaging response here",
-    "isComplete": boolean,
-    "projectData": {
-      "projectScope": "string summary of the physical build if complete",
-      "materialTier": "string summarizing the quality of materials discussed"
+    // 2. CONTRACT ENFORCEMENT: Cast the incoming data to your strict TypeScript interface
+    const payload = body as HomeownerInputPayload;
+
+    // 3. STRUCTURAL VERIFICATION: Ensure the AI did not drop critical variables
+    if (
+      !payload.projectScope ||
+      !payload.linearFootage ||
+      !payload.materialTier ||
+      !payload.roomCondition ||
+      !payload.mepRequired ||
+      !payload.zipCode
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            "System Error: Missing required parametric variables in payload.",
+        },
+        { status: 400 }, // Bad Request
+      );
     }
-  }
-`;
 
-    const formattedContents = history.map((msg: any) => ({
-      role: msg.role === "user" ? "user" : "model",
-      parts: [{ text: msg.text }],
-    }));
+    // 4. EXECUTION: Pass the verified payload into your decoupled deterministic engine
+    // We do not await this function because it executes synchronously on the server.
+    const proposalDossier = generateTurnkeyProposal(payload);
 
-    // Target the current production-stable model ID
-    const response = await ai.models.generateContent({
-      model: "gemini-3.6-flash",
-      contents: formattedContents,
-      config: {
-        systemInstruction: systemInstruction,
-        responseMimeType: "application/json",
-      },
-    });
-
-    // Extract text safely using the official SDK response structure
-    const rawText =
-      response.text ||
-      (response as any).candidates?.[0]?.content?.parts?.[0]?.text ||
-      "{}";
-    const parsedResponse = JSON.parse(rawText);
-
-    return NextResponse.json({
-      chatResponse:
-        parsedResponse.chatResponse ||
-        "Transmission received. Elaborate on your structural requirements.",
-      isComplete: parsedResponse.isComplete || false,
-      projectData: parsedResponse.projectData || null,
-    });
-  } catch (error: any) {
-    console.error("AI Processing Critical Failure Detail:", error);
-
-    const isRateLimited =
-      error?.status === 429 ||
-      error?.message?.includes("429") ||
-      error?.message?.includes("quota");
-
-    const userMessage = isRateLimited
-      ? "System Notice: API rate limit reached. Please allow a brief cooldown window before transmitting again."
-      : "Failed to process AI transmission. Verify system logs.";
-
+    // 5. RESPONSE: Transmit the B2C Turnkey Proposal back to the client interface
+    return NextResponse.json(proposalDossier, { status: 200 }); // OK
+  } catch (error) {
+    // 6. FALLBACK: Catch any runtime parsing errors to prevent the server from crashing
+    console.error("Estimating Engine Failure:", error);
     return NextResponse.json(
-      { chatResponse: userMessage, isComplete: false, projectData: null },
-      { status: 200 },
+      { error: "Internal Server Error: Failed to generate turnkey proposal." },
+      { status: 500 },
     );
   }
 }

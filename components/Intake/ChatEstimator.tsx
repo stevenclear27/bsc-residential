@@ -2,29 +2,29 @@
 
 import React, { useState } from "react";
 import ZipCodeGate from "./ZipCodeGate";
-import EstimatorChatBox from "./EstimatorChatBox";
+import ConsultationFeed from "./ConsultationFeed";
 import DossierSummaryCard from "./DossierSummaryCard";
 import AuthGateway from "./AuthGateway";
 
+export interface DraftedScopePayload {
+  projectTitle: string;
+  assumedScope: string;
+}
+
 export default function ChatEstimator() {
-  // 1. Establish System State (Memory)
-  // Step 0: Zip Verification | Step 1: Chat | Step 2: Summary | Step 3: Auth
-  const [intakeStep, setIntakeStep] = useState<0 | 1 | 2 | 3>(0);
+  const [intakeStep, setIntakeStep] = useState<number>(0);
+  const [verifiedZip, setVerifiedZip] = useState<string>("");
+  const [draftedScope, setDraftedScope] = useState<DraftedScopePayload | null>(
+    null,
+  );
 
-  const [projectPayload, setProjectPayload] = useState<any>({
-    projectData: null,
-    clientData: null,
-    verifiedZip: null,
-  });
-
-  // 2. Logic Handlers for the State Machine
   const handleZipVerification = (zip: string) => {
-    setProjectPayload((prev: any) => ({ ...prev, verifiedZip: zip }));
-    setIntakeStep(1); // Unlock the Chatbot
+    setVerifiedZip(zip);
+    setIntakeStep(1);
   };
 
-  const handleIntakeComplete = (data: any) => {
-    setProjectPayload((prev: any) => ({ ...prev, projectData: data }));
+  const handleVisionComplete = (scopeData: DraftedScopePayload) => {
+    setDraftedScope(scopeData);
     setIntakeStep(2);
   };
 
@@ -33,52 +33,33 @@ export default function ChatEstimator() {
   };
 
   return (
-    <section className="w-full max-w-4xl mx-auto my-12 px-4">
-      {/* Progress Indicator */}
-      {intakeStep > 0 && (
-        <div className="flex gap-2 mb-6">
-          <div
-            className={`h-2 flex-1 rounded transition-colors duration-500 ${intakeStep >= 1 ? "bg-brand-primary" : "bg-brand-primary/20"}`}
-          />
-          <div
-            className={`h-2 flex-1 rounded transition-colors duration-500 ${intakeStep >= 2 ? "bg-brand-primary" : "bg-brand-primary/20"}`}
-          />
-          <div
-            className={`h-2 flex-1 rounded transition-colors duration-500 ${intakeStep === 3 ? "bg-brand-primary" : "bg-brand-primary/20"}`}
-          />
-        </div>
-      )}
+    <div className="w-full max-w-4xl mx-auto flex flex-col gap-8">
+      {intakeStep === 0 && <ZipCodeGate onVerified={handleZipVerification} />}
 
-      {/* Component Routing Floor */}
-      {intakeStep === 0 && (
-        <div className="animate-in fade-in duration-500">
-          <ZipCodeGate onVerified={handleZipVerification} />
-        </div>
-      )}
-
+      {/* STEP 1: The dynamic consultation feed replacing the static form */}
       {intakeStep === 1 && (
         <div className="animate-in fade-in duration-500">
-          <EstimatorChatBox
-            zipCode={projectPayload.verifiedZip}
-            onIntakeComplete={handleIntakeComplete}
+          <ConsultationFeed
+            zipCode={verifiedZip}
+            onIntakeComplete={handleVisionComplete}
           />
         </div>
       )}
 
-      {intakeStep === 2 && (
+      {intakeStep === 2 && draftedScope && (
         <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
           <DossierSummaryCard
-            projectData={projectPayload.projectData}
+            dossier={draftedScope}
             onAcknowledge={handleDossierAcknowledge}
           />
         </div>
       )}
 
       {intakeStep === 3 && (
-        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-          <AuthGateway projectPayload={projectPayload} />
+        <div className="animate-in fade-in duration-500">
+          <AuthGateway />
         </div>
       )}
-    </section>
+    </div>
   );
 }

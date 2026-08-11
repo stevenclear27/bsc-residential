@@ -33,7 +33,7 @@ export default function OperatorProfile() {
         </div>
 
         {/* Headshot Asset Column */}
-        <div className="relative h-[450px] w-full overflow-hidden rounded-xl shadow-lg border border-brand-primary/20">
+        <div className="relative h-112.5 w-full overflow-hidden rounded-xl shadow-lg border border-brand-primary/20">
           <Image
             src="/operator/operator-profile-headshot-business.webp"
             alt="Master Carpenter on a structural build site"
@@ -45,7 +45,7 @@ export default function OperatorProfile() {
       </div>
 
       {/* ZONE 2: WIDESCREEN ASSET (Mobile Workshop Rig) */}
-      <div className="relative w-full h-[350px] sm:h-[500px] lg:h-[700px] overflow-hidden rounded-xl shadow-2xl border border-brand-primary/20">
+      <div className="relative w-full h-87.5 sm:h-125 lg:h-175 overflow-hidden rounded-xl shadow-2xl border border-brand-primary/20">
         <Image
           src="/operator/mobile-workshop-rig.webp"
           alt="BSC Residential Mobile Workshop Rig"
