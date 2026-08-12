@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import ZipCodeGate from "./ZipCodeGate";
 import ConsultationFeed from "./ConsultationFeed";
 import DossierSummaryCard from "./DossierSummaryCard";
-import AuthGateway from "./AuthGateway";
+import AuthGateway from "../AuthGateway";
 
 export interface DraftedScopePayload {
   projectTitle: string;

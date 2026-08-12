@@ -161,7 +161,7 @@ export default function ConsultationFeed({
   };
 
   return (
-    <div className="bg-brand-canvas border border-brand-primary/20 p-6 rounded-lg shadow-xl flex flex-col h-[700px] max-w-4xl mx-auto">
+    <div className="bg-brand-canvas border border-brand-primary/20 p-6 rounded-lg shadow-xl flex flex-col h-175 max-w-4xl mx-auto">
       <header className="border-b border-zinc-800 pb-4 mb-4 flex justify-between items-end">
         <div>
           <h2 className="text-xl font-bold text-brand-primary uppercase tracking-widest">
@@ -240,7 +240,7 @@ export default function ConsultationFeed({
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             placeholder="Type your reply here..."
-            className="flex-1 bg-zinc-900/50 border border-zinc-700 rounded p-4 text-white focus:outline-none focus:border-brand-primary transition-colors resize-none h-[50px] min-h-[50px] max-h-[150px] overflow-y-auto"
+            className="flex-1 bg-zinc-900/50 border border-zinc-700 rounded p-4 text-white focus:outline-none focus:border-brand-primary transition-colors resize-none h-12.5 min-h-12.5 max-h-37.5 overflow-y-auto"
             rows={1}
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.shiftKey) {

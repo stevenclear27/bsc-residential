@@ -1,24 +1,56 @@
-"use client"; // Required for form state and user interactivity
+"use client"; // Interactivity required for auth state[cite: 1]
 
 import React, { useState } from "react";
+import { useRouter } from "next/navigation";
+import { createClient } from "@/utils/supabase/client";
 
 export default function AuthGateway() {
-  // STATE MANAGEMENT: Toggling between Sign Up and Log In
+  const router = useRouter();
+  const supabase = createClient();
+
   const [isLogin, setIsLogin] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [isProcessing, setIsProcessing] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsProcessing(true);
+    setLoading(true);
+    setError(null);
 
-    // Placeholder for the upcoming Supabase Auth wiring
-    console.log(`Executing ${isLogin ? "Login" : "Registration"} for:`, email);
+    // DIAGNOSTIC PROBE 1: Firing the sequence
+    console.log("[AUTH PROBE] 1. Initialization started for:", email);
 
-    setTimeout(() => {
-      setIsProcessing(false);
-    }, 1000);
+    try {
+      if (isLogin) {
+        console.log("[AUTH PROBE] 2. Executing Login...");
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+        console.log("[AUTH PROBE] 3. Login Response:", { data, error });
+        if (error) throw error;
+      } else {
+        console.log("[AUTH PROBE] 2. Executing Registration...");
+        const { data, error } = await supabase.auth.signUp({ email, password });
+        console.log("[AUTH PROBE] 3. Registration Response:", { data, error });
+        if (error) throw error;
+      }
+
+      console.log(
+        "[AUTH PROBE] 4. Auth successful. Triggering router redirect...",
+      );
+      router.push("/dashboard");
+    } catch (err: any) {
+      console.error("[AUTH FAULT] Caught Error:", err);
+      setError(
+        err.message || "An unknown network fault occurred. Check console.",
+      );
+    } finally {
+      console.log("[AUTH PROBE] 5. Resetting load state.");
+      setLoading(false);
+    }
   };
 
   return (
@@ -29,12 +61,18 @@ export default function AuthGateway() {
         </h2>
         <p className="text-sm text-zinc-400">
           {isLogin
-            ? "Enter your credentials to view your active project."
+            ? "Enter your credentials to view your active project ledger."
             : "Create secure credentials to save your project dossier."}
         </p>
       </header>
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+        {error && (
+          <div className="p-3 bg-red-900/30 border border-red-500/50 text-red-400 text-xs uppercase tracking-widest rounded">
+            {error}
+          </div>
+        )}
+
         <div className="flex flex-col gap-2">
           <label className="text-xs uppercase tracking-widest text-zinc-500">
             Email Address
@@ -65,10 +103,10 @@ export default function AuthGateway() {
 
         <button
           type="submit"
-          disabled={isProcessing || !email || !password}
+          disabled={loading || !email || !password}
           className="mt-2 w-full py-4 bg-brand-primary text-brand-canvas font-bold uppercase tracking-widest hover:bg-white transition-colors rounded disabled:opacity-50"
         >
-          {isProcessing
+          {loading
             ? "Authenticating..."
             : isLogin
               ? "Secure Login"
@@ -77,16 +115,17 @@ export default function AuthGateway() {
       </form>
 
       <div className="text-center mt-4 border-t border-zinc-800 pt-6">
-        <p className="text-sm text-zinc-400">
-          {isLogin
-            ? "Need to create an account?"
-            : "Already have a project portal?"}
-        </p>
         <button
-          onClick={() => setIsLogin(!isLogin)}
-          className="mt-2 text-brand-primary text-sm uppercase tracking-widest hover:text-white transition-colors"
+          type="button"
+          onClick={() => {
+            setIsLogin(!isLogin);
+            setError(null);
+          }}
+          className="text-brand-primary text-sm uppercase tracking-widest hover:text-white transition-colors"
         >
-          {isLogin ? "Initialize New Portal" : "Log In to Existing"}
+          {isLogin
+            ? "Need to initialize a new portal?"
+            : "Already have an active ledger?"}
         </button>
       </div>
     </div>
