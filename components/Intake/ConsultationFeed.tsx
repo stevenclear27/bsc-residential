@@ -113,15 +113,24 @@ export default function ConsultationFeed({
       const data = await response.json();
 
       // THE STATE SHIFT: Evaluate the AI's response type
-      if (data.type === "dossier_generated") {
-        // The AI hit the perimeter. Transition the main state machine.
-        onIntakeComplete(data.data);
-      } else if (data.type === "conversational_reply") {
-        // The AI is still consulting. Append the reply.
-        setMessages((prev) => [
-          ...prev,
+      // CONDITION 1: The AI is acting as the Designer (Chatting)
+      if (data.type === "chat_response") {
+        // You must append the AI's response to your local React state so the chat bubble renders
+        setMessages((prevMessages) => [
+          ...prevMessages,
           { role: "assistant", content: data.message },
         ]);
+      }
+      // CONDITION 2: The AI is acting as the Project Manager (Dossier Built)
+      else if (data.type === "dossier_generated") {
+        // 1. Acknowledge the payload locally in the chat feed
+        setMessages((prevMessages) => [
+          ...prevMessages,
+          { role: "assistant", content: data.message },
+        ]);
+
+        // 2. Transmit the structured payload up to the parent to trigger Step 2
+        onIntakeComplete(data.data);
       }
     } catch (error) {
       console.error("Transmission Error:", error);

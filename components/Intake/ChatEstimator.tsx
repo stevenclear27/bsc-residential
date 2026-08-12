@@ -9,6 +9,10 @@ import AuthGateway from "../AuthGateway";
 export interface DraftedScopePayload {
   projectTitle: string;
   assumedScope: string;
+  projectPhases: {
+    phaseName: string;
+    description: string;
+  }[];
 }
 
 export default function ChatEstimator() {
@@ -29,6 +33,15 @@ export default function ChatEstimator() {
   };
 
   const handleDossierAcknowledge = () => {
+    // 1. Cache the volatile structural payload into browser storage to survive the routing boundary
+    if (draftedScope) {
+      sessionStorage.setItem(
+        "bsc_pending_dossier",
+        JSON.stringify(draftedScope),
+      );
+    }
+
+    // 2. Shift UI to the AuthGateway
     setIntakeStep(3);
   };
 

@@ -2,12 +2,14 @@
 
 import React from "react";
 
-// STRICT DATA CONTRACT: We maintain the old interface structure to prevent
-// compiler errors if the backend still sends the extra data, but we only render what we need.
 export interface DossierSummaryCardProps {
   dossier: {
     projectTitle: string;
     assumedScope: string;
+    projectPhases: {
+      phaseName: string;
+      description: string;
+    }[];
   };
   onAcknowledge: () => void;
 }

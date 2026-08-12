@@ -1,5 +1,9 @@
 import { NextResponse } from "next/server";
 import OpenAI from "openai";
+import {
+  generateInvestmentTier,
+  EstimatorInputs,
+} from "@/lib/estimatingEngine";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -7,41 +11,62 @@ const openai = new OpenAI({
 
 const MODEL_VERSION = process.env.DRAFT_SCOPE_MODEL || "gpt-4o-mini";
 
-// THE ABSTRACTION LAYER: The Elite Designer Persona
+// THE ABSTRACTION LAYER: Front-of-House Designer & Back-of-House PM
 const SYSTEM_INSTRUCTION = `
-You are an elite architectural design consultant representing BSC Residential LLC, a high-end custom carpentry firm. 
-Your objective is to consult with prospective clients, validate their aesthetic vision, and gently expand their concepts using your knowledge of modern, luxury design trends (e.g., vaulted ceilings, custom millwork, integrated lighting).
+You operate in two distinct cognitive phases for BSC Residential LLC, a high-end custom carpentry firm.
 
-RULES OF ENGAGEMENT:
-1. Speak as a visionary designer. Be accommodating, enthusiastic, and highly professional.
-2. Interrogate ambiguous visual data if they upload photos. Ask clarifying questions about their preferences.
-3. DO NOT output JSON in your conversational replies. 
-4. THE PERIMETER: Once you have gathered enough structural context (typically 2-4 exchanges) and proposed design expansions, you MUST explicitly ask the client: "Shall I compile these concepts into your preliminary project dossier?"
-5. THE HANDOFF: If the client explicitly agrees to compile the dossier, you must immediately execute the 'generate_project_dossier' tool.
+PHASE 1: THE DESIGN CONSULTANT (Client-Facing)
+When conversing with the user, act as an elite architectural design consultant. Validate their aesthetic vision, accommodate their ideas, and gently expand their concepts using luxury design trends. DO NOT output JSON in your conversational replies.
+
+PHASE 2: THE PROJECT MANAGER (System-Facing)
+Once you have gathered enough structural context (typically 2-4 exchanges), you must explicitly ask: "Shall I compile these concepts into your preliminary project dossier?"
+If the client explicitly agrees, execute the 'generate_project_dossier' tool. You must extrapolate the client's abstract vision into four highly clinical, structural phases, and estimate the linear footage, material tier, and room condition based on the scope of the chat.
 `;
 
-// THE DATA CONTRACT: Defining the strict structural output for the AI tool
 const tools = [
   {
     type: "function" as const,
     function: {
       name: "generate_project_dossier",
       description:
-        "Executes only when the client agrees to finalize the consultation. Compiles the vision into a structured scope of work.",
+        "Executes when the client agrees to finalize the consultation. Compiles the vision into a phased, structural scope of work.",
       parameters: {
         type: "object",
         properties: {
-          projectTitle: {
-            type: "string",
-            description: "A clean, professional 3-5 word title.",
+          projectTitle: { type: "string" },
+          assumedScope: { type: "string" },
+          projectPhases: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                phaseName: { type: "string" },
+                description: { type: "string" },
+              },
+              required: ["phaseName", "description"],
+            },
           },
-          assumedScope: {
+          linearFootage: {
+            type: "number",
+            description: "Estimated linear footage of the work area.",
+          },
+          materialTier: {
             type: "string",
-            description:
-              "A 2-3 sentence clinical paragraph defining the structural work.",
+            enum: ["Standard", "Premium", "Ultra-Custom"],
+          },
+          roomCondition: {
+            type: "string",
+            enum: ["Turnkey", "Minor Prep Needed", "Gut and Reframe"],
           },
         },
-        required: ["projectTitle", "assumedScope"],
+        required: [
+          "projectTitle",
+          "assumedScope",
+          "projectPhases",
+          "linearFootage",
+          "materialTier",
+          "roomCondition",
+        ],
       },
     },
   },
@@ -49,61 +74,86 @@ const tools = [
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
-    const { messages } = body;
+    console.log("[DIAGNOSTIC PROBE] 1. Request Received. Parsing payload...");
+    const { messages } = await request.json();
 
-    // Execute the chat completion with the defined tools
+    console.log(
+      "[DIAGNOSTIC PROBE] 2. Transmitting to OpenAI (Computation Only)...",
+    );
     const response = await openai.chat.completions.create({
       model: MODEL_VERSION,
       messages: [{ role: "system", content: SYSTEM_INSTRUCTION }, ...messages],
       tools: tools,
-      tool_choice: "auto", // Allows the AI to decide when to converse vs. when to execute the tool
+      tool_choice: "auto",
     });
 
-    const responseMessage = response.choices[0]?.message;
+    const responseMessage = response.choices[0].message;
+    console.log("[DIAGNOSTIC PROBE] 3. OpenAI Response Received.");
 
-    // STATE TRANSITION: Did the AI execute the tool (The Client said "Yes")?
     if (responseMessage?.tool_calls) {
       const toolCall = responseMessage.tool_calls.find(
-        // CORRECTION: Type narrowing. We explicitly verify the tool is a "function" before reading its name.
         (tool) =>
           tool.type === "function" &&
           tool.function.name === "generate_project_dossier",
       );
 
       if (toolCall && toolCall.type === "function") {
-        // Parse the strictly typed JSON payload generated by the AI
-        const dossierData = JSON.parse(toolCall.function.arguments);
+        console.log(
+          "[DIAGNOSTIC PROBE] 4. Executing Dossier Generation Logic...",
+        );
+        const rawData = JSON.parse(toolCall.function.arguments);
 
+        const investmentData = generateInvestmentTier({
+          linearFootage: rawData.linearFootage,
+          materialTier: rawData.materialTier as EstimatorInputs["materialTier"],
+          roomCondition:
+            rawData.roomCondition as EstimatorInputs["roomCondition"],
+        });
+
+        console.log(
+          "[DIAGNOSTIC PROBE] 5. Math calculated. Shipping volatile payload to UI.",
+        );
         return NextResponse.json(
           {
             type: "dossier_generated",
-            data: dossierData,
+            message:
+              "Project parameters compiled. Transitioning to formal dossier.",
+            data: {
+              projectTitle: rawData.projectTitle,
+              assumedScope: rawData.assumedScope,
+              projectPhases: rawData.projectPhases,
+              investmentRange: {
+                floor: investmentData.formattedFloor,
+                ceiling: investmentData.formattedCeiling,
+              },
+              // The frontend needs the raw integers to execute the database write later
+              rawInvestment: {
+                floor: investmentData.rawFloor,
+                ceiling: investmentData.rawCeiling,
+                linearFootage: rawData.linearFootage,
+                materialTier: rawData.materialTier,
+                roomCondition: rawData.roomCondition,
+              },
+            },
           },
           { status: 200 },
         );
       }
     }
 
-    // ONGOING CONVERSATION: The AI is still consulting
+    console.log(
+      "[DIAGNOSTIC PROBE] 4. Standard chat response. Shipping payload to UI.",
+    );
     return NextResponse.json(
       {
-        type: "conversational_reply",
-        message: responseMessage?.content,
+        type: "chat_response",
+        message:
+          responseMessage.content || "Processing structural variables...",
       },
       { status: 200 },
     );
-  } catch (error) {
-    console.error("========================================");
-    console.error("AI CONSULTATION FAULT DETECTED:");
-    console.error(error);
-    console.error("========================================");
-
-    return NextResponse.json(
-      {
-        error: "Internal Server Error: Failed to process conversational state.",
-      },
-      { status: 500 },
-    );
+  } catch (error: any) {
+    console.error("[BACKEND FAULT]", error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

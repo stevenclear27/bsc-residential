@@ -42,8 +42,6 @@ The content is organized as follows:
 <directory_structure>
 app/
   (marketing)/
-    portal-login/
-      page.tsx
     portfolio/
       page.tsx
     services/
@@ -52,46 +50,46 @@ app/
   (portal)/
     dashboard/
       page.tsx
-    operator/
-      page.tsx
     layout.tsx
   api/
     chat/
       route.ts
-    estimate/
-      route.ts
     generate-concept/
       route.ts
+  portal-login/
+    page.tsx
   globals.css
   icon.png
   layout.tsx
 components/
+  Dashboard/
+    AccountabilityLedger.tsx
+    ClientProfile.tsx
+    LiveContract.tsx
+    ProjectProposal.tsx
+    StorefrontLobby.tsx
   Intake/
-    AuthGateway.tsx
     ChatEstimator.tsx
+    ConsultationFeed.tsx
     DossierSummaryCard.tsx
-    EstimatorChatBox.tsx
     ZipCodeGate.tsx
+  AuthGateway.tsx
   Footer.tsx
   HeroSection.tsx
   IntroSection.tsx
   Navbar.tsx
   OperatorProfile.tsx
-  PortalLogin.tsx
   PortfolioSection.tsx
-  ProjectChat.tsx
   ProjectGallery.tsx
   ServicesSection.tsx
 lib/
   data/
     portfolio.ts
-  pricing/
-    estimator.ts
   schemas/
     estimateDossierSchema.ts
   types/
     database.ts
-    estimating.ts
+  estimatingEngine.ts
   portfolioData.ts
   supabaseClient.ts
 public/
@@ -140,6 +138,9 @@ public/
         siding-rear-after.webp
     remodels/
       hero-patio.webp
+supabase/
+  .temp/
+    linked-project.json
 utils/
   supabase/
     client.ts
@@ -160,270 +161,535 @@ tsconfig.json
 <files>
 This section contains the contents of the repository's files.
 
-<file path="app/api/chat/route.ts">
-// /src/app/api/chat/route.ts
-import { NextResponse } from "next/server";
-import { GoogleGenAI } from "@google/genai";
+<file path="components/Dashboard/AccountabilityLedger.tsx">
+import React from "react";
 
-// Initialize the AI securely on the server
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+export default function AccountabilityLedger() {
+  return (
+    <section className="flex-1 min-h-100 border border-zinc-800 rounded-lg flex flex-col bg-zinc-900/20 overflow-hidden shadow-xl">
+      <header className="p-6 border-b border-zinc-800 bg-zinc-900/50 flex justify-between items-center">
+        <div>
+          <h2 className="text-sm uppercase tracking-widest text-brand-primary">
+            Accountability Ledger
+          </h2>
+          <p className="text-xs text-zinc-500 mt-1 uppercase tracking-wider">
+            Secure Communications Feed
+          </p>
+        </div>
+        <div className="h-2 w-2 bg-brand-primary rounded-full animate-pulse"></div>
+      </header>
+      <div className="flex-1 p-8 flex items-center justify-center text-zinc-600 uppercase tracking-widest text-xs">
+        Ledger initialization pending database architecture...
+      </div>
+    </section>
+  );
+}
+</file>
 
-const SYSTEM_INSTRUCTION = `
-You are the Master Carpentry Consultant and Senior Estimator for BSC Residential LLC.
-Your objective is to validate the client's architectural vision, build excitement about high-end craftsmanship, and extract exactly six parametric variables required for our estimating engine.
+<file path="components/Dashboard/ClientProfile.tsx">
+"use client"; // Required for local UI toggle state
 
-You must guide the conversation to extract the following data. If a client is vague, ask targeted, professional questions until you can definitively categorize their needs into these exact parameters:
+import React, { useState } from "react";
 
-1. projectScope: Must be exactly one of: "custom_cabinetry", "architectural_millwork", or "room_refinish_install".
-2. linearFootage: Estimated linear footage of the install (numeric value).
-3. materialTier: Must be exactly one of: "designer_painted", "stain_grade_hardwood", or "ultra_custom_walnut_oak".
-4. roomCondition: Must be exactly one of: "turnkey_ready" (plumb/clean), "minor_prep_needed" (patching/trim removal), or "gut_and_reframe" (strip down/out of plumb).
-5. mepRequired: Determine if electrical or plumbing modifications are required (boolean).
-6. zipCode: The 5-digit project zip code.
+export default function ClientProfile() {
+  const [isEditing, setIsEditing] = useState(true);
+  const [clientName, setClientName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [siteAddress, setSiteAddress] = useState("");
 
-CRITICAL EXECUTION RULES:
-- You must respond ONLY in valid, parseable JSON format. No markdown, no backticks, no preamble text.
-- Set 'isComplete' to true ONLY when you have confidently extracted all 6 parameters. 
-- Until 'isComplete' is true, leave the extractedData values as null.
+  const handleSave = (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsEditing(false);
+  };
 
-JSON SCHEMA TO STRICTLY FOLLOW:
-{
-  "chatResponse": "Your clinical, candid, and architectural response to the client.",
-  "isComplete": boolean,
-  "extractedData": {
-    "projectScope": string | null,
-    "linearFootage": number | null,
-    "materialTier": string | null,
-    "roomCondition": string | null,
-    "mepRequired": {
-      "electricalModifications": boolean,
-      "plumbingModifications": boolean
+  return (
+    <section className="bg-brand-canvas border border-zinc-800 rounded-lg shadow-xl overflow-hidden">
+      <header className="bg-zinc-900/80 border-b border-zinc-800 p-6 flex justify-between items-center">
+        <div>
+          <h2 className="text-lg uppercase tracking-widest text-brand-primary">
+            Client Profile
+          </h2>
+          <p className="text-xs text-zinc-500 uppercase tracking-widest mt-1">
+            Identity & Site Parameters
+          </p>
+        </div>
+        {!isEditing && (
+          <button
+            onClick={() => setIsEditing(true)}
+            className="text-xs text-zinc-400 hover:text-brand-primary uppercase tracking-widest transition-colors border border-zinc-700 hover:border-brand-primary px-4 py-2 rounded"
+          >
+            Edit Data
+          </button>
+        )}
+      </header>
+
+      <div className="p-6">
+        {isEditing ? (
+          <form
+            onSubmit={handleSave}
+            className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-in fade-in"
+          >
+            <div className="flex flex-col gap-2">
+              <label className="text-xs uppercase tracking-widest text-zinc-500">
+                Authorized Client
+              </label>
+              <input
+                type="text"
+                value={clientName}
+                onChange={(e) => setClientName(e.target.value)}
+                className="bg-zinc-900/50 border border-zinc-700 rounded p-3 text-white focus:outline-none focus:border-brand-primary text-sm"
+                placeholder="Full Name"
+                required
+              />
+            </div>
+            <div className="flex flex-col gap-2">
+              <label className="text-xs uppercase tracking-widest text-zinc-500">
+                Contact Number (Optional)
+              </label>
+              <input
+                type="tel"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                className="bg-zinc-900/50 border border-zinc-700 rounded p-3 text-white focus:outline-none focus:border-brand-primary text-sm"
+                placeholder="(555) 555-5555"
+              />
+            </div>
+            <div className="flex flex-col gap-2 md:col-span-2">
+              <label className="text-xs uppercase tracking-widest text-zinc-500">
+                Site Location
+              </label>
+              <input
+                type="text"
+                value={siteAddress}
+                onChange={(e) => setSiteAddress(e.target.value)}
+                className="bg-zinc-900/50 border border-zinc-700 rounded p-3 text-white focus:outline-none focus:border-brand-primary text-sm"
+                placeholder="Property Address"
+                required
+              />
+            </div>
+            <button
+              type="submit"
+              className="md:col-span-2 bg-brand-primary text-brand-canvas px-6 py-3 text-sm font-bold uppercase tracking-widest rounded hover:bg-white transition-colors"
+            >
+              Lock Profile
+            </button>
+          </form>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-in fade-in">
+            <div>
+              <span className="text-zinc-500 uppercase text-xs tracking-widest block mb-1">
+                Authorized Client
+              </span>
+              <span className="text-white text-lg font-light tracking-wide">
+                {clientName || "Pending..."}
+              </span>
+            </div>
+            <div>
+              <span className="text-zinc-500 uppercase text-xs tracking-widest block mb-1">
+                Contact Number
+              </span>
+              <span className="text-white text-lg font-light tracking-wide">
+                {phone || "Not Provided"}
+              </span>
+            </div>
+            <div className="md:col-span-3 pt-4 border-t border-zinc-800/50">
+              <span className="text-zinc-500 uppercase text-xs tracking-widest block mb-1">
+                Site Location
+              </span>
+              <span className="text-white text-lg font-light tracking-wide">
+                {siteAddress || "Pending..."}
+              </span>
+            </div>
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
+</file>
+
+<file path="components/Dashboard/LiveContract.tsx">
+"use client";
+
+import React, { useState } from "react";
+
+export default function LiveContract() {
+  // STATE MANAGEMENT: Data bindings and UI toggle switch
+  const [isEditing, setIsEditing] = useState(true);
+  const [clientName, setClientName] = useState("");
+  const [siteAddress, setSiteAddress] = useState("");
+  const [projectNotes, setProjectNotes] = useState("");
+
+  const handleSave = (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsEditing(false); // Flip the switch to lock the document
+  };
+
+  return (
+    <section className="border border-zinc-800 rounded-lg bg-zinc-900/20 relative overflow-hidden shadow-xl max-w-4xl">
+      <div className="absolute top-0 left-0 w-full h-1 bg-brand-primary"></div>
+
+      <div className="p-8 flex flex-col gap-6">
+        <div className="flex justify-between items-end border-b border-zinc-800 pb-4">
+          <div>
+            <h2 className="text-xl uppercase tracking-widest text-brand-primary mb-1">
+              Preliminary Scope
+            </h2>
+            <p className="text-xs text-zinc-400 uppercase tracking-widest">
+              Statement of Work & Parameters
+            </p>
+          </div>
+
+          {!isEditing && (
+            <button
+              onClick={() => setIsEditing(true)}
+              className="text-xs text-zinc-400 hover:text-brand-primary uppercase tracking-widest transition-colors border border-zinc-700 hover:border-brand-primary px-4 py-2 rounded"
+            >
+              Edit Parameters
+            </button>
+          )}
+        </div>
+
+        {/* CONDITION 1: The Input Phase (isEditing === true) */}
+        {isEditing ? (
+          <form
+            onSubmit={handleSave}
+            className="flex flex-col gap-6 animate-in fade-in duration-300"
+          >
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="flex flex-col gap-2">
+                <label className="text-xs uppercase tracking-widest text-zinc-500">
+                  Authorized Client
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={clientName}
+                  onChange={(e) => setClientName(e.target.value)}
+                  placeholder="e.g., John Doe"
+                  className="bg-zinc-900/50 border border-zinc-700 rounded p-4 text-white focus:outline-none focus:border-brand-primary transition-colors text-sm"
+                />
+              </div>
+              <div className="flex flex-col gap-2">
+                <label className="text-xs uppercase tracking-widest text-zinc-500">
+                  Site Location
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={siteAddress}
+                  onChange={(e) => setSiteAddress(e.target.value)}
+                  placeholder="e.g., 123 Main St, Anderson, IN"
+                  className="bg-zinc-900/50 border border-zinc-700 rounded p-4 text-white focus:outline-none focus:border-brand-primary transition-colors text-sm"
+                />
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <label className="text-xs uppercase tracking-widest text-zinc-500">
+                Structural Objective
+              </label>
+              <textarea
+                required
+                value={projectNotes}
+                onChange={(e) => setProjectNotes(e.target.value)}
+                placeholder="Describe the desired outcome and design specifications..."
+                rows={4}
+                className="bg-zinc-900/50 border border-zinc-700 rounded p-4 text-white focus:outline-none focus:border-brand-primary transition-colors text-sm resize-none"
+              />
+            </div>
+
+            <button
+              type="submit"
+              className="self-end bg-brand-primary text-brand-canvas px-8 py-3 text-sm font-bold uppercase tracking-widest rounded hover:bg-white transition-colors"
+            >
+              Lock Parameters
+            </button>
+          </form>
+        ) : (
+          /* CONDITION 2: The Locked Contract Phase (isEditing === false) */
+          <div className="flex flex-col gap-6 animate-in fade-in duration-300">
+            <div className="bg-zinc-900/40 border border-zinc-800 rounded p-6 shadow-inner space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 border-b border-zinc-800/50 pb-6">
+                <div>
+                  <span className="text-zinc-500 uppercase text-xs tracking-widest block mb-1">
+                    Client Authorization
+                  </span>
+                  <span className="text-white text-lg font-light tracking-wide">
+                    {clientName}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-zinc-500 uppercase text-xs tracking-widest block mb-1">
+                    Site Location
+                  </span>
+                  <span className="text-white text-lg font-light tracking-wide">
+                    {siteAddress}
+                  </span>
+                </div>
+              </div>
+
+              <div>
+                <span className="text-zinc-500 uppercase text-xs tracking-widest block mb-2">
+                  Project Directive
+                </span>
+                <p className="text-zinc-300 leading-relaxed font-light">
+                  {projectNotes}
+                </p>
+              </div>
+            </div>
+
+            <div className="pt-2">
+              <p className="text-[10px] text-zinc-500 uppercase tracking-widest leading-relaxed">
+                This document serves as a preliminary outline. Final
+                specifications, structural variables, and investment tiers are
+                subject to change. Details to be discussed with Master
+                Carpenter, Steven Clear.
+              </p>
+            </div>
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
+</file>
+
+<file path="components/Dashboard/ProjectProposal.tsx">
+import React from "react";
+
+// Strict typing for incoming parameters[cite: 1]
+interface PhaseProp {
+  phaseName: string;
+  description: string;
+}
+
+interface ProjectProposalProps {
+  investmentRange?: {
+    floor: string;
+    ceiling: string;
+  };
+}
+
+export default function ProjectProposal({
+  investmentRange,
+}: ProjectProposalProps) {
+  const constructionPhases: PhaseProp[] = [
+    {
+      phaseName: "1. Site Prep & Protection",
+      description:
+        "Establishment of dust barriers, floor protection, and material staging zones.",
     },
-    "zipCode": string | null
-  }
-}
-`;
+    {
+      phaseName: "2. Demolition",
+      description:
+        "Selective removal of existing assemblies to expose structural framework.",
+    },
+    {
+      phaseName: "3. The Build",
+      description:
+        "Core structural framing, mechanical rough-ins, and substrate installation.",
+    },
+    {
+      phaseName: "4. The Finish",
+      description:
+        "Installation of architectural millwork, paint, and final mechanical trims.",
+    },
+  ];
 
-export async function POST(request: Request) {
-  try {
-    const body = await request.json();
-    const { history, message } = body;
+  return (
+    <section className="bg-brand-canvas border border-zinc-800 rounded-lg shadow-xl overflow-hidden relative">
+      <div className="absolute top-0 left-0 w-full h-1 bg-brand-primary"></div>
 
-    // Construct the payload for the Gemini API
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
-      contents: message,
-      config: {
-        systemInstruction: SYSTEM_INSTRUCTION,
-        // Force the AI to output parseable JSON to prevent frontend parsing failures
-        responseMimeType: "application/json",
-      },
-    });
+      <header className="bg-zinc-900/40 border-b border-zinc-800 p-6">
+        <h2 className="text-xl uppercase tracking-widest text-brand-primary">
+          Initial Project Proposal
+        </h2>
+        <p className="text-xs text-zinc-500 uppercase tracking-widest mt-2">
+          Statement of Work & Phased Execution
+        </p>
+      </header>
 
-    // Parse the AI's JSON string into an actionable JavaScript object
-    const aiResponseData = JSON.parse(response.text());
+      <div className="p-6 space-y-8">
+        <div>
+          <h3 className="text-sm uppercase tracking-widest text-zinc-400 mb-3 border-b border-zinc-800 pb-2">
+            Executive Summary
+          </h3>
+          <p className="text-zinc-300 font-light leading-relaxed">
+            This proposal synthesizes the initial design consultation into
+            actionable structural parameters. The following phases outline the
+            anticipated load path for executing the build, subject to formal
+            site verification.
+          </p>
+        </div>
 
-    return NextResponse.json(aiResponseData, { status: 200 });
-  } catch (error) {
-    console.error("ChatBot Extraction Failure:", error);
-    return NextResponse.json(
-      { error: "Internal Server Error: Failed to process chat." },
-      { status: 500 },
-    );
-  }
+        <div>
+          <h3 className="text-sm uppercase tracking-widest text-zinc-400 mb-4 border-b border-zinc-800 pb-2">
+            Project Phasing
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {constructionPhases.map((phase, idx) => (
+              <div
+                key={idx}
+                className="bg-zinc-900/50 border border-zinc-800 p-4 rounded shadow-inner"
+              >
+                <h4 className="text-brand-primary text-sm font-bold tracking-widest uppercase mb-2">
+                  {phase.phaseName}
+                </h4>
+                <p className="text-zinc-400 text-sm font-light leading-relaxed">
+                  {phase.description}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* NEW FINANCIAL MODULE: The Target Investment Tier */}
+        <div className="bg-brand-primary/5 border border-brand-primary/20 rounded p-6 mt-4 flex flex-col md:flex-row justify-between items-center gap-4">
+          <div>
+            <h3 className="text-brand-primary uppercase tracking-widest font-bold">
+              Target Investment Tier
+            </h3>
+            <p className="text-xs text-zinc-400 mt-1">
+              Based on assumed linear footage and material specifications.
+            </p>
+          </div>
+
+          <div className="text-2xl font-light text-white tracking-wider">
+            {investmentRange
+              ? `${investmentRange.floor} — ${investmentRange.ceiling}`
+              : "$ Calculating..."}
+          </div>
+        </div>
+
+        <div className="pt-4 border-t border-zinc-800/80">
+          <p className="text-[10px] text-zinc-500 uppercase tracking-widest leading-relaxed">
+            This digital ledger serves as a preliminary architectural outline.
+            Fixed-rate contract structures, final schedules, and investment
+            variables will be formalized post-consultation. Details to be
+            discussed exclusively with Master Carpenter, Steven Clear.
+          </p>
+        </div>
+      </div>
+    </section>
+  );
 }
 </file>
 
-<file path="lib/pricing/estimator.ts">
-// /src/lib/pricing/estimator.ts
+<file path="components/Dashboard/StorefrontLobby.tsx">
+import React from "react";
 
-// ============================================================================
-// 1. DATA CONTRACTS (STRICT TYPING)
-// Prevents runtime failures by forcing the AI and UI to pass exact data shapes.
-// ============================================================================
+export default function StorefrontLobby() {
+  return (
+    <header className="w-full bg-zinc-900 border-b border-brand-primary/30 p-8 shadow-md">
+      <div className="max-w-6xl mx-auto flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div className="flex flex-col gap-2">
+          <h1 className="text-3xl font-light tracking-wide text-brand-primary uppercase">
+            BSC Residential
+          </h1>
+          <p className="text-sm text-zinc-400 uppercase tracking-widest">
+            Master Carpenter: Steven Clear | Private Client Ledger
+          </p>
+        </div>
+        <div className="text-right">
+          <div className="text-xs text-zinc-500 uppercase tracking-widest">
+            Status
+          </div>
+          <div className="text-sm text-brand-primary uppercase tracking-widest font-bold">
+            Intake Phase
+          </div>
+        </div>
+      </div>
+    </header>
+  );
+}
+</file>
 
-export interface HomeownerInputPayload {
-  projectScope:
-    | "custom_cabinetry"
-    | "architectural_millwork"
-    | "room_refinish_install";
-  linearFootage: number;
-  materialTier:
-    | "designer_painted"
-    | "stain_grade_hardwood"
-    | "ultra_custom_walnut_oak";
-  roomCondition: "turnkey_ready" | "minor_prep_needed" | "gut_and_reframe";
-  mepRequired: {
-    electricalModifications: boolean;
-    plumbingModifications: boolean;
-  };
-  zipCode: string;
+<file path="lib/estimatingEngine.ts">
+// /lib/estimatingEngine.ts
+import { Database } from "./types/database";
+
+// STRICT TYPING: Extracting the exact column types directly from Supabase
+type ProjectRecord = Database["public"]["Tables"]["projects"]["Row"];
+
+export interface EstimatorInputs {
+  // We force these inputs to match the exact data types your database expects
+  linearFootage: NonNullable<ProjectRecord["linear_footage"]>;
+  materialTier: NonNullable<ProjectRecord["material_tier"]>;
+  roomCondition: NonNullable<ProjectRecord["room_condition"]>;
 }
 
-export interface ResolvedParametricVariables {
-  mUnit: number;
-  lUnit: number;
-  dPrep: number;
-  rDay: number;
-  sMep: number;
-  mSub: number;
-  fFixed: number;
-}
-
-export interface CalculationResult {
-  productSubtotal: number;
-  prepSubtotal: number;
-  mepManagedSubtotal: number;
-  fixedOverhead: number;
-  totalTurnkeyInvestment: number;
-}
-
-export interface B2CProposalPayload {
-  clientName: string;
-  projectSummary: string;
-  totalTurnkeyInvestment: number;
-  includedScopeOfWork: string[];
-  projectedTimelineDays: number;
-  legalExclusions: string[];
-}
-
-// ============================================================================
-// 2. OPERATOR HEURISTICS & LOOKUP TABLES
-// Decoupled variables for high-autonomy adjustments.
-// ============================================================================
-
-const MASTER_CARPENTER_DAY_RATE = 950.0;
-const BASE_FIXED_OVERHEAD = 1500.0;
-const SUBCONTRACTOR_MARKUP = 0.2; // 20%
-const HAMILTON_COUNTY_CORRIDOR = ["46032", "46033", "46060", "46062", "46077"];
-const OUT_OF_NETWORK_SURCHARGE = 450.0; // Fuel/travel offset
-
-const MATERIAL_AND_LABOR_RATES: Record<
-  string,
-  { mUnit: number; lUnit: number }
-> = {
-  designer_painted: { mUnit: 220, lUnit: 120 },
-  stain_grade_hardwood: { mUnit: 350, lUnit: 180 },
-  ultra_custom_walnut_oak: { mUnit: 550, lUnit: 280 },
+// ISOLATED CONFIGURATION: Your business logic variables
+const BASE_RATES = {
+  masterCarpenterDayRate: 850,
+  linearFootBaseline: 150,
 };
 
-const ROOM_PREP_DAYS: Record<string, number> = {
-  turnkey_ready: 1.0,
-  minor_prep_needed: 3.0,
-  gut_and_reframe: 6.0,
+// We define the exact string literals expected by the engine
+type MaterialTier = "Standard" | "Premium" | "Ultra-Custom";
+type RoomCondition = "Turnkey" | "Minor Prep Needed" | "Gut and Reframe";
+
+const MULTIPLIERS: Record<string, Record<string, number>> = {
+  material: {
+    Standard: 1.0,
+    Premium: 1.45,
+    "Ultra-Custom": 2.2,
+  },
+  complexity: {
+    Turnkey: 1.0,
+    "Minor Prep Needed": 1.25,
+    "Gut and Reframe": 1.75,
+  },
 };
 
-const MEP_ALLOWANCES = {
-  electrical: 1800.0,
-  plumbing: 2200.0,
+const ALLOWANCES = {
+  subcontractorBuffer: 1500,
+  contingencyMargin: 1.15,
 };
 
-// ============================================================================
-// 3. DETERMINISTIC ENGINE
-// Executes the decoupled financial algorithm.
-// ============================================================================
+export function generateInvestmentTier(inputs: EstimatorInputs) {
+  // 1. Calculate Base Structural Cost
+  const baseStructuralCost =
+    inputs.linearFootage * BASE_RATES.linearFootBaseline;
 
-export function generateTurnkeyProposal(
-  input: HomeownerInputPayload,
-  clientIdentifier: string = "Valued Client",
-): B2CProposalPayload {
-  // STEP A: Resolve Parametric Variables
-  const rates = MATERIAL_AND_LABOR_RATES[input.materialTier];
-  const dPrep = ROOM_PREP_DAYS[input.roomCondition];
+  // 2. Apply Multipliers (Fallback to 1.0 if the AI passes an unexpected string)
+  const materialMultiplier = MULTIPLIERS.material[inputs.materialTier] || 1.0;
+  const complexityMultiplier =
+    MULTIPLIERS.complexity[inputs.roomCondition] || 1.0;
 
-  let sMep = 0;
-  if (input.mepRequired.electricalModifications)
-    sMep += MEP_ALLOWANCES.electrical;
-  if (input.mepRequired.plumbingModifications) sMep += MEP_ALLOWANCES.plumbing;
+  const calculatedCost =
+    baseStructuralCost * materialMultiplier * complexityMultiplier;
 
-  let fFixed = BASE_FIXED_OVERHEAD;
-  if (!HAMILTON_COUNTY_CORRIDOR.includes(input.zipCode)) {
-    fFixed += OUT_OF_NETWORK_SURCHARGE;
-  }
+  // 3. Add Fixed Allowances and Master Carpenter Minimums
+  const laborAndSubs =
+    BASE_RATES.masterCarpenterDayRate * 3 + ALLOWANCES.subcontractorBuffer;
 
-  const params: ResolvedParametricVariables = {
-    mUnit: rates.mUnit,
-    lUnit: rates.lUnit,
-    dPrep: dPrep,
-    rDay: MASTER_CARPENTER_DAY_RATE,
-    sMep: sMep,
-    mSub: SUBCONTRACTOR_MARKUP,
-    fFixed: fFixed,
-  };
+  const rawTotal = calculatedCost + laborAndSubs;
 
-  // STEP B: Execute Financial Algorithm
-  // C_total = [LF * (M_unit + L_unit)] + (D_prep * R_day) + [S_MEP * (1 + M_sub)] + F_fixed
-  const productSubtotal = input.linearFootage * (params.mUnit + params.lUnit);
-  const prepSubtotal = params.dPrep * params.rDay;
-  const mepManagedSubtotal = params.sMep * (1 + params.mSub);
+  // 4. Generate the Range (Floor and Ceiling)
+  const targetFloor = rawTotal;
+  const targetCeiling = rawTotal * ALLOWANCES.contingencyMargin;
 
-  const totalTurnkeyInvestment =
-    productSubtotal + prepSubtotal + mepManagedSubtotal + params.fFixed;
-
-  // STEP C: Generate Timeline
-  // Timeline = Math.ceil(D_prep + (LF / 15)) + 1
-  const projectedTimelineDays =
-    Math.ceil(params.dPrep + input.linearFootage / 15) + 1;
-
-  // STEP D: Construct Value-Backed Scope Array
-  const includedScopeOfWork: string[] = [
-    "Precision laser-leveling and installation of custom architectural units.",
-    "Complete floor-to-ceiling zip-wall dust containment and site protection system.",
-    "In-house preparation, wall alignment, and seamless integration of millwork.",
-  ];
-
-  if (
-    input.mepRequired.electricalModifications ||
-    input.mepRequired.plumbingModifications
-  ) {
-    includedScopeOfWork.push(
-      "Turnkey coordination and management of all licensed trade professionals (Electrical/Plumbing).",
-    );
-  }
-
-  // STEP E: Edge Case Handling & System Guardrails
-  const legalExclusions: string[] = [
-    "Remediation of existing mold, asbestos, or pest damage concealed behind walls.",
-    "Upgrades to existing main electrical panels to support new loads (unless expressly written).",
-  ];
-
-  if (input.roomCondition === "gut_and_reframe" && input.linearFootage > 40) {
-    legalExclusions.push(
-      "Structural modifications to load-bearing walls require independent engineering approval and are quoted under separate contract.",
-    );
-  }
-
-  // STEP F: Return Zero-Cost Breakdown Payload
+  // Return formatted strings for the UI and raw integers for the database
   return {
-    clientName: clientIdentifier,
-    projectSummary: `Custom ${input.projectScope.replace(/_/g, " ")} Installation (${input.linearFootage} LF)`,
-    totalTurnkeyInvestment: Math.round(totalTurnkeyInvestment), // Round to nearest dollar for clean presentation
-    includedScopeOfWork,
-    projectedTimelineDays,
-    legalExclusions,
+    formattedFloor: new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+      maximumFractionDigits: 0,
+    }).format(targetFloor),
+    formattedCeiling: new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+      maximumFractionDigits: 0,
+    }).format(targetCeiling),
+    rawFloor: targetFloor,
+    rawCeiling: targetCeiling,
   };
 }
 </file>
 
-<file path="lib/types/estimating.ts">
-// /src/lib/types/estimating.ts
-
-export type MaterialTier = "standard" | "premium";
-
-export interface ProjectParameters {
-  category: string;
-  area: number;
-  tier: MaterialTier;
-  confidenceScore: number;
-}
-</file>
-
-<file path="app/(marketing)/portal-login/page.tsx">
-import PortalLogin from "@/components/PortalLogin";
-
-export default function PortalLoginPage() {
-  return <PortalLogin />;
-}
+<file path="supabase/.temp/linked-project.json">
+{"ref":"nrujiztotggvsnubppaj","name":"BSC Residential","organization_id":"ktovuwwkqukcgxgzpbbx","organization_slug":"ktovuwwkqukcgxgzpbbx"}
 </file>
 
 <file path="app/(marketing)/portfolio/page.tsx">
@@ -484,103 +750,6 @@ export default function Home() {
         </div>
       </section>
     </main>
-  );
-}
-</file>
-
-<file path="app/(portal)/dashboard/page.tsx">
-export default function DashboardOverview() {
-  return (
-    <div className="space-y-6">
-      <h1 className="text-3xl font-bold text-zinc-100 border-b border-brand-primary/20 pb-4">
-        Project Ledger
-      </h1>
-      <p className="text-zinc-400">
-        System initialized. Awaiting database payload.
-      </p>
-    </div>
-  );
-}
-</file>
-
-<file path="app/(portal)/operator/page.tsx">
-import { createClient } from "@/utils/supabase/server";
-import { Project } from "@/lib/types/database";
-
-// 1. SERVER-FIRST BASELINE: This component runs entirely on the server.
-export default async function OperatorDashboard() {
-  const supabase = await createClient();
-
-  // 2. FETCH THE LEDGER: Your RLS bypass allows this to pull all projects.
-  const { data: projects, error } = await supabase
-    .from("projects")
-    .select("*")
-    .order("created_at", { ascending: false });
-
-  if (error) {
-    console.error("Database Error:", error.message);
-  }
-
-  // 3. STRICT TYPING: Cast the raw database output to our verified contract.
-  const verifiedProjects: Project[] = projects || [];
-
-  return (
-    <div className="space-y-8">
-      <div className="border-b border-brand-primary/20 pb-4">
-        <h1 className="text-3xl font-bold text-brand-primary uppercase tracking-widest">
-          Command Center
-        </h1>
-        <p className="text-zinc-400 mt-2">
-          Global Operator Access. Monitoring {verifiedProjects.length} active
-          ledgers.
-        </p>
-      </div>
-
-      {/* 4. COMPONENT ISOLATION: We will map the data to an isolated UI component here later */}
-      <div className="grid grid-cols-1 gap-6">
-        {verifiedProjects.length === 0 ? (
-          <div className="p-8 border border-brand-primary/20 bg-brand-surface rounded text-center text-zinc-500">
-            No active projects detected in the master ledger.
-          </div>
-        ) : (
-          verifiedProjects.map((project) => (
-            <div
-              key={project.id}
-              className="p-6 border border-brand-primary/20 bg-brand-surface rounded"
-            >
-              <span className="text-xs font-bold text-brand-primary uppercase tracking-widest">
-                {project.status}
-              </span>
-              <h2 className="text-xl font-bold text-zinc-100 mt-1">
-                {project.title}
-              </h2>
-              <p className="text-sm text-zinc-400 mt-2">
-                {project.project_type}
-              </p>
-
-              <div className="mt-4 pt-4 border-t border-brand-primary/10 grid grid-cols-2 gap-4">
-                <div>
-                  <span className="text-[10px] text-zinc-500 uppercase">
-                    Budget
-                  </span>
-                  <p className="text-sm text-zinc-300">
-                    {project.budget_range}
-                  </p>
-                </div>
-                <div>
-                  <span className="text-[10px] text-zinc-500 uppercase">
-                    Timeline
-                  </span>
-                  <p className="text-sm text-zinc-300">
-                    {project.timeline_expectation}
-                  </p>
-                </div>
-              </div>
-            </div>
-          ))
-        )}
-      </div>
-    </div>
   );
 }
 </file>
@@ -650,6 +819,168 @@ export default function PortalLayout({ children }: { children: ReactNode }) {
 }
 </file>
 
+<file path="app/api/chat/route.ts">
+import { NextResponse } from "next/server";
+import OpenAI from "openai";
+import {
+  generateInvestmentTier,
+  EstimatorInputs,
+} from "@/lib/estimatingEngine";
+
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
+
+const MODEL_VERSION = process.env.DRAFT_SCOPE_MODEL || "gpt-4o-mini";
+
+// THE ABSTRACTION LAYER: Front-of-House Designer & Back-of-House PM
+const SYSTEM_INSTRUCTION = `
+You operate in two distinct cognitive phases for BSC Residential LLC, a high-end custom carpentry firm.
+
+PHASE 1: THE DESIGN CONSULTANT (Client-Facing)
+When conversing with the user, act as an elite architectural design consultant. Validate their aesthetic vision, accommodate their ideas, and gently expand their concepts using luxury design trends. DO NOT output JSON in your conversational replies.
+
+PHASE 2: THE PROJECT MANAGER (System-Facing)
+Once you have gathered enough structural context (typically 2-4 exchanges), you must explicitly ask: "Shall I compile these concepts into your preliminary project dossier?"
+If the client explicitly agrees, execute the 'generate_project_dossier' tool. You must extrapolate the client's abstract vision into four highly clinical, structural phases, and estimate the linear footage, material tier, and room condition based on the scope of the chat.
+`;
+
+const tools = [
+  {
+    type: "function" as const,
+    function: {
+      name: "generate_project_dossier",
+      description:
+        "Executes when the client agrees to finalize the consultation. Compiles the vision into a phased, structural scope of work.",
+      parameters: {
+        type: "object",
+        properties: {
+          projectTitle: { type: "string" },
+          assumedScope: { type: "string" },
+          projectPhases: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                phaseName: { type: "string" },
+                description: { type: "string" },
+              },
+              required: ["phaseName", "description"],
+            },
+          },
+          linearFootage: {
+            type: "number",
+            description: "Estimated linear footage of the work area.",
+          },
+          materialTier: {
+            type: "string",
+            enum: ["Standard", "Premium", "Ultra-Custom"],
+          },
+          roomCondition: {
+            type: "string",
+            enum: ["Turnkey", "Minor Prep Needed", "Gut and Reframe"],
+          },
+        },
+        required: [
+          "projectTitle",
+          "assumedScope",
+          "projectPhases",
+          "linearFootage",
+          "materialTier",
+          "roomCondition",
+        ],
+      },
+    },
+  },
+];
+
+export async function POST(request: Request) {
+  try {
+    console.log("[DIAGNOSTIC PROBE] 1. Request Received. Parsing payload...");
+    const { messages } = await request.json();
+
+    console.log(
+      "[DIAGNOSTIC PROBE] 2. Transmitting to OpenAI (Computation Only)...",
+    );
+    const response = await openai.chat.completions.create({
+      model: MODEL_VERSION,
+      messages: [{ role: "system", content: SYSTEM_INSTRUCTION }, ...messages],
+      tools: tools,
+      tool_choice: "auto",
+    });
+
+    const responseMessage = response.choices[0].message;
+    console.log("[DIAGNOSTIC PROBE] 3. OpenAI Response Received.");
+
+    if (responseMessage?.tool_calls) {
+      const toolCall = responseMessage.tool_calls.find(
+        (tool) =>
+          tool.type === "function" &&
+          tool.function.name === "generate_project_dossier",
+      );
+
+      if (toolCall && toolCall.type === "function") {
+        console.log(
+          "[DIAGNOSTIC PROBE] 4. Executing Dossier Generation Logic...",
+        );
+        const rawData = JSON.parse(toolCall.function.arguments);
+
+        const investmentData = generateInvestmentTier({
+          linearFootage: rawData.linearFootage,
+          materialTier: rawData.materialTier as EstimatorInputs["materialTier"],
+          roomCondition:
+            rawData.roomCondition as EstimatorInputs["roomCondition"],
+        });
+
+        console.log(
+          "[DIAGNOSTIC PROBE] 5. Math calculated. Shipping volatile payload to UI.",
+        );
+        return NextResponse.json(
+          {
+            type: "dossier_generated",
+            message:
+              "Project parameters compiled. Transitioning to formal dossier.",
+            data: {
+              projectTitle: rawData.projectTitle,
+              assumedScope: rawData.assumedScope,
+              projectPhases: rawData.projectPhases,
+              investmentRange: {
+                floor: investmentData.formattedFloor,
+                ceiling: investmentData.formattedCeiling,
+              },
+              // The frontend needs the raw integers to execute the database write later
+              rawInvestment: {
+                floor: investmentData.rawFloor,
+                ceiling: investmentData.rawCeiling,
+                linearFootage: rawData.linearFootage,
+                materialTier: rawData.materialTier,
+                roomCondition: rawData.roomCondition,
+              },
+            },
+          },
+          { status: 200 },
+        );
+      }
+    }
+
+    console.log(
+      "[DIAGNOSTIC PROBE] 4. Standard chat response. Shipping payload to UI.",
+    );
+    return NextResponse.json(
+      {
+        type: "chat_response",
+        message:
+          responseMessage.content || "Processing structural variables...",
+      },
+      { status: 200 },
+    );
+  } catch (error: any) {
+    console.error("[BACKEND FAULT]", error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}
+</file>
+
 <file path="app/api/generate-concept/route.ts">
 import { NextResponse } from "next/server";
 import { GoogleGenAI } from "@google/genai";
@@ -700,146 +1031,15 @@ export async function POST(request: Request) {
 }
 </file>
 
-<file path="components/Intake/AuthGateway.tsx">
-"use client";
+<file path="app/portal-login/page.tsx">
+import React from "react";
+import AuthGateway from "@/components/AuthGateway"; // The unified component
 
-import React, { useState } from "react";
-import { useRouter } from "next/navigation";
-import { createClient } from "@/utils/supabase/client";
-
-interface AuthGatewayProps {
-  // We pass the dossier payload into this component so we can write it
-  // to the database the exact moment the account is successfully created.
-  projectPayload: any;
-}
-
-export default function AuthGateway({ projectPayload }: AuthGatewayProps) {
-  const router = useRouter();
-  const supabase = createClient();
-
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
-
-  const handleAccountProvisioning = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsProcessing(true);
-    setErrorMsg(null);
-
-    try {
-      // 1. Provision the secure user account via Supabase Auth
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            full_name: name, // Store the name in the Auth metadata
-          },
-        },
-      });
-
-      if (authError) throw authError;
-
-      // 2. Future Execution: Anchor the projectPayload to the new user's UUID in your database tables here.
-      // Database Security: All Supabase tables must have Row Level Security (RLS) enabled. A user must only ever be able to read/write their own project data[cite: 3].
-      console.log("Payload ready for database injection:", projectPayload);
-
-      // 3. Redirect the user to the Client Portal
-      router.push("/portal");
-    } catch (error: any) {
-      console.error("Auth Provisioning Error:", error);
-      setErrorMsg(error.message || "Failed to establish a secure connection.");
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
+export default function PortalLoginPage() {
   return (
-    <div className="bg-brand-surface p-8 rounded-lg border border-brand-primary/20 mb-6 shadow-xl">
-      <div className="mb-8 border-b border-brand-primary/20 pb-6">
-        <h3 className="text-2xl font-bold text-brand-primary uppercase tracking-wide mb-3">
-          Secure Portal Activation
-        </h3>
-        <p className="text-zinc-300 text-sm leading-relaxed mb-4">
-          Your preliminary project dossier is ready. To save your structural
-          parameters and schedule an onsite verification, you must establish a
-          secure account.
-        </p>
-        <p className="text-zinc-400 text-xs leading-relaxed">
-          This account provisions your Client Portal. Once your build commences,
-          this portal serves as your single source of truth for scheduling,
-          daily site logs, and milestone tracking.
-        </p>
-      </div>
-
-      <form
-        onSubmit={handleAccountProvisioning}
-        className="grid grid-cols-1 md:grid-cols-2 gap-6"
-      >
-        <div className="md:col-span-2">
-          <label className="block text-[10px] font-bold uppercase tracking-widest text-brand-primary mb-2">
-            Full Name
-          </label>
-          <input
-            type="text"
-            required
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="e.g. Steven Clear"
-            className="w-full bg-brand-canvas border border-brand-primary/30 rounded px-4 py-3 text-zinc-100 focus:outline-none focus:border-brand-primary transition-colors"
-          />
-        </div>
-
-        <div>
-          <label className="block text-[10px] font-bold uppercase tracking-widest text-brand-primary mb-2">
-            Email Address
-          </label>
-          <input
-            type="email"
-            required
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="client@example.com"
-            className="w-full bg-brand-canvas border border-brand-primary/30 rounded px-4 py-3 text-zinc-100 focus:outline-none focus:border-brand-primary transition-colors"
-          />
-        </div>
-
-        <div>
-          <label className="block text-[10px] font-bold uppercase tracking-widest text-brand-primary mb-2">
-            Secure Password
-          </label>
-          <input
-            type="password"
-            required
-            minLength={8}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="••••••••"
-            className="w-full bg-brand-canvas border border-brand-primary/30 rounded px-4 py-3 text-zinc-100 focus:outline-none focus:border-brand-primary transition-colors"
-          />
-        </div>
-
-        {errorMsg && (
-          <div className="md:col-span-2 p-3 bg-red-900/20 border border-red-500/50 rounded text-xs text-red-400">
-            {errorMsg}
-          </div>
-        )}
-
-        <div className="md:col-span-2 mt-4 pt-4 border-t border-brand-primary/10">
-          <button
-            type="submit"
-            disabled={isProcessing}
-            className="w-full bg-brand-accent text-brand-primary font-bold uppercase tracking-widest py-4 rounded hover:bg-brand-accent/90 disabled:opacity-50 transition-colors shadow-lg"
-          >
-            {isProcessing
-              ? "Provisioning Ledger..."
-              : "Create Account & Save Dossier"}
-          </button>
-        </div>
-      </form>
-    </div>
+    <main className="flex-1 w-full flex items-center justify-center p-8 min-h-screen">
+      <AuthGateway />
+    </main>
   );
 }
 </file>
@@ -923,148 +1123,6 @@ export default function ZipCodeGate({ onVerified }: ZipCodeGateProps) {
         >
           Verify Location
         </button>
-      </form>
-    </div>
-  );
-}
-</file>
-
-<file path="components/ProjectChat.tsx">
-"use client";
-
-import { useState, useEffect } from "react";
-import { Message } from "@/lib/types/database";
-import { createClient } from "@/utils/supabase/client";
-
-interface ProjectChatProps {
-  projectId: string;
-  currentUserId: string;
-  initialMessages: Message[];
-}
-
-export default function ProjectChat({
-  projectId,
-  currentUserId,
-  initialMessages,
-}: ProjectChatProps) {
-  const [messages, setMessages] = useState<Message[]>(initialMessages);
-  const [inputText, setInputText] = useState("");
-  const supabase = createClient();
-
-  useEffect(() => {
-    // 1. Establish the Realtime Subscription
-    // We filter strictly by the project_id to prevent data bleed from other active builds.
-    const channel = supabase
-      .channel(`project_chat_${projectId}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "messages",
-          filter: `project_id=eq.${projectId}`,
-        },
-        (payload) => {
-          // Cast the incoming payload to our verified TypeScript contract
-          const newMessage = payload.new as Message;
-          setMessages((prev) => [...prev, newMessage]);
-        },
-      )
-      .subscribe();
-
-    // 2. Controlled Demolition (Cleanup)
-    // Severs the websocket connection when the component unmounts to prevent memory leaks.
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [projectId, supabase]);
-
-  const handleSendMessage = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!inputText.trim()) return;
-
-    const payloadText = inputText.trim();
-    setInputText(""); // Optimistic UI clear to maintain a responsive feel
-
-    // 3. Database Insertion
-    // RLS policies will automatically block this if the currentUserId is not in the stakeholders junction table.
-    const { error } = await supabase.from("messages").insert({
-      project_id: projectId,
-      sender_id: currentUserId,
-      text_payload: payloadText,
-    });
-
-    if (error) {
-      console.error("Transmission Error:", error.message);
-      // In production, we will map this to a visible error toast for the Operator
-    }
-  };
-
-  return (
-    <div className="flex flex-col h-[500px] border border-brand-primary/20 rounded bg-brand-surface">
-      {/* Header */}
-      <div className="p-4 border-b border-brand-primary/20 bg-brand-canvas/50">
-        <h3 className="text-sm font-bold text-brand-primary uppercase tracking-widest">
-          Project Comm Ledger
-        </h3>
-      </div>
-
-      {/* Message Feed */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-brand-canvas">
-        {messages.length === 0 ? (
-          <p className="text-zinc-500 text-sm text-center mt-4">
-            No communications logged. The ledger is clear.
-          </p>
-        ) : (
-          messages.map((msg) => {
-            const isMe = msg.sender_id === currentUserId;
-            return (
-              <div
-                key={msg.id}
-                className={`flex ${isMe ? "justify-end" : "justify-start"}`}
-              >
-                <div
-                  className={`max-w-[80%] p-3 rounded text-sm ${
-                    isMe
-                      ? "bg-brand-primary/10 border border-brand-primary/30 text-zinc-100"
-                      : "bg-brand-surface border border-brand-primary/10 text-zinc-300"
-                  }`}
-                >
-                  <p>{msg.text_payload}</p>
-                  <span className="text-[10px] text-zinc-500 mt-2 block uppercase">
-                    {new Date(msg.created_at).toLocaleTimeString([], {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
-                  </span>
-                </div>
-              </div>
-            );
-          })
-        )}
-      </div>
-
-      {/* Input Area */}
-      <form
-        onSubmit={handleSendMessage}
-        className="p-4 border-t border-brand-primary/20 bg-brand-surface"
-      >
-        <div className="flex gap-2">
-          <input
-            type="text"
-            value={inputText}
-            onChange={(e) => setInputText(e.target.value)}
-            placeholder="Log an update or ask a question..."
-            className="flex-1 bg-brand-canvas border border-brand-primary/20 rounded p-2 text-sm text-zinc-100 focus:outline-none focus:border-brand-primary transition-colors"
-          />
-          <button
-            type="submit"
-            disabled={!inputText.trim()}
-            className="px-4 py-2 bg-brand-primary/10 text-brand-primary text-xs font-bold uppercase tracking-wider rounded border border-brand-primary/30 hover:bg-brand-primary/20 disabled:opacity-50 transition-colors"
-          >
-            Transmit
-          </button>
-        </div>
       </form>
     </div>
   );
@@ -1161,75 +1219,407 @@ export type EstimateDossier = z.infer<typeof estimateDossierSchema>;
 </file>
 
 <file path="lib/types/database.ts">
-// src/lib/types/database.ts
+export type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json | undefined }
+  | Json[]
 
-/**
- * 1. THE PROPERTY LEDGER
- * Geographic locations anchored to a specific client.
- */
-export interface Property {
-  id: string; // UUID generated by Supabase
-  client_id: string; // UUID anchoring the property to the authenticated user
-  street_address: string;
-  zip_code: string;
-  created_at: string; // ISO Timestamp
+export type Database = {
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: "14.5"
+  }
+  public: {
+    Tables: {
+      clients: {
+        Row: {
+          created_at: string | null
+          full_name: string | null
+          id: string
+          phone: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          full_name?: string | null
+          id: string
+          phone?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          full_name?: string | null
+          id?: string
+          phone?: string | null
+        }
+        Relationships: []
+      }
+      messages: {
+        Row: {
+          created_at: string | null
+          id: string
+          project_id: string
+          sender_id: string
+          text_payload: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          project_id: string
+          sender_id: string
+          text_payload: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          project_id?: string
+          sender_id?: string
+          text_payload?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string | null
+          first_name: string | null
+          id: string
+          last_name: string | null
+          role: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          first_name?: string | null
+          id: string
+          last_name?: string | null
+          role?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          first_name?: string | null
+          id?: string
+          last_name?: string | null
+          role?: string | null
+        }
+        Relationships: []
+      }
+      project_dossiers: {
+        Row: {
+          after_image: string | null
+          before_image: string | null
+          budget_tier: string
+          client_email: string
+          client_name: string
+          client_phone: string
+          created_at: string | null
+          id: string
+          scope_of_work: string
+          timeline: string
+          zip_code: string
+        }
+        Insert: {
+          after_image?: string | null
+          before_image?: string | null
+          budget_tier: string
+          client_email: string
+          client_name: string
+          client_phone: string
+          created_at?: string | null
+          id?: string
+          scope_of_work: string
+          timeline: string
+          zip_code: string
+        }
+        Update: {
+          after_image?: string | null
+          before_image?: string | null
+          budget_tier?: string
+          client_email?: string
+          client_name?: string
+          client_phone?: string
+          created_at?: string | null
+          id?: string
+          scope_of_work?: string
+          timeline?: string
+          zip_code?: string
+        }
+        Relationships: []
+      }
+      project_stakeholders: {
+        Row: {
+          id: string
+          joined_at: string | null
+          project_id: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          joined_at?: string | null
+          project_id: string
+          role: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          joined_at?: string | null
+          project_id?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      projects: {
+        Row: {
+          assumed_scope: string
+          created_at: string | null
+          id: string
+          investment_ceiling: number | null
+          investment_floor: number | null
+          linear_footage: number | null
+          material_tier: string | null
+          project_phases: Json
+          project_title: string
+          property_id: string
+          room_condition: string | null
+          status: string | null
+        }
+        Insert: {
+          assumed_scope: string
+          created_at?: string | null
+          id?: string
+          investment_ceiling?: number | null
+          investment_floor?: number | null
+          linear_footage?: number | null
+          material_tier?: string | null
+          project_phases: Json
+          project_title: string
+          property_id: string
+          room_condition?: string | null
+          status?: string | null
+        }
+        Update: {
+          assumed_scope?: string
+          created_at?: string | null
+          id?: string
+          investment_ceiling?: number | null
+          investment_floor?: number | null
+          linear_footage?: number | null
+          material_tier?: string | null
+          project_phases?: Json
+          project_title?: string
+          property_id?: string
+          room_condition?: string | null
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "projects_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      properties: {
+        Row: {
+          client_id: string
+          created_at: string | null
+          id: string
+          site_address: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string | null
+          id?: string
+          site_address: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string | null
+          id?: string
+          site_address?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "properties_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      site_logs: {
+        Row: {
+          created_at: string | null
+          description: string
+          id: string
+          image_url: string | null
+          operator_id: string
+          project_id: string
+          title: string
+        }
+        Insert: {
+          created_at?: string | null
+          description: string
+          id?: string
+          image_url?: string | null
+          operator_id: string
+          project_id: string
+          title: string
+        }
+        Update: {
+          created_at?: string | null
+          description?: string
+          id?: string
+          image_url?: string | null
+          operator_id?: string
+          project_id?: string
+          title?: string
+        }
+        Relationships: []
+      }
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      [_ in never]: never
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
 }
 
-/**
- * 2. THE PROJECT LEDGER
- * The core project dossier, structurally bound to both the Client and a specific Property.
- */
-export interface Project {
-  id: string;
-  client_id: string;
-  property_id: string; // The critical linkage for historical sorting
-  title: string;
-  status:
-    | "Intake Review"
-    | "Consultation Requested"
-    | "Active Build"
-    | "Completed";
-  project_type: string;
-  scope_description: string;
-  budget_range: string;
-  timeline_expectation: string;
-  created_at: string;
-}
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
 
-/**
- * 3. DIRECT COMMUNICATION (ASYNCHRONOUS CHAT)
- * Message payloads for the portal's communication feed.
- */
-export interface Message {
-  id: string;
-  project_id: string; // Links message to a specific project ledger
-  sender_id: string; // UUID of either the Client or the Operator
-  text_payload: string;
-  created_at: string;
-}
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
 
-/**
- * 4. SITE LOGS (THE OPERATOR'S FIELD UPDATES)
- * Timestamped progress updates pushed from the field.
- */
-export interface SiteLog {
-  id: string;
-  project_id: string; // Links the log to a specific project
-  operator_id: string; // Your secure UUID
-  title: string;
-  description: string;
-  image_url?: string; // Optional: Supabase Storage URL for the compressed .webp image
-  created_at: string;
+export type Tables<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
 }
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+      Row: infer R
+    }
+    ? R
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
+        Row: infer R
+      }
+      ? R
+      : never
+    : never
 
-// 1. The Junction Table Contract
-export interface ProjectStakeholder {
-  id: string;
-  project_id: string; // Links to the specific build
-  user_id: string; // The authenticated user (Client A, Client B, or Operator)
-  role: "primary_client" | "secondary_client" | "operator";
-  joined_at: string;
+export type TablesInsert<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
 }
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Insert: infer I
+    }
+    ? I
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Insert: infer I
+      }
+      ? I
+      : never
+    : never
+
+export type TablesUpdate<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Update: infer U
+    }
+    ? U
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Update: infer U
+      }
+      ? U
+      : never
+    : never
+
+export type Enums<
+  DefaultSchemaEnumNameOrOptions extends
+    | keyof DefaultSchema["Enums"]
+    | { schema: keyof DatabaseWithoutInternals },
+  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+    : never = never,
+> = DefaultSchemaEnumNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
+    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
+    : never
+
+export type CompositeTypes<
+  PublicCompositeTypeNameOrOptions extends
+    | keyof DefaultSchema["CompositeTypes"]
+    | { schema: keyof DatabaseWithoutInternals },
+  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    : never = never,
+> = PublicCompositeTypeNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+    : never
+
+export const Constants = {
+  public: {
+    Enums: {},
+  },
+} as const
 </file>
 
 <file path="lib/portfolioData.ts">
@@ -1333,10 +1723,6 @@ const nextConfig: NextConfig = {
 };
 
 export default nextConfig;
-</file>
-
-<file path="prcommands.md">
-npx repomix --output project_context.txt
 </file>
 
 <file path="proxy.ts">
@@ -1470,145 +1856,296 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 }
 </file>
 
-<file path="app/api/estimate/route.ts">
-// /src/app/api/estimate/route.ts
-import { NextResponse } from "next/server";
-import {
-  generateTurnkeyProposal,
-  HomeownerInputPayload,
-} from "@/src/lib/pricing/estimator";
+<file path="app/(portal)/dashboard/page.tsx">
+import React from "react";
+import StorefrontLobby from "@/components/Dashboard/StorefrontLobby";
+import ClientProfile from "@/components/Dashboard/ClientProfile";
+import ProjectProposal from "@/components/Dashboard/ProjectProposal";
+import AccountabilityLedger from "@/components/Dashboard/AccountabilityLedger";
 
-export async function POST(request: Request) {
-  try {
-    // 1. INGESTION: Parse the incoming JSON payload from the frontend Chatbot
-    const body = await request.json();
+export default async function ClientDashboardPage() {
+  return (
+    <div className="min-h-screen bg-brand-canvas text-white flex flex-col">
+      <StorefrontLobby />
 
-    // 2. CONTRACT ENFORCEMENT: Cast the incoming data to your strict TypeScript interface
-    const payload = body as HomeownerInputPayload;
-
-    // 3. STRUCTURAL VERIFICATION: Ensure the AI did not drop critical variables
-    if (
-      !payload.projectScope ||
-      !payload.linearFootage ||
-      !payload.materialTier ||
-      !payload.roomCondition ||
-      !payload.mepRequired ||
-      !payload.zipCode
-    ) {
-      return NextResponse.json(
-        {
-          error:
-            "System Error: Missing required parametric variables in payload.",
-        },
-        { status: 400 }, // Bad Request
-      );
-    }
-
-    // 4. EXECUTION: Pass the verified payload into your decoupled deterministic engine
-    // We do not await this function because it executes synchronously on the server.
-    const proposalDossier = generateTurnkeyProposal(payload);
-
-    // 5. RESPONSE: Transmit the B2C Turnkey Proposal back to the client interface
-    return NextResponse.json(proposalDossier, { status: 200 }); // OK
-  } catch (error) {
-    // 6. FALLBACK: Catch any runtime parsing errors to prevent the server from crashing
-    console.error("Estimating Engine Failure:", error);
-    return NextResponse.json(
-      { error: "Internal Server Error: Failed to generate turnkey proposal." },
-      { status: 500 },
-    );
-  }
+      <main className="flex-1 w-full max-w-6xl mx-auto p-4 md:p-8 flex flex-col gap-8">
+        <ClientProfile />
+        <ProjectProposal />
+        <AccountabilityLedger />
+      </main>
+    </div>
+  );
 }
 </file>
 
-<file path="components/Intake/DossierSummaryCard.tsx">
-"use client";
+<file path="components/Intake/ConsultationFeed.tsx">
+"use client"; // Required for state management and user interactivity
 
-import React from "react";
+import React, {
+  useState,
+  useRef,
+  useEffect,
+  ChangeEvent,
+  FormEvent,
+} from "react";
 
-// 1. Define the exact shape of the data we expect to receive
-interface DossierSummaryCardProps {
-  onAcknowledge: () => void;
-  projectData: {
-    name?: string;
-    projectScope?: string;
-    materialTier?: string;
-    timeline?: string;
-    ballparkEstimate?: string; // e.g., "$15,000 - $22,000"
-  };
+// STRICT DATA CONTRACTS[cite: 1, 2]
+interface ConsultationFeedProps {
+  zipCode: string;
+  onIntakeComplete: (dossierData: any) => void;
 }
 
-export default function DossierSummaryCard({
-  onAcknowledge,
-  projectData,
-}: DossierSummaryCardProps) {
-  // 2. Fallback check: If data hasn't loaded, don't crash the system
-  if (!projectData) return null;
+interface Message {
+  role: "user" | "assistant" | "system";
+  content: string | any[];
+}
+
+interface PendingImage {
+  mimeType: string;
+  data: string;
+}
+
+export default function ConsultationFeed({
+  zipCode,
+  onIntakeComplete,
+}: ConsultationFeedProps) {
+  // STATE MANAGEMENT: The Conversational Array
+  const [messages, setMessages] = useState<Message[]>([
+    {
+      role: "assistant",
+      content:
+        "Welcome. I am the architectural design consultant for BSC Residential. To get started, could you describe your vision for this space? Feel free to upload any photos of the current area or inspiration images you've saved.",
+    },
+  ]);
+  const [inputValue, setInputValue] = useState("");
+  const [pendingImages, setPendingImages] = useState<PendingImage[]>([]);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const feedEndRef = useRef<HTMLDivElement>(null);
+
+  // UTILITY: Auto-scroll to the newest message
+  useEffect(() => {
+    feedEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
+  // UTILITY: Client-side Base64 Image Compression
+  const handleImageSelect = async (e: ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files) return;
+
+    // Protect operational bandwidth: max 3 images per transmission
+    const files = Array.from(e.target.files).slice(0, 3);
+
+    const base64Promises = files.map((file) => {
+      return new Promise<PendingImage>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => {
+          const result = reader.result as string;
+          resolve({ mimeType: file.type, data: result.split(",")[1] });
+        };
+        reader.onerror = (error) => reject(error);
+      });
+    });
+
+    try {
+      const processed = await Promise.all(base64Promises);
+      // Array Mutability Best Practice: Spread previous state, do not push directly.
+      setPendingImages((prev) => [...prev, ...processed].slice(0, 3));
+    } catch (error) {
+      console.error("Image processing error", error);
+    }
+  };
+
+  // EXECUTION: Construct payload and transmit to OpenAI backend
+  const handleSendMessage = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!inputValue.trim() && pendingImages.length === 0) return;
+
+    setIsProcessing(true);
+
+    // Assemble OpenAI multimodal structure
+    const userContent: any[] = [];
+    if (inputValue.trim()) {
+      userContent.push({ type: "text", text: inputValue });
+    }
+    pendingImages.forEach((img) => {
+      userContent.push({
+        type: "image_url",
+        image_url: { url: `data:${img.mimeType};base64,${img.data}` },
+      });
+    });
+
+    const newUserMessage: Message = { role: "user", content: userContent };
+    const updatedMessages = [...messages, newUserMessage];
+
+    // Optimistic UI Update: Render client message immediately
+    setMessages(updatedMessages);
+    setInputValue("");
+    setPendingImages([]);
+
+    try {
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ messages: updatedMessages }),
+      });
+
+      if (!response.ok) throw new Error("API Fault");
+
+      const data = await response.json();
+
+      // THE STATE SHIFT: Evaluate the AI's response type
+      // CONDITION 1: The AI is acting as the Designer (Chatting)
+      if (data.type === "chat_response") {
+        // You must append the AI's response to your local React state so the chat bubble renders
+        setMessages((prevMessages) => [
+          ...prevMessages,
+          { role: "assistant", content: data.message },
+        ]);
+      }
+      // CONDITION 2: The AI is acting as the Project Manager (Dossier Built)
+      else if (data.type === "dossier_generated") {
+        // Push the structured data to your Summary Card / Dashboard state
+        // e.g., setDossierPayload(data.data);
+        // e.g., transitionToNextStep();
+      }
+    } catch (error) {
+      console.error("Transmission Error:", error);
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "assistant",
+          content:
+            "System connection interrupted. Please try transmitting again.",
+        },
+      ]);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  // Sub-renderer for multimodal chat bubbles
+  const renderContent = (content: string | any[]) => {
+    if (typeof content === "string") return <p>{content}</p>;
+    return (
+      <div className="flex flex-col gap-3">
+        {content.map((item, idx) => {
+          if (item.type === "text") return <p key={idx}>{item.text}</p>;
+          if (item.type === "image_url")
+            return (
+              <img
+                key={idx}
+                src={item.image_url.url}
+                alt="upload"
+                className="w-48 h-48 object-cover rounded border border-brand-primary/30 shadow-md"
+              />
+            );
+          return null;
+        })}
+      </div>
+    );
+  };
 
   return (
-    <div className="bg-brand-surface border border-brand-primary/20 rounded-lg overflow-hidden mt-6">
-      <div className="p-6 border-b border-brand-primary/20 bg-brand-canvas">
-        <h3 className="text-xl font-bold text-brand-primary uppercase tracking-wide">
-          Preliminary Project Dossier
-        </h3>
-        <p className="text-sm text-brand-primary/80 mt-1">
-          Review the initial parameters before locking in your onsite
-          verification.
-        </p>
-      </div>
-
-      <div className="p-6 space-y-6">
+    <div className="bg-brand-canvas border border-brand-primary/20 p-6 rounded-lg shadow-xl flex flex-col h-175 max-w-4xl mx-auto">
+      <header className="border-b border-zinc-800 pb-4 mb-4 flex justify-between items-end">
         <div>
-          <h4 className="text-xs font-bold text-brand-primary uppercase tracking-widest mb-2">
-            Scope of Work
-          </h4>
-          <p className="text-sm text-zinc-300 leading-relaxed bg-brand-canvas/50 p-4 rounded border border-brand-primary/10">
-            {projectData.projectScope || "Scope parameters pending..."}
+          <h2 className="text-xl font-bold text-brand-primary uppercase tracking-widest">
+            Design Consultation
+          </h2>
+          <p className="text-xs text-zinc-500 uppercase tracking-wider mt-1">
+            AI Assisting BSC Residential
           </p>
         </div>
+        <div className="text-xs text-zinc-500 uppercase tracking-wider text-right">
+          Zone Verified: {zipCode}
+        </div>
+      </header>
 
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <h4 className="text-xs font-bold text-brand-primary uppercase tracking-widest mb-1">
-              Material Tier
-            </h4>
-            <p className="text-sm text-zinc-300">
-              {projectData.materialTier || "TBD"}
-            </p>
+      {/* CHAT LOG */}
+      <div className="flex-1 overflow-y-auto pr-4 space-y-6 scrollbar-thin scrollbar-thumb-zinc-700">
+        {messages.map((msg, idx) => (
+          <div
+            key={idx}
+            className={`flex ${msg.role === "assistant" ? "justify-start" : "justify-end"}`}
+          >
+            <div
+              className={`max-w-[85%] p-4 rounded-lg ${msg.role === "assistant" ? "bg-zinc-900/80 border border-zinc-800 text-zinc-300" : "bg-brand-primary/10 border border-brand-primary/30 text-white shadow-inner"}`}
+            >
+              {renderContent(msg.content)}
+            </div>
           </div>
-          <div>
-            <h4 className="text-xs font-bold text-brand-primary uppercase tracking-widest mb-1">
-              Target Timeline
-            </h4>
-            <p className="text-sm text-zinc-300">
-              {projectData.timeline || "TBD"}
-            </p>
+        ))}
+        {isProcessing && (
+          <div className="flex justify-start">
+            <div className="bg-zinc-900/80 border border-zinc-800 text-zinc-500 p-4 rounded-lg animate-pulse uppercase tracking-widest text-xs font-bold">
+              Synthesizing...
+            </div>
           </div>
-        </div>
-
-        <div className="pt-6 border-t border-brand-primary/20">
-          <h4 className="text-xs font-bold text-brand-primary uppercase tracking-widest mb-2">
-            Estimated Ballpark Range
-          </h4>
-          <p className="text-3xl font-black text-brand-primary tracking-tighter">
-            {projectData.ballparkEstimate || "Requires Onsite Diagnostic"}
-          </p>
-          <p className="text-xs text-zinc-500 mt-2 max-w-xl">
-            *This is an algorithmic approximation based on the structural
-            parameters provided. A fixed-price contract requires physical site
-            verification and exact material takeoffs.
-          </p>
-        </div>
+        )}
+        <div ref={feedEndRef} />
       </div>
 
-      <div className="p-6 bg-brand-canvas flex justify-end border-t border-brand-primary/20">
-        <button
-          onClick={onAcknowledge}
-          className="px-6 py-3 bg-brand-accent text-brand-primary rounded font-bold uppercase tracking-widest hover:opacity-90 transition-opacity"
-        >
-          Acknowledge & Schedule Onsite
-        </button>
-      </div>
+      {/* INPUT MANIFOLD */}
+      <form
+        onSubmit={handleSendMessage}
+        className="mt-4 pt-4 border-t border-zinc-800"
+      >
+        {pendingImages.length > 0 && (
+          <div className="flex gap-3 mb-3 p-2 bg-zinc-900/50 rounded border border-zinc-800">
+            {pendingImages.map((img, idx) => (
+              <div
+                key={idx}
+                className="relative w-16 h-16 rounded overflow-hidden border border-brand-primary/50 shadow"
+              >
+                <img
+                  src={`data:${img.mimeType};base64,${img.data}`}
+                  alt="Queued"
+                  className="w-full h-full object-cover opacity-80"
+                />
+              </div>
+            ))}
+          </div>
+        )}
+
+        <div className="flex gap-2 items-end">
+          <label className="cursor-pointer p-4 bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 rounded transition-colors text-brand-primary shadow-sm flex items-center justify-center">
+            <input
+              type="file"
+              accept="image/*"
+              multiple
+              onChange={handleImageSelect}
+              className="hidden"
+            />
+            <span className="text-xs font-bold uppercase tracking-widest leading-none">
+              + Photo
+            </span>
+          </label>
+
+          <textarea
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            placeholder="Type your reply here..."
+            className="flex-1 bg-zinc-900/50 border border-zinc-700 rounded p-4 text-white focus:outline-none focus:border-brand-primary transition-colors resize-none h-12.5 min-h-12.5 max-h-37.5 overflow-y-auto"
+            rows={1}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                handleSendMessage(e);
+              }
+            }}
+          />
+
+          <button
+            type="submit"
+            disabled={
+              isProcessing || (!inputValue.trim() && pendingImages.length === 0)
+            }
+            className="px-6 py-4 bg-brand-primary text-brand-canvas font-bold uppercase tracking-widest rounded hover:bg-white disabled:opacity-50 transition-colors"
+          >
+            Transmit
+          </button>
+        </div>
+      </form>
     </div>
   );
 }
@@ -1847,174 +2384,210 @@ const config = {
 export default config;
 </file>
 
-<file path="components/Intake/ChatEstimator.tsx">
-"use client";
+<file path="prcommands.md">
+npx repomix --output project_context.txt
+npx repomix --output project_context.txt
+</file>
+
+<file path="components/Intake/DossierSummaryCard.tsx">
+"use client"; // Required for the onAcknowledge button interaction
+
+import React from "react";
+
+export interface DossierSummaryCardProps {
+  dossier: {
+    projectTitle: string;
+    assumedScope: string;
+    projectPhases: {
+      phaseName: string;
+      description: string;
+    }[];
+  };
+  onAcknowledge: () => void;
+}
+
+export default function DossierSummaryCard({
+  dossier,
+  onAcknowledge,
+}: DossierSummaryCardProps) {
+  return (
+    <div className="bg-brand-canvas border border-brand-primary/30 p-8 rounded-lg shadow-2xl flex flex-col gap-8 max-w-3xl mx-auto">
+      {/* HEADER: Acknowledging the completion of the consultation */}
+      <header className="border-b border-zinc-800 pb-4 text-center">
+        <h2 className="text-sm uppercase tracking-widest text-brand-primary mb-2">
+          Design Consultation Complete
+        </h2>
+        <h3 className="text-3xl font-light text-white">
+          {dossier.projectTitle}
+        </h3>
+      </header>
+
+      {/* THE VISION: Reflecting their idea back to them professionally */}
+      <section className="bg-zinc-900/50 p-6 rounded border border-zinc-800">
+        <h4 className="text-xs uppercase tracking-wider text-zinc-500 mb-3">
+          Proposed Scope of Work
+        </h4>
+        <p className="text-zinc-300 leading-relaxed text-lg">
+          {dossier.assumedScope}
+        </p>
+      </section>
+
+      {/* THE HOOK: The Value Exchange & Call to Action */}
+      <section className="bg-brand-primary/10 p-8 rounded border border-brand-primary/30 text-center">
+        <h4 className="text-xl text-brand-primary mb-3 font-medium">
+          Secure Your Project Blueprint
+        </h4>
+        <p className="text-sm text-zinc-300 mb-8 max-w-lg mx-auto">
+          Your preliminary design data has been synthesized. To permanently save
+          this dossier, unlock direct messaging with our Master Carpenter, and
+          schedule your on-site structural consultation, initialize your secure
+          client portal below.
+        </p>
+
+        <button
+          onClick={onAcknowledge}
+          className="w-full px-8 py-5 bg-brand-primary text-brand-canvas font-bold uppercase tracking-widest hover:bg-white transition-colors rounded shadow-lg text-sm"
+        >
+          Initialize Client Portal
+        </button>
+      </section>
+    </div>
+  );
+}
+</file>
+
+<file path="components/AuthGateway.tsx">
+"use client"; // Interactivity required for auth state[cite: 1]
 
 import React, { useState } from "react";
-import ZipCodeGate from "./ZipCodeGate";
-import EstimatorChatBox from "./EstimatorChatBox";
-import DossierSummaryCard from "./DossierSummaryCard";
-import AuthGateway from "./AuthGateway";
-import type { B2CProposalPayload } from "@/src/lib/pricing/estimator";
+import { useRouter } from "next/navigation";
+import { createClient } from "@/utils/supabase/client";
 
-// 1. STRICT DATA CONTRACTS
-// Replaces 'any' with a rigid interface matching the backend extraction schema.
-export interface ExtractedParameters {
-  projectScope:
-    | "custom_cabinetry"
-    | "architectural_millwork"
-    | "room_refinish_install";
-  linearFootage: number;
-  materialTier:
-    | "designer_painted"
-    | "stain_grade_hardwood"
-    | "ultra_custom_walnut_oak";
-  roomCondition: "turnkey_ready" | "minor_prep_needed" | "gut_and_reframe";
-  mepRequired: {
-    electricalModifications: boolean;
-    plumbingModifications: boolean;
-  };
-  zipCode: string;
-}
+export default function AuthGateway() {
+  const router = useRouter();
+  const supabase = createClient();
 
-interface ProjectPayload {
-  verifiedZip: string | null;
-  extractedParameters: ExtractedParameters | null;
-  dossier: B2CProposalPayload | null;
-  conceptImageUrl: string | null;
-}
+  const [isLogin, setIsLogin] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-export default function ChatEstimator() {
-  // 2. ESTABLISH SYSTEM STATE (MEMORY)
-  const [intakeStep, setIntakeStep] = useState<0 | 1 | 2 | 3>(0);
-  const [isProcessing, setIsProcessing] = useState<boolean>(false);
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
 
-  const [projectPayload, setProjectPayload] = useState<ProjectPayload>({
-    verifiedZip: null,
-    extractedParameters: null,
-    dossier: null,
-    conceptImageUrl: null,
-  });
-
-  // 3. LOGIC HANDLERS FOR THE STATE MACHINE
-  const handleZipVerification = (zip: string) => {
-    setProjectPayload((prev) => ({ ...prev, verifiedZip: zip }));
-    setIntakeStep(1);
-  };
-
-  const handleIntakeComplete = async (extractedData: ExtractedParameters) => {
-    setIsProcessing(true);
-    setProjectPayload((prev) => ({
-      ...prev,
-      extractedParameters: extractedData,
-    }));
+    // DIAGNOSTIC PROBE 1: Firing the sequence
+    console.log("[AUTH PROBE] 1. Initialization started for:", email);
 
     try {
-      const [estimateResponse, conceptResponse] = await Promise.all([
-        fetch("/api/estimate", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(extractedData),
-        }),
-        fetch("/api/generate-concept", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ projectScope: extractedData.projectScope }),
-        }),
-      ]);
-
-      if (!estimateResponse.ok) {
-        throw new Error("Estimating engine failed to return a valid dossier.");
+      if (isLogin) {
+        console.log("[AUTH PROBE] 2. Executing Login...");
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+        console.log("[AUTH PROBE] 3. Login Response:", { data, error });
+        if (error) throw error;
+      } else {
+        console.log("[AUTH PROBE] 2. Executing Registration...");
+        const { data, error } = await supabase.auth.signUp({ email, password });
+        console.log("[AUTH PROBE] 3. Registration Response:", { data, error });
+        if (error) throw error;
       }
 
-      const dossierData: B2CProposalPayload = await estimateResponse.json();
-
-      let imageUrl = "";
-      if (conceptResponse.ok) {
-        const conceptData = await conceptResponse.json();
-        imageUrl = conceptData.imageUrl || "";
-      }
-
-      setProjectPayload((prev) => ({
-        ...prev,
-        dossier: dossierData,
-        conceptImageUrl: imageUrl,
-      }));
-
-      setIntakeStep(2);
-    } catch (error) {
-      console.error("Pipeline Error:", error);
-      alert(
-        "System Error: Unable to compile structural dossier. Please try again.",
+      console.log(
+        "[AUTH PROBE] 4. Auth successful. Triggering router redirect...",
+      );
+      router.push("/dashboard");
+    } catch (err: any) {
+      console.error("[AUTH FAULT] Caught Error:", err);
+      setError(
+        err.message || "An unknown network fault occurred. Check console.",
       );
     } finally {
-      setIsProcessing(false);
+      console.log("[AUTH PROBE] 5. Resetting load state.");
+      setLoading(false);
     }
   };
 
-  const handleDossierAcknowledge = () => {
-    setIntakeStep(3);
-  };
-
   return (
-    <section className="w-full max-w-4xl mx-auto my-12 px-4">
-      {intakeStep > 0 && (
-        <div className="flex gap-2 mb-6">
-          <div
-            className={`h-2 flex-1 rounded transition-colors duration-500 ${intakeStep >= 1 ? "bg-brand-primary" : "bg-brand-primary/20"}`}
-          />
-          <div
-            className={`h-2 flex-1 rounded transition-colors duration-500 ${intakeStep >= 2 ? "bg-brand-primary" : "bg-brand-primary/20"}`}
-          />
-          <div
-            className={`h-2 flex-1 rounded transition-colors duration-500 ${intakeStep === 3 ? "bg-brand-primary" : "bg-brand-primary/20"}`}
-          />
-        </div>
-      )}
+    <div className="bg-brand-canvas border border-brand-primary/30 p-8 rounded-lg shadow-2xl flex flex-col gap-6 max-w-md mx-auto w-full">
+      <header className="text-center mb-4">
+        <h2 className="text-2xl font-light text-white mb-2">
+          {isLogin ? "Access Portal" : "Initialize Portal"}
+        </h2>
+        <p className="text-sm text-zinc-400">
+          {isLogin
+            ? "Enter your credentials to view your active project ledger."
+            : "Create secure credentials to save your project dossier."}
+        </p>
+      </header>
 
-      {intakeStep === 0 && (
-        <div className="animate-in fade-in duration-500">
-          <ZipCodeGate onVerified={handleZipVerification} />
-        </div>
-      )}
+      <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+        {error && (
+          <div className="p-3 bg-red-900/30 border border-red-500/50 text-red-400 text-xs uppercase tracking-widest rounded">
+            {error}
+          </div>
+        )}
 
-      {intakeStep === 1 && (
-        <div className="animate-in fade-in duration-500">
-          {isProcessing ? (
-            <div className="p-12 text-center text-brand-primary animate-pulse border border-brand-primary/20 bg-brand-canvas rounded-lg shadow-lg">
-              <p className="text-xl font-bold tracking-widest uppercase">
-                Compiling Structural Dossier
-              </p>
-              <p className="text-sm opacity-70 mt-2">
-                Executing deterministic calculations & rendering visual
-                concepts...
-              </p>
-            </div>
-          ) : (
-            <EstimatorChatBox
-              zipCode={projectPayload.verifiedZip}
-              onIntakeComplete={handleIntakeComplete}
-            />
-          )}
-        </div>
-      )}
-
-      {intakeStep === 2 && projectPayload.dossier && (
-        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-          <DossierSummaryCard
-            dossier={projectPayload.dossier}
-            conceptImageUrl={projectPayload.conceptImageUrl}
-            onAcknowledge={handleDossierAcknowledge}
+        <div className="flex flex-col gap-2">
+          <label className="text-xs uppercase tracking-widest text-zinc-500">
+            Email Address
+          </label>
+          <input
+            type="email"
+            required
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="bg-zinc-900/50 border border-zinc-700 rounded p-4 text-white focus:outline-none focus:border-brand-primary transition-colors"
+            placeholder="client@example.com"
           />
         </div>
-      )}
 
-      {intakeStep === 3 && (
-        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-          <AuthGateway projectPayload={projectPayload} />
+        <div className="flex flex-col gap-2">
+          <label className="text-xs uppercase tracking-widest text-zinc-500">
+            Secure Password
+          </label>
+          <input
+            type="password"
+            required
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="bg-zinc-900/50 border border-zinc-700 rounded p-4 text-white focus:outline-none focus:border-brand-primary transition-colors"
+            placeholder="••••••••"
+          />
         </div>
-      )}
-    </section>
+
+        <button
+          type="submit"
+          disabled={loading || !email || !password}
+          className="mt-2 w-full py-4 bg-brand-primary text-brand-canvas font-bold uppercase tracking-widest hover:bg-white transition-colors rounded disabled:opacity-50"
+        >
+          {loading
+            ? "Authenticating..."
+            : isLogin
+              ? "Secure Login"
+              : "Create Account"}
+        </button>
+      </form>
+
+      <div className="text-center mt-4 border-t border-zinc-800 pt-6">
+        <button
+          type="button"
+          onClick={() => {
+            setIsLogin(!isLogin);
+            setError(null);
+          }}
+          className="text-brand-primary text-sm uppercase tracking-widest hover:text-white transition-colors"
+        >
+          {isLogin
+            ? "Need to initialize a new portal?"
+            : "Already have an active ledger?"}
+        </button>
+      </div>
+    </div>
   );
 }
 </file>
@@ -2037,6 +2610,53 @@ export default function Footer() {
     </footer>
   );
 }
+</file>
+
+<file path=".gitignore">
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# dependencies
+/node_modules
+/.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+
+# testing
+/coverage
+
+# next.js
+/.next/
+/out/
+
+# production
+/build
+
+# misc
+.DS_Store
+*.pem
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# env files (can opt-in for committing if needed)
+.env*
+.env.local
+
+# vercel
+.vercel
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
+repomix-output.xml
 </file>
 
 <file path="components/OperatorProfile.tsx">
@@ -2107,53 +2727,6 @@ export default function OperatorProfile() {
 }
 </file>
 
-<file path=".gitignore">
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
-
-# dependencies
-/node_modules
-/.pnp
-.pnp.*
-.yarn/*
-!.yarn/patches
-!.yarn/plugins
-!.yarn/releases
-!.yarn/versions
-
-# testing
-/coverage
-
-# next.js
-/.next/
-/out/
-
-# production
-/build
-
-# misc
-.DS_Store
-*.pem
-
-# debug
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-.pnpm-debug.log*
-
-# env files (can opt-in for committing if needed)
-.env*
-.env.local
-
-# vercel
-.vercel
-
-# typescript
-*.tsbuildinfo
-next-env.d.ts
-
-repomix-output.xml
-</file>
-
 <file path="package.json">
 {
   "name": "bsc-residential",
@@ -2172,6 +2745,7 @@ repomix-output.xml
     "@supabase/ssr": "^0.12.3",
     "@supabase/supabase-js": "^2.110.8",
     "next": "16.2.11",
+    "openai": "^7.4.0",
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "react-hook-form": "^7.82.0",
@@ -2189,319 +2763,6 @@ repomix-output.xml
     "tailwindcss": "^4.3.3",
     "typescript": "^5"
   }
-}
-</file>
-
-<file path="components/Intake/EstimatorChatBox.tsx">
-"use client";
-
-import React, { useState, useRef, useEffect } from "react";
-
-interface Message {
-  role: "user" | "model";
-  text: string;
-  images?: string[];
-}
-
-// 1. STRICT DATA CONTRACT: Require zipCode as a prop
-interface EstimatorChatBoxProps {
-  zipCode: string;
-  onIntakeComplete?: (projectData: any) => void;
-}
-
-export default function EstimatorChatBox({
-  zipCode,
-  onIntakeComplete,
-}: EstimatorChatBoxProps) {
-  // --- Logistical State ---
-  // The zip code state is removed; it is now an immutable prop.
-  const [timeline, setTimeline] = useState("flexible");
-
-  // --- Chat State ---
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      role: "model",
-      text: "Let's discuss your architectural vision. Are we upgrading exterior patio space, transforming a custom home office, or building a highly specialized bespoke cabinet system? Detail your goals and attach up to 3 site photos.",
-    },
-  ]);
-  const [input, setInput] = useState("");
-  const [imagePayloads, setImagePayloads] = useState<string[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [readyToCompile, setReadyToCompile] = useState(false);
-  const [compiledData, setCompiledData] = useState<any>(null);
-
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
-  }, [messages, isLoading, readyToCompile]);
-
-  const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
-    if (!files.length) return;
-
-    const availableSlots = 3 - imagePayloads.length;
-    const filesToProcess = files.slice(0, availableSlots);
-
-    const base64Promises = filesToProcess.map((file) => {
-      return new Promise<string>((resolve) => {
-        const reader = new FileReader();
-        reader.onloadend = () => resolve(reader.result as string);
-        reader.readAsDataURL(file);
-      });
-    });
-
-    const newBase64Images = await Promise.all(base64Promises);
-    setImagePayloads((prev) => [...prev, ...newBase64Images]);
-    if (fileInputRef.current) fileInputRef.current.value = "";
-  };
-
-  const removeStagedImage = (indexToRemove: number) => {
-    setImagePayloads((prev) => prev.filter((_, idx) => idx !== indexToRemove));
-  };
-
-  const handleTransmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if ((!input.trim() && imagePayloads.length === 0) || isLoading) return;
-
-    const userMessage = input.trim();
-    const currentImages = [...imagePayloads];
-
-    setInput("");
-    setImagePayloads([]);
-    if (fileInputRef.current) fileInputRef.current.value = "";
-
-    const newHistory: Message[] = [
-      ...messages,
-      {
-        role: "user",
-        text: userMessage,
-        images: currentImages.length > 0 ? currentImages : undefined,
-      },
-    ];
-    setMessages(newHistory);
-    setIsLoading(true);
-
-    try {
-      const response = await fetch("/api/estimate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          history: newHistory,
-          message: userMessage,
-          logistics: { zipCode, timeline },
-        }),
-      });
-
-      const data = await response.json();
-
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: "model",
-          text: data.chatResponse || "Transmission received.",
-        },
-      ]);
-
-      if (data.isComplete && onIntakeComplete) {
-        setCompiledData({
-          ...data.projectData,
-          zipCode,
-          timeline,
-        });
-        setReadyToCompile(true);
-      }
-    } catch (error) {
-      console.error("Transmission Error:", error);
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: "model",
-          text: "System Error: Connection disrupted. Please attempt transmission again.",
-        },
-      ]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  return (
-    <div className="bg-brand-surface p-6 rounded-lg border border-brand-primary/20 flex flex-col h-187.5">
-      {/* Logistical Parameter Deck */}
-      <div className="shrink-0 mb-4 flex flex-col sm:flex-row gap-4 p-4 bg-brand-canvas border border-brand-primary/10 rounded">
-        <div className="flex-1">
-          <label className="block text-[10px] font-bold text-brand-primary uppercase tracking-widest mb-1">
-            Verified Zone
-          </label>
-          {/* 2. LOCKED UI ELEMENT: Displays the fixed prop */}
-          <div className="w-full bg-brand-surface/50 border border-brand-primary/10 rounded px-3 py-2 text-sm text-zinc-500 cursor-not-allowed">
-            {zipCode} (Locked)
-          </div>
-        </div>
-        <div className="flex-1">
-          <label className="block text-[10px] font-bold text-brand-primary uppercase tracking-widest mb-1">
-            Target Timeline
-          </label>
-          <select
-            value={timeline}
-            onChange={(e) => setTimeline(e.target.value)}
-            className="w-full bg-brand-surface border border-brand-primary/30 rounded px-3 py-2 text-sm text-zinc-100 focus:border-brand-primary focus:outline-none"
-          >
-            <option value="asap">As soon as possible</option>
-            <option value="1_to_3_months">1 - 3 Months</option>
-            <option value="3_to_6_months">3 - 6 Months</option>
-            <option value="flexible">Flexible / Planning Phase</option>
-          </select>
-        </div>
-      </div>
-
-      <div
-        ref={scrollRef}
-        className="flex-1 overflow-y-auto space-y-4 mb-4 pr-2 scrollbar-thin scrollbar-thumb-brand-primary/30"
-      >
-        {messages.map((msg, idx) => (
-          <div
-            key={idx}
-            className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
-          >
-            <div
-              className={`max-w-[85%] p-4 rounded text-sm leading-relaxed shadow-sm ${
-                msg.role === "user"
-                  ? "bg-brand-primary text-brand-canvas rounded-br-none font-medium"
-                  : "bg-brand-canvas border border-brand-primary/30 text-brand-primary rounded-bl-none"
-              }`}
-            >
-              {msg.images && msg.images.length > 0 && (
-                <div className="flex flex-col gap-2 mb-3">
-                  {msg.images.map((imgSrc, i) => (
-                    <img
-                      key={i}
-                      src={imgSrc}
-                      alt={`Site Upload ${i + 1}`}
-                      className="w-full max-w-sm rounded border border-brand-canvas/20"
-                    />
-                  ))}
-                </div>
-              )}
-              {msg.text && <span>{msg.text}</span>}
-            </div>
-          </div>
-        ))}
-        {isLoading && (
-          <div className="flex justify-start">
-            <div className="max-w-[85%] p-4 rounded text-sm bg-brand-canvas border border-brand-primary/30 text-brand-primary/50 rounded-bl-none animate-pulse">
-              Analyzing structural parameters...
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Input Deck */}
-      <div className="shrink-0 flex flex-col gap-4">
-        {imagePayloads.length > 0 && (
-          <div className="flex flex-col gap-3 px-4 py-4 bg-brand-primary/10 border border-brand-primary/30 rounded">
-            <div className="flex justify-between items-center text-brand-primary">
-              <span className="text-sm font-bold uppercase tracking-wider">
-                Site Photos Staged ({imagePayloads.length}/3)
-              </span>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              {imagePayloads.map((imgSrc, idx) => (
-                <div key={idx} className="relative group">
-                  <img
-                    src={imgSrc}
-                    alt={`Staged upload ${idx + 1}`}
-                    className="w-full h-40 object-cover rounded border border-brand-primary/50 shadow-sm"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => removeStagedImage(idx)}
-                    className="absolute top-2 right-2 bg-red-600/90 hover:bg-red-500 text-white font-bold px-2 py-1 uppercase text-xs rounded transition-colors shadow"
-                  >
-                    [X]
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {readyToCompile ? (
-          <div className="flex flex-col gap-3 p-4 bg-brand-primary/10 border border-brand-primary/30 rounded animate-in fade-in duration-300">
-            <button
-              onClick={() => onIntakeComplete && onIntakeComplete(compiledData)}
-              className="w-full py-4 bg-brand-primary text-brand-canvas font-bold uppercase tracking-widest rounded hover:bg-brand-primary/90 transition-colors shadow-sm"
-            >
-              Compile Project Dossier
-            </button>
-            <button
-              onClick={() => {
-                setReadyToCompile(false);
-                setCompiledData(null);
-              }}
-              className="text-xs font-bold text-brand-primary/70 uppercase tracking-wide hover:text-brand-primary transition-colors text-center py-2"
-            >
-              Wait, I need to add more details
-            </button>
-          </div>
-        ) : (
-          <form onSubmit={handleTransmit} className="flex gap-2">
-            <input
-              type="file"
-              accept="image/*"
-              multiple
-              ref={fileInputRef}
-              onChange={handleImageSelect}
-              className="hidden"
-            />
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={isLoading || imagePayloads.length >= 3}
-              className="px-4 py-3 border border-brand-primary/30 text-brand-primary rounded hover:bg-brand-primary/10 disabled:opacity-50 transition-colors flex items-center justify-center"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                <polyline points="17 8 12 3 7 8"></polyline>
-                <line x1="12" y1="3" x2="12" y2="15"></line>
-              </svg>
-            </button>
-
-            <input
-              type="text"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder="Detail your architectural goals..."
-              disabled={isLoading}
-              className="flex-1 bg-brand-canvas border border-brand-primary/30 rounded px-4 py-3 text-zinc-100 focus:outline-none focus:border-brand-primary disabled:opacity-50"
-            />
-            <button
-              type="submit"
-              disabled={
-                isLoading || (!input.trim() && imagePayloads.length === 0)
-              }
-              className="px-6 py-3 bg-brand-accent text-brand-primary font-bold uppercase tracking-widest rounded hover:bg-brand-accent/90 disabled:opacity-50 transition-colors"
-            >
-              Transmit
-            </button>
-          </form>
-        )}
-      </div>
-    </div>
-  );
 }
 </file>
 
@@ -2556,155 +2817,74 @@ export default function EstimatorChatBox({
 }
 </file>
 
-<file path="components/PortalLogin.tsx">
+<file path="components/Intake/ChatEstimator.tsx">
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { createClient } from "@/utils/supabase/client";
+import React, { useState } from "react";
+import ZipCodeGate from "./ZipCodeGate";
+import ConsultationFeed from "./ConsultationFeed";
+import DossierSummaryCard from "./DossierSummaryCard";
+import AuthGateway from "../AuthGateway";
 
-export default function PortalLogin() {
-  const router = useRouter();
-  const supabase = createClient();
+export interface DraftedScopePayload {
+  projectTitle: string;
+  assumedScope: string;
+  projectPhases: {
+    phaseName: string;
+    description: string;
+  }[];
+}
 
-  // INJECT THE PROBE HERE (Logic Phase)
-  console.log("System Audit - URL:", process.env.NEXT_PUBLIC_SUPABASE_URL);
+export default function ChatEstimator() {
+  const [intakeStep, setIntakeStep] = useState<number>(0);
+  const [verifiedZip, setVerifiedZip] = useState<string>("");
+  const [draftedScope, setDraftedScope] = useState<DraftedScopePayload | null>(
+    null,
+  );
 
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  // 1. STANDARD LOGIN FLOW
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError(null);
-
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-
-    if (error) {
-      setError(error.message);
-      setLoading(false);
-    } else {
-      router.push("/dashboard");
-      router.refresh(); // Forces the middleware to recognize the new session
-    }
+  const handleZipVerification = (zip: string) => {
+    setVerifiedZip(zip);
+    setIntakeStep(1);
   };
 
-  // 2. DEVELOPER BYPASS FLOW
-  const handleDevBypass = async () => {
-    setLoading(true);
-    setError(null);
+  const handleVisionComplete = (scopeData: DraftedScopePayload) => {
+    setDraftedScope(scopeData);
+    setIntakeStep(2);
+  };
 
-    // Operator Authentication Payload
-    const { error } = await supabase.auth.signInWithPassword({
-      email: "stevenclear27@gmail.com",
-      password: "&znBbcGxZ*2xK44", // Insert your exact Supabase Auth password here
-    });
-
-    if (error) {
-      setError(
-        `Dev Auth Failed: ${error.message}. Ensure credentials match your Supabase Auth panel.`,
-      );
-      setLoading(false);
-    } else {
-      // Force route the operator directly to the Command Center
-      router.push("/operator");
-      router.refresh();
-    }
+  const handleDossierAcknowledge = () => {
+    setIntakeStep(3);
   };
 
   return (
-    <section className="w-full py-24 border-t border-brand-surface bg-brand-canvas flex justify-center">
-      <div className="max-w-md w-full px-6 text-center">
-        <h1 className="text-3xl font-bold tracking-tight text-brand-primary uppercase">
-          Client Gateway
-        </h1>
-        <p className="mt-4 text-sm text-zinc-200">
-          Secure access to your project ledger, daily site logs, and financial
-          milestones.
-        </p>
-        {/* Authentication Lockbox */}
-        <div className="mt-10 border border-brand-surface bg-brand-surface/50 p-8 text-left backdrop-blur-sm rounded-lg">
-          <form className="flex flex-col gap-6" onSubmit={handleLogin}>
-            {/* Error Ledger */}
-            {error && (
-              <div className="p-3 border border-red-500/50 bg-red-500/10 rounded-md text-red-400 text-sm">
-                {error}
-              </div>
-            )}
+    <div className="w-full max-w-4xl mx-auto flex flex-col gap-8">
+      {intakeStep === 0 && <ZipCodeGate onVerified={handleZipVerification} />}
 
-            <div>
-              <label
-                htmlFor="email"
-                className="block text-sm font-medium text-zinc-300"
-              >
-                Email Address
-              </label>
-              <input
-                type="email"
-                id="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                className="mt-2 block w-full rounded-md border-0 bg-brand-canvas py-2 px-3 text-zinc-50 ring-1 ring-inset ring-brand-surface focus:ring-2 focus:ring-inset focus:ring-brand-primary sm:text-sm sm:leading-6"
-                placeholder="client@example.com"
-              />
-            </div>
-
-            <div>
-              <label
-                htmlFor="password"
-                className="block text-sm font-medium text-zinc-300"
-              >
-                Secure PIN
-              </label>
-              <input
-                type="password"
-                id="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                className="mt-2 block w-full rounded-md border-0 bg-brand-canvas py-2 px-3 text-zinc-50 ring-1 ring-inset ring-brand-surface focus:ring-2 focus:ring-inset focus:ring-brand-primary sm:text-sm sm:leading-6"
-                placeholder="••••••••"
-              />
-            </div>
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="mt-4 w-full rounded-md bg-brand-primary px-3 py-2 text-sm font-semibold text-brand-canvas shadow-sm hover:opacity-90 transition-opacity disabled:opacity-50"
-            >
-              {loading ? "Authenticating..." : "Access Ledger"}
-            </button>
-          </form>
-
-          {/* ISOLATED DEV ENVIRONMENT RENDER */}
-          {process.env.NODE_ENV === "development" && (
-            <div className="mt-8 border-t border-brand-surface pt-6">
-              <button
-                type="button"
-                onClick={handleDevBypass}
-                disabled={loading}
-                className="flex w-full justify-center rounded-md border border-brand-primary/30 px-3 py-1.5 text-sm font-semibold text-brand-primary hover:bg-brand-primary/10 transition-colors disabled:opacity-50"
-              >
-                [DEV] Auto-Inject Credentials
-              </button>
-              <p className="mt-2 text-center text-xs text-zinc-500">
-                Bypasses standard entry for local dashboard engineering.
-              </p>
-            </div>
-          )}
+      {/* STEP 1: The dynamic consultation feed replacing the static form */}
+      {intakeStep === 1 && (
+        <div className="animate-in fade-in duration-500">
+          <ConsultationFeed
+            zipCode={verifiedZip}
+            onIntakeComplete={handleVisionComplete}
+          />
         </div>
-        <p className="mt-6 text-xs text-brand-primary">
-          Access is strictly limited to active clients.
-        </p>
-      </div>
-    </section>
+      )}
+
+      {intakeStep === 2 && draftedScope && (
+        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <DossierSummaryCard
+            dossier={draftedScope}
+            onAcknowledge={handleDossierAcknowledge}
+          />
+        </div>
+      )}
+
+      {intakeStep === 3 && (
+        <div className="animate-in fade-in duration-500">
+          <AuthGateway />
+        </div>
+      )}
+    </div>
   );
 }
 </file>
