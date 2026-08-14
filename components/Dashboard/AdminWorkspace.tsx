@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-// You can import the existing AccountabilityLedger here later to reuse the chat component for the admin side
+import AccountabilityLedger from "./AccountabilityLedger";
 
 interface AdminWorkspaceProps {
   projects: any[];
@@ -46,8 +46,9 @@ export default function AdminWorkspace({ projects }: AdminWorkspaceProps) {
                   {project.project_title}
                 </span>
                 <span className="text-[10px] text-zinc-500 uppercase tracking-widest">
-                  Client: {project.profiles?.first_name || "Pending"}{" "}
-                  {project.profiles?.last_name || ""}
+                  Client:{" "}
+                  {project.properties?.clients?.full_name ||
+                    "Pending Authorization"}
                 </span>
               </button>
             ))
@@ -83,12 +84,9 @@ export default function AdminWorkspace({ projects }: AdminWorkspaceProps) {
               </p>
             </section>
 
-            {/* We will eventually mount the Admin version of the AccountabilityLedger here to reply to chats */}
-            <section className="bg-brand-primary/5 border border-brand-primary/20 p-6 rounded flex items-center justify-center h-48">
-              <span className="text-xs text-brand-primary/50 uppercase tracking-widest font-bold">
-                [Communications Link Pending]
-              </span>
-            </section>
+            <div className="mt-4">
+              <AccountabilityLedger project={activeProject} />
+            </div>
           </div>
         )}
       </div>

@@ -1,10 +1,12 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { createClient } from "@/utils/supabase/client";
 import ZipCodeGate from "./ZipCodeGate";
 import ConsultationFeed from "./ConsultationFeed";
 import DossierSummaryCard from "./DossierSummaryCard";
 import AuthGateway from "../AuthGateway";
+import { useRouter } from "next/navigation";
 
 export interface DraftedScopePayload {
   projectTitle: string;
@@ -16,11 +18,29 @@ export interface DraftedScopePayload {
 }
 
 export default function ChatEstimator() {
+  const router = useRouter();
   const [intakeStep, setIntakeStep] = useState<number>(0);
   const [verifiedZip, setVerifiedZip] = useState<string>("");
   const [draftedScope, setDraftedScope] = useState<DraftedScopePayload | null>(
     null,
   );
+
+  // 1. ADD STATE FOR SESSION DETECTION
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+
+  // 2. THE SESSION SENSOR
+  useEffect(() => {
+    const verifyIdentity = async () => {
+      const supabase = createClient();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (session) {
+        setIsAuthenticated(true);
+      }
+    };
+    verifyIdentity();
+  }, []);
 
   const handleZipVerification = (zip: string) => {
     setVerifiedZip(zip);
@@ -33,7 +53,6 @@ export default function ChatEstimator() {
   };
 
   const handleDossierAcknowledge = () => {
-    // 1. Cache the volatile structural payload into browser storage to survive the routing boundary
     if (draftedScope) {
       sessionStorage.setItem(
         "bsc_pending_dossier",
@@ -41,15 +60,19 @@ export default function ChatEstimator() {
       );
     }
 
-    // 2. Shift UI to the AuthGateway
-    setIntakeStep(3);
+    // 3. THE ROUTING BYPASS
+    // If the user is already authenticated, bypass the gateway and inject them straight into the ledger.
+    if (isAuthenticated) {
+      router.push("/dashboard");
+    } else {
+      setIntakeStep(3);
+    }
   };
 
   return (
     <div className="w-full max-w-4xl mx-auto flex flex-col gap-8">
       {intakeStep === 0 && <ZipCodeGate onVerified={handleZipVerification} />}
 
-      {/* STEP 1: The dynamic consultation feed replacing the static form */}
       {intakeStep === 1 && (
         <div className="animate-in fade-in duration-500">
           <ConsultationFeed
@@ -61,9 +84,11 @@ export default function ChatEstimator() {
 
       {intakeStep === 2 && draftedScope && (
         <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+          {/* 4. PASS THE AUTH FLAG TO THE CARD */}
           <DossierSummaryCard
             dossier={draftedScope}
             onAcknowledge={handleDossierAcknowledge}
+            isAuthenticated={isAuthenticated}
           />
         </div>
       )}

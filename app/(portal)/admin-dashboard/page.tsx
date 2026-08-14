@@ -24,15 +24,30 @@ export default async function AdminDashboardPage() {
   }
 
   // 2. THE GLOBAL PULL: Fetch all active projects via RLS bypass
+  // Corrected Load Path: projects -> properties -> clients
   const { data: activeProjects, error } = await supabase
     .from("projects")
     .select(
       `
       *,
-      profiles:user_id (first_name, last_name, email)
+      properties (
+        site_address,
+        clients (
+          full_name,
+          phone
+        )
+      )
     `,
     )
     .order("created_at", { ascending: false });
+
+  // 3. TRUST-VERIFICATION: Do not allow silent failures
+  if (error) {
+    console.error(
+      "[SYSTEM FAULT] Operations Command Relational Join Failed:",
+      error,
+    );
+  }
 
   return (
     <div className="min-h-screen bg-brand-canvas text-white p-8">
