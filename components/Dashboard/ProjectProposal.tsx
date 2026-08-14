@@ -1,129 +1,113 @@
+// components/Dashboard/ProjectProposal.tsx
 "use client";
 
-import React, { useEffect, useState } from "react";
-
-interface PhaseProp {
-  phaseName: string;
-  description: string;
-}
-
+import React from "react";
+// Assuming you have a types file, otherwise use 'any' temporarily while testing
 interface ProjectProposalProps {
-  investmentRange?: {
-    floor: string;
-    ceiling: string;
-  };
+  project: any;
 }
 
-export default function ProjectProposal({
-  investmentRange: initialRange,
-}: ProjectProposalProps) {
-  // 1. Establish State
-  const [range, setRange] = useState(initialRange);
-  const [phases, setPhases] = useState<PhaseProp[]>([
-    {
-      phaseName: "1. Site Prep & Protection",
-      description:
-        "Establishment of dust barriers, floor protection, and material staging zones.",
-    },
-    {
-      phaseName: "2. Demolition",
-      description:
-        "Selective removal of existing assemblies to expose structural framework.",
-    },
-    {
-      phaseName: "3. The Build",
-      description:
-        "Core structural framing, mechanical rough-ins, and substrate installation.",
-    },
-    {
-      phaseName: "4. The Finish",
-      description:
-        "Installation of architectural millwork, paint, and final mechanical trims.",
-    },
-  ]);
+export default function ProjectProposal({ project }: ProjectProposalProps) {
+  // If the server hasn't hydrated the project yet (LedgerSync is running), show a loading/draft state
+  if (!project) {
+    return (
+      <div className="bg-zinc-50 border border-zinc-300 p-8 md:p-12 animate-pulse text-center">
+        <p className="text-zinc-500 uppercase tracking-widest text-xs font-bold">
+          Synthesizing Structural Dossier...
+        </p>
+      </div>
+    );
+  }
 
-  // 2. Hydrate from Cache on Component Mount
-  useEffect(() => {
-    const cachedDossier = sessionStorage.getItem("bsc_pending_dossier");
-    if (cachedDossier) {
-      try {
-        const parsedData = JSON.parse(cachedDossier);
+  // Parse the JSON phases safely from the database payload
+  const phases = project.project_phases || [];
 
-        // Inject the cached AI calculations into the UI
-        if (parsedData.investmentRange) {
-          setRange(parsedData.investmentRange);
-        }
-        if (parsedData.projectPhases && parsedData.projectPhases.length > 0) {
-          setPhases(parsedData.projectPhases);
-        }
-      } catch (error) {
-        console.error("Failed to parse cached dossier:", error);
-      }
-    }
-  }, []);
+  // Logic to determine active tier based on the database ceiling/floor
+  let activeTier = null;
+  const floor = project.investment_floor;
+  if (floor) {
+    if (floor < 5000) activeTier = 1;
+    else if (floor < 15000) activeTier = 2;
+    else if (floor < 30000) activeTier = 3;
+    else if (floor < 60000) activeTier = 4;
+    else activeTier = 5;
+  }
+
+  const investmentTiers = [
+    { id: 1, label: "< $5k" },
+    { id: 2, label: "$5k — $15k" },
+    { id: 3, label: "$15k — $30k" },
+    { id: 4, label: "$30k — $60k" },
+    { id: 5, label: "$60k+" },
+  ];
 
   return (
-    <section className="bg-brand-canvas border border-zinc-800 rounded-lg shadow-xl overflow-hidden relative">
-      <div className="absolute top-0 left-0 w-full h-1 bg-brand-primary"></div>
-
-      <header className="bg-zinc-900/40 border-b border-zinc-800 p-6">
-        <h2 className="text-xl uppercase tracking-widest text-brand-primary">
-          Initial Project Proposal
-        </h2>
-        <p className="text-xs text-zinc-500 uppercase tracking-widest mt-2">
-          Statement of Work & Phased Execution
-        </p>
-      </header>
-
-      <div className="p-6 space-y-8">
+    <div className="bg-zinc-50 rounded-sm shadow-md border border-zinc-300 p-8 md:p-12 text-zinc-900">
+      <header className="border-b-2 border-zinc-800 pb-6 mb-8 flex justify-between items-end">
         <div>
-          <h3 className="text-sm uppercase tracking-widest text-zinc-400 mb-3 border-b border-zinc-800 pb-2">
-            Executive Summary
-          </h3>
-          <p className="text-zinc-300 font-light leading-relaxed">
-            This proposal synthesizes the initial design consultation into
-            actionable structural parameters. The following phases outline the
-            anticipated load path for executing the build, subject to formal
-            site verification.
+          <h2 className="text-3xl font-bold uppercase tracking-widest text-zinc-900">
+            {project.project_title || "Preliminary Dossier"}
+          </h2>
+          <p className="text-xs text-zinc-500 uppercase tracking-widest mt-2 font-semibold">
+            BSC Residential LLC | Structural Outline
           </p>
         </div>
+      </header>
 
-        <div>
-          <h3 className="text-sm uppercase tracking-widest text-zinc-400 mb-4 border-b border-zinc-800 pb-2">
-            Project Phasing
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {phases.map((phase, idx) => (
-              <div
-                key={idx}
-                className="bg-zinc-900/50 border border-zinc-800 p-4 rounded shadow-inner"
-              >
-                <h4 className="text-brand-primary text-sm font-bold tracking-widest uppercase mb-2">
-                  {phase.phaseName}
-                </h4>
-                <p className="text-zinc-400 text-sm font-light leading-relaxed">
-                  {phase.description}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
+      <div className="mb-10">
+        <h3 className="text-xs uppercase tracking-widest text-zinc-500 font-bold mb-3 border-b border-zinc-300 pb-2">
+          Executive Summary
+        </h3>
+        <p className="text-zinc-800 leading-relaxed text-base font-medium">
+          {project.assumed_scope || "Scope pending formal verification."}
+        </p>
+      </div>
 
-        <div className="bg-brand-primary/5 border border-brand-primary/20 rounded p-6 mt-4 flex flex-col md:flex-row justify-between items-center gap-4">
-          <div>
-            <h3 className="text-brand-primary uppercase tracking-widest font-bold">
-              Target Investment Tier
-            </h3>
-            <p className="text-xs text-zinc-400 mt-1">
-              Based on assumed linear footage and material specifications.
-            </p>
-          </div>
-
-          <div className="text-2xl font-light text-white tracking-wider">
-            {range ? `${range.floor} — ${range.ceiling}` : "$ Calculating..."}
-          </div>
+      <div className="mb-12">
+        <h3 className="text-xs uppercase tracking-widest text-zinc-500 font-bold mb-4 border-b border-zinc-300 pb-2">
+          Proposed Phased Execution
+        </h3>
+        <div className="flex flex-col space-y-6">
+          {phases.map((phase: any, idx: number) => (
+            <div
+              key={idx}
+              className="pl-5 border-l-4 border-brand-primary py-1"
+            >
+              <h4 className="text-zinc-900 text-sm font-bold tracking-widest uppercase mb-1">
+                {phase.phaseName}
+              </h4>
+              <p className="text-zinc-700 text-sm leading-relaxed font-medium">
+                {phase.description}
+              </p>
+            </div>
+          ))}
         </div>
       </div>
-    </section>
+
+      <div className="bg-white border border-zinc-200 rounded-sm p-6 shadow-sm mt-8">
+        <h3 className="text-xs uppercase tracking-widest text-zinc-500 font-bold mb-4 flex justify-between items-end">
+          <span>Target Investment Tier</span>
+        </h3>
+        <div className="w-full flex rounded-sm overflow-hidden border border-zinc-300 bg-zinc-100 shadow-inner h-12">
+          {investmentTiers.map((tier) => {
+            const isActive = activeTier === tier.id;
+            return (
+              <div
+                key={tier.id}
+                className={`flex-1 flex items-center justify-center border-r border-zinc-300 transition-all duration-500 ${
+                  isActive
+                    ? "bg-brand-primary text-zinc-900 font-bold shadow-[inset_0_0_10px_rgba(0,0,0,0.1)]"
+                    : "text-zinc-500 font-medium opacity-70"
+                }`}
+              >
+                <span className="text-[10px] md:text-xs tracking-widest uppercase whitespace-nowrap px-1">
+                  {tier.label}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
   );
 }

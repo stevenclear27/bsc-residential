@@ -1,4 +1,4 @@
-"use client"; // Interactivity required for auth state[cite: 1]
+"use client";
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -19,7 +19,6 @@ export default function AuthGateway() {
     setLoading(true);
     setError(null);
 
-    // DIAGNOSTIC PROBE 1: Firing the sequence
     console.log("[AUTH PROBE] 1. Initialization started for:", email);
 
     try {
@@ -36,6 +35,15 @@ export default function AuthGateway() {
         const { data, error } = await supabase.auth.signUp({ email, password });
         console.log("[AUTH PROBE] 3. Registration Response:", { data, error });
         if (error) throw error;
+
+        // STRUCTURAL SAFEGUARD: Prevent silent failure if email confirmation is required
+        if (!data.session) {
+          setError(
+            "Account provisioned. Please check your email to verify your identity and unlock the portal.",
+          );
+          setLoading(false);
+          return; // Abort the redirect sequence
+        }
       }
 
       console.log(
@@ -49,7 +57,7 @@ export default function AuthGateway() {
       );
     } finally {
       console.log("[AUTH PROBE] 5. Resetting load state.");
-      setLoading(false);
+      if (error) setLoading(false);
     }
   };
 
@@ -68,7 +76,7 @@ export default function AuthGateway() {
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-5">
         {error && (
-          <div className="p-3 bg-red-900/30 border border-red-500/50 text-red-400 text-xs uppercase tracking-widest rounded">
+          <div className="p-3 bg-red-900/30 border border-red-500/50 text-red-400 text-xs uppercase tracking-widest rounded leading-relaxed text-center font-bold">
             {error}
           </div>
         )}
@@ -82,7 +90,7 @@ export default function AuthGateway() {
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="bg-zinc-900/50 border border-zinc-700 rounded p-4 text-white focus:outline-none focus:border-brand-primary transition-colors"
+            className="bg-zinc-900/50 border border-zinc-700 rounded-sm p-4 text-white focus:outline-none focus:border-brand-primary transition-colors"
             placeholder="client@example.com"
           />
         </div>
@@ -96,7 +104,7 @@ export default function AuthGateway() {
             required
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="bg-zinc-900/50 border border-zinc-700 rounded p-4 text-white focus:outline-none focus:border-brand-primary transition-colors"
+            className="bg-zinc-900/50 border border-zinc-700 rounded-sm p-4 text-white focus:outline-none focus:border-brand-primary transition-colors"
             placeholder="••••••••"
           />
         </div>
@@ -104,7 +112,7 @@ export default function AuthGateway() {
         <button
           type="submit"
           disabled={loading || !email || !password}
-          className="mt-2 w-full py-4 bg-brand-primary text-brand-canvas font-bold uppercase tracking-widest hover:bg-white transition-colors rounded disabled:opacity-50"
+          className="mt-2 w-full py-4 bg-brand-primary text-brand-canvas font-bold uppercase tracking-widest hover:bg-white transition-colors rounded-sm disabled:opacity-50"
         >
           {loading
             ? "Authenticating..."

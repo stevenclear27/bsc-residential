@@ -65,6 +65,7 @@ components/
   Dashboard/
     AccountabilityLedger.tsx
     ClientProfile.tsx
+    LedgerSync.tsx
     LiveContract.tsx
     ProjectProposal.tsx
     StorefrontLobby.tsx
@@ -140,7 +141,14 @@ public/
       hero-patio.webp
 supabase/
   .temp/
+    gotrue-version
     linked-project.json
+    pooler-url
+    postgres-version
+    project-ref
+    rest-version
+    storage-migration
+    storage-version
 utils/
   supabase/
     client.ts
@@ -161,27 +169,418 @@ tsconfig.json
 <files>
 This section contains the contents of the repository's files.
 
-<file path="components/Dashboard/AccountabilityLedger.tsx">
+<file path="supabase/.temp/gotrue-version">
+v2.195.0
+</file>
+
+<file path="supabase/.temp/pooler-url">
+postgresql://postgres.nrujiztotggvsnubppaj@aws-1-us-east-2.pooler.supabase.com:5432/postgres
+</file>
+
+<file path="supabase/.temp/postgres-version">
+17.6.1.147
+</file>
+
+<file path="supabase/.temp/project-ref">
+nrujiztotggvsnubppaj
+</file>
+
+<file path="supabase/.temp/rest-version">
+v14.5
+</file>
+
+<file path="supabase/.temp/storage-migration">
+mark-filename-immutable
+</file>
+
+<file path="supabase/.temp/storage-version">
+v1.69.0
+</file>
+
+<file path="app/(marketing)/portfolio/page.tsx">
+import PortfolioSection from "@/components/PortfolioSection";
+
+export default function PortfolioPage() {
+  return (
+    <main className="flex min-h-screen flex-col items-center justify-start w-full">
+      <PortfolioSection />
+    </main>
+  );
+}
+</file>
+
+<file path="app/(marketing)/services/page.tsx">
+import ServicesSection from "@/components/ServicesSection";
+
+export default function ServicesPage() {
+  return (
+    <main className="flex min-h-screen flex-col items-center justify-start w-full">
+      <ServicesSection />
+    </main>
+  );
+}
+</file>
+
+<file path="app/(marketing)/page.tsx">
+import HeroSection from "@/components/HeroSection";
+import IntroSection from "@/components/IntroSection";
+import ChatEstimator from "@/components/Intake/ChatEstimator";
+
+export default function Home() {
+  return (
+    <main className="flex min-h-screen flex-col items-center justify-start bg-brand-canvas">
+      <HeroSection />
+      <IntroSection />
+
+      {/* Automated Intake / Filter Section */}
+      <section
+        id="estimate"
+        className="w-full py-20 px-4 md:px-8 border-t border-brand-surface"
+      >
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold uppercase tracking-widest">
+              INSTANT PROJECT FEASIBILITY & ESTIMATOR
+            </h2>
+            <p className="mt-4 text-zinc-200">
+              Submit project specs and site photos to receive an immediate
+              preliminary scope and target investment tier. Qualified
+              submissions receive direct portal access to schedule an on-site
+              structural consultation.
+            </p>
+          </div>
+
+          {/* The isolated Phase 2 component is mounted here */}
+          <ChatEstimator />
+        </div>
+      </section>
+    </main>
+  );
+}
+</file>
+
+<file path="app/(portal)/layout.tsx">
+import Link from "next/link";
+import { ReactNode } from "react";
+
+export default function PortalLayout({ children }: { children: ReactNode }) {
+  return (
+    <div className="flex h-screen w-full bg-brand-canvas text-zinc-100">
+      {/* SIDEBAR COMPONENT (Isolated Navigation) */}
+      <aside className="w-64 border-r border-brand-primary/20 bg-brand-canvas/50 flex flex-col hidden md:flex">
+        <div className="p-6 border-b border-brand-primary/20">
+          <h2 className="text-xl font-bold tracking-widest text-brand-primary uppercase">
+            BSC Portal
+          </h2>
+          <span className="text-xs text-zinc-500 uppercase tracking-widest">
+            Accountability Ledger
+          </span>
+        </div>
+
+        <nav className="flex-1 p-4 space-y-2">
+          <Link
+            href="/dashboard"
+            className="block px-4 py-3 rounded-md hover:bg-brand-primary/10 hover:text-brand-primary transition-colors"
+          >
+            Active Projects
+          </Link>
+          <Link
+            href="/dashboard/messages"
+            className="block px-4 py-3 rounded-md hover:bg-brand-primary/10 hover:text-brand-primary transition-colors"
+          >
+            Direct Comm
+          </Link>
+          <Link
+            href="/dashboard/logs"
+            className="block px-4 py-3 rounded-md hover:bg-brand-primary/10 hover:text-brand-primary transition-colors"
+          >
+            Site Logs
+          </Link>
+        </nav>
+
+        <div className="p-4 border-t border-brand-primary/20">
+          {/* Logout functionality will be wired here */}
+          <button className="w-full text-left px-4 py-2 text-sm text-zinc-400 hover:text-brand-primary transition-colors">
+            Sign Out
+          </button>
+        </div>
+      </aside>
+
+      {/* MAIN CONTENT AREA */}
+      <main className="flex-1 overflow-y-auto">
+        {/* Mobile Header fallback */}
+        <header className="md:hidden border-b border-brand-primary/20 p-4 flex justify-between items-center bg-brand-canvas">
+          <h2 className="text-lg font-bold text-brand-primary">BSC Portal</h2>
+          <button className="text-brand-primary border border-brand-primary/30 px-3 py-1 rounded text-sm">
+            Menu
+          </button>
+        </header>
+
+        {/* Children (Specific Pages) load here */}
+        <div className="p-6 md:p-10">{children}</div>
+      </main>
+    </div>
+  );
+}
+</file>
+
+<file path="app/api/generate-concept/route.ts">
+import { NextResponse } from "next/server";
+import { GoogleGenAI } from "@google/genai";
+
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+
+export async function POST(request: Request) {
+  try {
+    const body = await request.json();
+    const { projectScope } = body;
+
+    const prompt = `A realistic, high-end architectural photo of a finished custom carpentry and exterior remodeling project matching this scope: ${projectScope}. Professional lighting, master craftsmanship, premium materials.`;
+
+    // Correct SDK method call for image generation or safe fallback wrapper
+    let imageUrl = "";
+    try {
+      const response = await ai.models.generateImages({
+        model: "imagen-3.0-generate-002",
+        prompt: prompt,
+        config: {
+          numberOfImages: 1,
+          outputMimeType: "image/jpeg",
+        },
+      });
+      imageUrl = response.generatedImages?.[0]?.image?.imageBytes
+        ? `data:image/jpeg;base64,${response.generatedImages[0].image.imageBytes}`
+        : "";
+    } catch (imgError) {
+      console.warn("Imagen generation fallback triggered:", imgError);
+      // Fallback placeholder schematic if model generation is restricted on current tier key
+      imageUrl =
+        "https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=800&q=80";
+    }
+
+    return NextResponse.json({
+      success: true,
+      imageUrl: imageUrl,
+      dossierSummary:
+        "Project parameters locked. Verified by BSC Residential structural intake protocol.",
+    });
+  } catch (error: any) {
+    console.error("Conceptual Render Engine Error:", error);
+    return NextResponse.json(
+      { error: error.message || "Failed to generate conceptual render." },
+      { status: 500 },
+    );
+  }
+}
+</file>
+
+<file path="app/portal-login/page.tsx">
 import React from "react";
+import AuthGateway from "@/components/AuthGateway"; // The unified component
+
+export default function PortalLoginPage() {
+  return (
+    <main className="flex-1 w-full flex items-center justify-center p-8 min-h-screen">
+      <AuthGateway />
+    </main>
+  );
+}
+</file>
+
+<file path="components/Dashboard/AccountabilityLedger.tsx">
+"use client";
+
+import React, { useState, useEffect, useRef } from "react";
+import { createClient } from "@/utils/supabase/client";
+
+interface MessagePayload {
+  id: string;
+  text_payload: string;
+  sender_id: string;
+  created_at: string;
+}
+
+type SystemStatus = "initializing" | "active" | "no_project";
 
 export default function AccountabilityLedger() {
+  const supabase = createClient();
+  const [messages, setMessages] = useState<MessagePayload[]>([]);
+  const [inputValue, setInputValue] = useState("");
+  const [isTransmitting, setIsTransmitting] = useState(false);
+  const [projectId, setProjectId] = useState<string | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [status, setStatus] = useState<SystemStatus>("initializing");
+
+  const feedEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const initializeFeed = async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) {
+        setStatus("no_project");
+        return;
+      }
+      setUserId(user.id);
+
+      const { data: projectData, error: projectError } = await supabase
+        .from("projects")
+        .select("id")
+        .eq("user_id", user.id)
+        .single();
+
+      if (projectError || !projectData) {
+        console.warn("Ledger Initialization: No project found for this user.");
+        setStatus("no_project");
+        return;
+      }
+
+      setProjectId(projectData.id);
+      setStatus("active");
+      fetchMessages(projectData.id);
+    };
+
+    initializeFeed();
+  }, [supabase]);
+
+  const fetchMessages = async (targetProjectId: string) => {
+    const { data, error } = await supabase
+      .from("messages")
+      .select("*")
+      .eq("project_id", targetProjectId)
+      .order("created_at", { ascending: true });
+
+    if (error) {
+      console.error("Feed Retrieval Fault:", error);
+    } else {
+      setMessages(data || []);
+      scrollToBottom();
+    }
+  };
+
+  const scrollToBottom = () => {
+    setTimeout(() => {
+      feedEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }, 100);
+  };
+
+  const handleTransmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!inputValue.trim() || !projectId || !userId || status !== "active")
+      return;
+
+    setIsTransmitting(true);
+
+    const { error } = await supabase.from("messages").insert({
+      project_id: projectId,
+      sender_id: userId,
+      text_payload: inputValue.trim(),
+    });
+
+    if (error) {
+      console.error("Transmission Fault:", error);
+    } else {
+      setInputValue("");
+      await fetchMessages(projectId);
+    }
+
+    setIsTransmitting(false);
+  };
+
   return (
-    <section className="flex-1 min-h-100 border border-zinc-800 rounded-lg flex flex-col bg-zinc-900/20 overflow-hidden shadow-xl">
-      <header className="p-6 border-b border-zinc-800 bg-zinc-900/50 flex justify-between items-center">
-        <div>
-          <h2 className="text-sm uppercase tracking-widest text-brand-primary">
-            Accountability Ledger
-          </h2>
-          <p className="text-xs text-zinc-500 mt-1 uppercase tracking-wider">
-            Secure Communications Feed
-          </p>
-        </div>
-        <div className="h-2 w-2 bg-brand-primary rounded-full animate-pulse"></div>
-      </header>
-      <div className="flex-1 p-8 flex items-center justify-center text-zinc-600 uppercase tracking-widest text-xs">
-        Ledger initialization pending database architecture...
+    <div className="flex flex-col h-[500px]">
+      {/* THE FEED */}
+      <div className="flex-1 overflow-y-auto pr-4 space-y-4 custom-scrollbar mb-4 relative">
+        {status === "initializing" && (
+          <div className="absolute inset-0 flex items-center justify-center bg-zinc-900/50 backdrop-blur-sm rounded-sm">
+            <span className="text-xs font-bold uppercase tracking-widest text-brand-primary animate-pulse">
+              Connecting to Secure Ledger...
+            </span>
+          </div>
+        )}
+
+        {status === "no_project" && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-zinc-900/50 backdrop-blur-sm rounded-sm text-center px-6">
+            <span className="text-sm font-bold uppercase tracking-widest text-zinc-500 mb-2">
+              No Active Blueprint Detected
+            </span>
+            <p className="text-xs text-zinc-400 max-w-sm leading-relaxed">
+              Your identity is verified, but no active construction parameters
+              exist in the database. Return to the Intake Estimator to generate
+              your preliminary structural dossier.
+            </p>
+          </div>
+        )}
+
+        {status === "active" && messages.length === 0 ? (
+          <div className="flex h-full items-center justify-center text-zinc-600 uppercase tracking-widest text-xs font-bold">
+            No communications in ledger.
+          </div>
+        ) : (
+          messages.map((msg) => {
+            const isClient = msg.sender_id === userId;
+            return (
+              <div
+                key={msg.id}
+                className={`flex ${isClient ? "justify-end" : "justify-start"}`}
+              >
+                <div
+                  className={`max-w-[80%] p-4 rounded-sm ${
+                    isClient
+                      ? "bg-brand-primary/10 border border-brand-primary/30 text-white"
+                      : "bg-zinc-800 border border-zinc-700 text-zinc-300"
+                  }`}
+                >
+                  <p className="text-sm font-medium leading-relaxed">
+                    {msg.text_payload}
+                  </p>
+                  <span className="text-[9px] text-zinc-500 uppercase tracking-widest mt-2 block">
+                    {new Date(msg.created_at).toLocaleTimeString([], {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </span>
+                </div>
+              </div>
+            );
+          })
+        )}
+        <div ref={feedEndRef} />
       </div>
-    </section>
+
+      {/* THE INPUT MANIFOLD */}
+      <form
+        onSubmit={handleTransmit}
+        className="flex gap-2 items-end pt-4 border-t border-zinc-800 relative"
+      >
+        <textarea
+          value={inputValue}
+          onChange={(e) => setInputValue(e.target.value)}
+          disabled={status !== "active"}
+          placeholder={
+            status === "active"
+              ? "Message your Master Carpenter..."
+              : "Ledger locked."
+          }
+          className="flex-1 bg-zinc-900/50 border border-zinc-700 rounded-sm p-4 text-white focus:outline-none focus:border-brand-primary transition-colors resize-none h-14 min-h-[56px] max-h-32 custom-scrollbar disabled:opacity-50 disabled:cursor-not-allowed"
+          rows={1}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && !e.shiftKey) {
+              e.preventDefault();
+              handleTransmit(e);
+            }
+          }}
+        />
+        <button
+          type="submit"
+          disabled={isTransmitting || !inputValue.trim() || status !== "active"}
+          className="px-6 py-4 bg-brand-primary text-brand-canvas font-bold uppercase tracking-widest rounded-sm hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors h-14"
+        >
+          {isTransmitting ? "..." : "Send"}
+        </button>
+      </form>
+    </div>
   );
 }
 </file>
@@ -203,16 +602,8 @@ export default function ClientProfile() {
   };
 
   return (
-    <section className="bg-brand-canvas border border-zinc-800 rounded-lg shadow-xl overflow-hidden">
+    <section className="bg-brand-surface border border-zinc-800 rounded-lg shadow-xl overflow-hidden">
       <header className="bg-zinc-900/80 border-b border-zinc-800 p-6 flex justify-between items-center">
-        <div>
-          <h2 className="text-lg uppercase tracking-widest text-brand-primary">
-            Client Profile
-          </h2>
-          <p className="text-xs text-zinc-500 uppercase tracking-widest mt-1">
-            Identity & Site Parameters
-          </p>
-        </div>
         {!isEditing && (
           <button
             onClick={() => setIsEditing(true)}
@@ -305,6 +696,91 @@ export default function ClientProfile() {
       </div>
     </section>
   );
+}
+</file>
+
+<file path="components/Dashboard/LedgerSync.tsx">
+"use client";
+
+import { useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
+import { createClient } from "@/utils/supabase/client";
+
+export default function LedgerSync({ userId }: { userId: string }) {
+  const router = useRouter();
+  const supabase = createClient();
+
+  // Mechanical lock to prevent React Strict Mode from double-firing the database insert
+  const syncAttempted = useRef(false);
+
+  useEffect(() => {
+    const synchronizeLedger = async () => {
+      // 1. Guard Clauses (Early Returns)
+      if (syncAttempted.current) return;
+
+      const cachedDossier = sessionStorage.getItem("bsc_pending_dossier");
+      if (!cachedDossier) return;
+
+      // Engage the mechanical lock only after verifying there is data to process
+      syncAttempted.current = true;
+
+      try {
+        const payload = JSON.parse(cachedDossier);
+
+        // 2. Security Verification
+        const {
+          data: { user },
+          error: authError,
+        } = await supabase.auth.getUser();
+        if (authError || !user)
+          throw new Error("Authentication barrier failed.");
+
+        // Strict verification: Ensure the logged-in user matches the intended ID
+        if (user.id !== userId) throw new Error("User identity mismatch.");
+
+        // 3. Sequential Database Execution
+        const { data: propertyData, error: propertyError } = await supabase
+          .from("properties")
+          .insert({
+            client_id: user.id,
+            site_address: "Address Pending Consultation",
+          })
+          .select("id")
+          .single();
+
+        if (propertyError) throw propertyError;
+
+        // Execute the strictly typed Project Insert enforcing Data Contracts
+        const { error: dbError } = await supabase.from("projects").insert({
+          user_id: user.id,
+          property_id: propertyData.id,
+          project_title: payload.projectTitle,
+          assumed_scope: payload.assumedScope,
+          project_phases: payload.projectPhases,
+          investment_floor: payload.rawInvestment?.floor,
+          investment_ceiling: payload.rawInvestment?.ceiling,
+          status: "Intake Phase",
+        });
+
+        if (dbError) throw dbError;
+
+        // 4. Volatile Cache Destruction
+        sessionStorage.removeItem("bsc_pending_dossier");
+        console.log("[SYSTEM] Ledger synchronized. Volatile cache destroyed.");
+
+        // 5. The Feedback Loop (Hydration Trigger)
+        router.refresh();
+      } catch (error) {
+        console.error("[SYSTEM FAULT] Ledger Sync Failure:", error);
+        // Release the mechanical lock so the system can attempt synchronization again upon a manual page refresh
+        syncAttempted.current = false;
+      }
+    };
+
+    synchronizeLedger();
+  }, [userId, router, supabase]); // Syntax corrected: userId matches the defined prop
+
+  return null; // Component Isolation: This is a pure logic node; it renders no UI
 }
 </file>
 
@@ -456,25 +932,18 @@ export default function LiveContract() {
 </file>
 
 <file path="components/Dashboard/ProjectProposal.tsx">
-import React from "react";
+"use client";
 
-// Strict typing for incoming parameters[cite: 1]
+import React, { useEffect, useState } from "react";
+
 interface PhaseProp {
   phaseName: string;
   description: string;
 }
 
-interface ProjectProposalProps {
-  investmentRange?: {
-    floor: string;
-    ceiling: string;
-  };
-}
-
-export default function ProjectProposal({
-  investmentRange,
-}: ProjectProposalProps) {
-  const constructionPhases: PhaseProp[] = [
+export default function ProjectProposal() {
+  const [activeTier, setActiveTier] = useState<number | null>(null);
+  const [phases, setPhases] = useState<PhaseProp[]>([
     {
       phaseName: "1. Site Prep & Protection",
       description:
@@ -495,83 +964,128 @@ export default function ProjectProposal({
       description:
         "Installation of architectural millwork, paint, and final mechanical trims.",
     },
+  ]);
+
+  const investmentTiers = [
+    { id: 1, label: "< $5k" },
+    { id: 2, label: "$5k — $15k" },
+    { id: 3, label: "$15k — $30k" },
+    { id: 4, label: "$30k — $60k" },
+    { id: 5, label: "$60k+" },
   ];
 
-  return (
-    <section className="bg-brand-canvas border border-zinc-800 rounded-lg shadow-xl overflow-hidden relative">
-      <div className="absolute top-0 left-0 w-full h-1 bg-brand-primary"></div>
+  useEffect(() => {
+    const cachedDossier = sessionStorage.getItem("bsc_pending_dossier");
+    if (cachedDossier) {
+      try {
+        const parsedData = JSON.parse(cachedDossier);
 
-      <header className="bg-zinc-900/40 border-b border-zinc-800 p-6">
-        <h2 className="text-xl uppercase tracking-widest text-brand-primary">
-          Initial Project Proposal
-        </h2>
-        <p className="text-xs text-zinc-500 uppercase tracking-widest mt-2">
-          Statement of Work & Phased Execution
-        </p>
+        if (parsedData.projectPhases && parsedData.projectPhases.length > 0) {
+          setPhases(parsedData.projectPhases);
+        }
+
+        if (parsedData.rawInvestment?.floor) {
+          const floor = parsedData.rawInvestment.floor;
+          if (floor < 5000) setActiveTier(1);
+          else if (floor < 15000) setActiveTier(2);
+          else if (floor < 30000) setActiveTier(3);
+          else if (floor < 60000) setActiveTier(4);
+          else setActiveTier(5);
+        }
+      } catch (error) {
+        console.error("Failed to parse cached dossier:", error);
+      }
+    }
+  }, []);
+
+  return (
+    <div className="bg-zinc-50 rounded-sm shadow-md border border-zinc-300 p-8 md:p-12 animate-in fade-in duration-500 text-zinc-900">
+      <header className="border-b-2 border-zinc-800 pb-6 mb-8 flex justify-between items-end">
+        <div>
+          <h2 className="text-3xl font-bold uppercase tracking-widest text-zinc-900">
+            Preliminary Dossier
+          </h2>
+          <p className="text-xs text-zinc-500 uppercase tracking-widest mt-2 font-semibold">
+            BSC Residential LLC | Structural Outline
+          </p>
+        </div>
+        <div className="text-right hidden md:block">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-brand-primary bg-brand-accent px-3 py-1 rounded-sm">
+            Draft Status
+          </p>
+        </div>
       </header>
 
-      <div className="p-6 space-y-8">
-        <div>
-          <h3 className="text-sm uppercase tracking-widest text-zinc-400 mb-3 border-b border-zinc-800 pb-2">
-            Executive Summary
-          </h3>
-          <p className="text-zinc-300 font-light leading-relaxed">
-            This proposal synthesizes the initial design consultation into
-            actionable structural parameters. The following phases outline the
-            anticipated load path for executing the build, subject to formal
-            site verification.
-          </p>
-        </div>
+      <div className="mb-10">
+        <h3 className="text-xs uppercase tracking-widest text-zinc-500 font-bold mb-3 border-b border-zinc-300 pb-2">
+          Executive Summary
+        </h3>
+        <p className="text-zinc-800 leading-relaxed text-base font-medium">
+          This document synthesizes the initial design consultation into
+          actionable structural parameters. The following phases outline the
+          anticipated load path for executing the build, subject to formal site
+          verification and material procurement constraints.
+        </p>
+      </div>
 
-        <div>
-          <h3 className="text-sm uppercase tracking-widest text-zinc-400 mb-4 border-b border-zinc-800 pb-2">
-            Project Phasing
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {constructionPhases.map((phase, idx) => (
-              <div
-                key={idx}
-                className="bg-zinc-900/50 border border-zinc-800 p-4 rounded shadow-inner"
-              >
-                <h4 className="text-brand-primary text-sm font-bold tracking-widest uppercase mb-2">
-                  {phase.phaseName}
-                </h4>
-                <p className="text-zinc-400 text-sm font-light leading-relaxed">
-                  {phase.description}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* NEW FINANCIAL MODULE: The Target Investment Tier */}
-        <div className="bg-brand-primary/5 border border-brand-primary/20 rounded p-6 mt-4 flex flex-col md:flex-row justify-between items-center gap-4">
-          <div>
-            <h3 className="text-brand-primary uppercase tracking-widest font-bold">
-              Target Investment Tier
-            </h3>
-            <p className="text-xs text-zinc-400 mt-1">
-              Based on assumed linear footage and material specifications.
-            </p>
-          </div>
-
-          <div className="text-2xl font-light text-white tracking-wider">
-            {investmentRange
-              ? `${investmentRange.floor} — ${investmentRange.ceiling}`
-              : "$ Calculating..."}
-          </div>
-        </div>
-
-        <div className="pt-4 border-t border-zinc-800/80">
-          <p className="text-[10px] text-zinc-500 uppercase tracking-widest leading-relaxed">
-            This digital ledger serves as a preliminary architectural outline.
-            Fixed-rate contract structures, final schedules, and investment
-            variables will be formalized post-consultation. Details to be
-            discussed exclusively with Master Carpenter, Steven Clear.
-          </p>
+      <div className="mb-12">
+        <h3 className="text-xs uppercase tracking-widest text-zinc-500 font-bold mb-4 border-b border-zinc-300 pb-2">
+          Proposed Phased Execution
+        </h3>
+        <div className="flex flex-col space-y-6">
+          {phases.map((phase, idx) => (
+            <div
+              key={idx}
+              className="pl-5 border-l-4 border-brand-primary py-1"
+            >
+              <h4 className="text-zinc-900 text-sm font-bold tracking-widest uppercase mb-1">
+                {phase.phaseName}
+              </h4>
+              <p className="text-zinc-700 text-sm leading-relaxed font-medium">
+                {phase.description}
+              </p>
+            </div>
+          ))}
         </div>
       </div>
-    </section>
+
+      {/* REFACTORED ESTIMATOR COMPONENT: Unified Light Theme */}
+      <div className="bg-white border border-zinc-200 rounded-sm p-6 shadow-sm mt-8">
+        <h3 className="text-xs uppercase tracking-widest text-zinc-500 font-bold mb-4 flex justify-between items-end">
+          <span>Target Investment Tier</span>
+          {activeTier === null && (
+            <span className="text-[10px] text-brand-primary animate-pulse">
+              Calculating...
+            </span>
+          )}
+        </h3>
+
+        <div className="w-full flex rounded-sm overflow-hidden border border-zinc-300 bg-zinc-100 shadow-inner h-12">
+          {investmentTiers.map((tier) => {
+            const isActive = activeTier === tier.id;
+            return (
+              <div
+                key={tier.id}
+                className={`flex-1 flex items-center justify-center border-r border-zinc-300 last:border-r-0 transition-all duration-500 ${
+                  isActive
+                    ? "bg-brand-primary text-zinc-900 font-bold shadow-[inset_0_0_10px_rgba(0,0,0,0.1)]"
+                    : "text-zinc-500 font-medium opacity-70"
+                }`}
+              >
+                <span className="text-[10px] md:text-xs tracking-widest uppercase whitespace-nowrap px-1">
+                  {tier.label}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+        <p className="text-[10px] text-zinc-500 uppercase tracking-widest mt-4 text-center leading-relaxed font-semibold">
+          This digital ledger serves as a preliminary architectural outline.
+          Fixed-rate contract structures and exact schedules will be formalized
+          post-consultation.
+        </p>
+      </div>
+    </div>
   );
 }
 </file>
@@ -601,445 +1115,6 @@ export default function StorefrontLobby() {
         </div>
       </div>
     </header>
-  );
-}
-</file>
-
-<file path="lib/estimatingEngine.ts">
-// /lib/estimatingEngine.ts
-import { Database } from "./types/database";
-
-// STRICT TYPING: Extracting the exact column types directly from Supabase
-type ProjectRecord = Database["public"]["Tables"]["projects"]["Row"];
-
-export interface EstimatorInputs {
-  // We force these inputs to match the exact data types your database expects
-  linearFootage: NonNullable<ProjectRecord["linear_footage"]>;
-  materialTier: NonNullable<ProjectRecord["material_tier"]>;
-  roomCondition: NonNullable<ProjectRecord["room_condition"]>;
-}
-
-// ISOLATED CONFIGURATION: Your business logic variables
-const BASE_RATES = {
-  masterCarpenterDayRate: 850,
-  linearFootBaseline: 150,
-};
-
-// We define the exact string literals expected by the engine
-type MaterialTier = "Standard" | "Premium" | "Ultra-Custom";
-type RoomCondition = "Turnkey" | "Minor Prep Needed" | "Gut and Reframe";
-
-const MULTIPLIERS: Record<string, Record<string, number>> = {
-  material: {
-    Standard: 1.0,
-    Premium: 1.45,
-    "Ultra-Custom": 2.2,
-  },
-  complexity: {
-    Turnkey: 1.0,
-    "Minor Prep Needed": 1.25,
-    "Gut and Reframe": 1.75,
-  },
-};
-
-const ALLOWANCES = {
-  subcontractorBuffer: 1500,
-  contingencyMargin: 1.15,
-};
-
-export function generateInvestmentTier(inputs: EstimatorInputs) {
-  // 1. Calculate Base Structural Cost
-  const baseStructuralCost =
-    inputs.linearFootage * BASE_RATES.linearFootBaseline;
-
-  // 2. Apply Multipliers (Fallback to 1.0 if the AI passes an unexpected string)
-  const materialMultiplier = MULTIPLIERS.material[inputs.materialTier] || 1.0;
-  const complexityMultiplier =
-    MULTIPLIERS.complexity[inputs.roomCondition] || 1.0;
-
-  const calculatedCost =
-    baseStructuralCost * materialMultiplier * complexityMultiplier;
-
-  // 3. Add Fixed Allowances and Master Carpenter Minimums
-  const laborAndSubs =
-    BASE_RATES.masterCarpenterDayRate * 3 + ALLOWANCES.subcontractorBuffer;
-
-  const rawTotal = calculatedCost + laborAndSubs;
-
-  // 4. Generate the Range (Floor and Ceiling)
-  const targetFloor = rawTotal;
-  const targetCeiling = rawTotal * ALLOWANCES.contingencyMargin;
-
-  // Return formatted strings for the UI and raw integers for the database
-  return {
-    formattedFloor: new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-      maximumFractionDigits: 0,
-    }).format(targetFloor),
-    formattedCeiling: new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-      maximumFractionDigits: 0,
-    }).format(targetCeiling),
-    rawFloor: targetFloor,
-    rawCeiling: targetCeiling,
-  };
-}
-</file>
-
-<file path="supabase/.temp/linked-project.json">
-{"ref":"nrujiztotggvsnubppaj","name":"BSC Residential","organization_id":"ktovuwwkqukcgxgzpbbx","organization_slug":"ktovuwwkqukcgxgzpbbx"}
-</file>
-
-<file path="app/(marketing)/portfolio/page.tsx">
-import PortfolioSection from "@/components/PortfolioSection";
-
-export default function PortfolioPage() {
-  return (
-    <main className="flex min-h-screen flex-col items-center justify-start w-full">
-      <PortfolioSection />
-    </main>
-  );
-}
-</file>
-
-<file path="app/(marketing)/services/page.tsx">
-import ServicesSection from "@/components/ServicesSection";
-
-export default function ServicesPage() {
-  return (
-    <main className="flex min-h-screen flex-col items-center justify-start w-full">
-      <ServicesSection />
-    </main>
-  );
-}
-</file>
-
-<file path="app/(marketing)/page.tsx">
-import HeroSection from "@/components/HeroSection";
-import IntroSection from "@/components/IntroSection";
-import ChatEstimator from "@/components/Intake/ChatEstimator";
-
-export default function Home() {
-  return (
-    <main className="flex min-h-screen flex-col items-center justify-start bg-brand-canvas">
-      <HeroSection />
-      <IntroSection />
-
-      {/* Automated Intake / Filter Section */}
-      <section
-        id="estimate"
-        className="w-full py-20 px-4 md:px-8 border-t border-brand-surface"
-      >
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold uppercase tracking-widest">
-              INSTANT PROJECT FEASIBILITY & ESTIMATOR
-            </h2>
-            <p className="mt-4 text-zinc-200">
-              Submit project specs and site photos to receive an immediate
-              preliminary scope and target investment tier. Qualified
-              submissions receive direct portal access to schedule an on-site
-              structural consultation.
-            </p>
-          </div>
-
-          {/* The isolated Phase 2 component is mounted here */}
-          <ChatEstimator />
-        </div>
-      </section>
-    </main>
-  );
-}
-</file>
-
-<file path="app/(portal)/layout.tsx">
-import Link from "next/link";
-import { ReactNode } from "react";
-
-export default function PortalLayout({ children }: { children: ReactNode }) {
-  return (
-    <div className="flex h-screen w-full bg-brand-canvas text-zinc-100">
-      {/* SIDEBAR COMPONENT (Isolated Navigation) */}
-      <aside className="w-64 border-r border-brand-primary/20 bg-brand-canvas/50 flex flex-col hidden md:flex">
-        <div className="p-6 border-b border-brand-primary/20">
-          <h2 className="text-xl font-bold tracking-widest text-brand-primary uppercase">
-            BSC Portal
-          </h2>
-          <span className="text-xs text-zinc-500 uppercase tracking-widest">
-            Accountability Ledger
-          </span>
-        </div>
-
-        <nav className="flex-1 p-4 space-y-2">
-          <Link
-            href="/dashboard"
-            className="block px-4 py-3 rounded-md hover:bg-brand-primary/10 hover:text-brand-primary transition-colors"
-          >
-            Active Projects
-          </Link>
-          <Link
-            href="/dashboard/messages"
-            className="block px-4 py-3 rounded-md hover:bg-brand-primary/10 hover:text-brand-primary transition-colors"
-          >
-            Direct Comm
-          </Link>
-          <Link
-            href="/dashboard/logs"
-            className="block px-4 py-3 rounded-md hover:bg-brand-primary/10 hover:text-brand-primary transition-colors"
-          >
-            Site Logs
-          </Link>
-        </nav>
-
-        <div className="p-4 border-t border-brand-primary/20">
-          {/* Logout functionality will be wired here */}
-          <button className="w-full text-left px-4 py-2 text-sm text-zinc-400 hover:text-brand-primary transition-colors">
-            Sign Out
-          </button>
-        </div>
-      </aside>
-
-      {/* MAIN CONTENT AREA */}
-      <main className="flex-1 overflow-y-auto">
-        {/* Mobile Header fallback */}
-        <header className="md:hidden border-b border-brand-primary/20 p-4 flex justify-between items-center bg-brand-canvas">
-          <h2 className="text-lg font-bold text-brand-primary">BSC Portal</h2>
-          <button className="text-brand-primary border border-brand-primary/30 px-3 py-1 rounded text-sm">
-            Menu
-          </button>
-        </header>
-
-        {/* Children (Specific Pages) load here */}
-        <div className="p-6 md:p-10">{children}</div>
-      </main>
-    </div>
-  );
-}
-</file>
-
-<file path="app/api/chat/route.ts">
-import { NextResponse } from "next/server";
-import OpenAI from "openai";
-import {
-  generateInvestmentTier,
-  EstimatorInputs,
-} from "@/lib/estimatingEngine";
-
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
-
-const MODEL_VERSION = process.env.DRAFT_SCOPE_MODEL || "gpt-4o-mini";
-
-// THE ABSTRACTION LAYER: Front-of-House Designer & Back-of-House PM
-const SYSTEM_INSTRUCTION = `
-You operate in two distinct cognitive phases for BSC Residential LLC, a high-end custom carpentry firm.
-
-PHASE 1: THE DESIGN CONSULTANT (Client-Facing)
-When conversing with the user, act as an elite architectural design consultant. Validate their aesthetic vision, accommodate their ideas, and gently expand their concepts using luxury design trends. DO NOT output JSON in your conversational replies.
-
-PHASE 2: THE PROJECT MANAGER (System-Facing)
-Once you have gathered enough structural context (typically 2-4 exchanges), you must explicitly ask: "Shall I compile these concepts into your preliminary project dossier?"
-If the client explicitly agrees, execute the 'generate_project_dossier' tool. You must extrapolate the client's abstract vision into four highly clinical, structural phases, and estimate the linear footage, material tier, and room condition based on the scope of the chat.
-`;
-
-const tools = [
-  {
-    type: "function" as const,
-    function: {
-      name: "generate_project_dossier",
-      description:
-        "Executes when the client agrees to finalize the consultation. Compiles the vision into a phased, structural scope of work.",
-      parameters: {
-        type: "object",
-        properties: {
-          projectTitle: { type: "string" },
-          assumedScope: { type: "string" },
-          projectPhases: {
-            type: "array",
-            items: {
-              type: "object",
-              properties: {
-                phaseName: { type: "string" },
-                description: { type: "string" },
-              },
-              required: ["phaseName", "description"],
-            },
-          },
-          linearFootage: {
-            type: "number",
-            description: "Estimated linear footage of the work area.",
-          },
-          materialTier: {
-            type: "string",
-            enum: ["Standard", "Premium", "Ultra-Custom"],
-          },
-          roomCondition: {
-            type: "string",
-            enum: ["Turnkey", "Minor Prep Needed", "Gut and Reframe"],
-          },
-        },
-        required: [
-          "projectTitle",
-          "assumedScope",
-          "projectPhases",
-          "linearFootage",
-          "materialTier",
-          "roomCondition",
-        ],
-      },
-    },
-  },
-];
-
-export async function POST(request: Request) {
-  try {
-    console.log("[DIAGNOSTIC PROBE] 1. Request Received. Parsing payload...");
-    const { messages } = await request.json();
-
-    console.log(
-      "[DIAGNOSTIC PROBE] 2. Transmitting to OpenAI (Computation Only)...",
-    );
-    const response = await openai.chat.completions.create({
-      model: MODEL_VERSION,
-      messages: [{ role: "system", content: SYSTEM_INSTRUCTION }, ...messages],
-      tools: tools,
-      tool_choice: "auto",
-    });
-
-    const responseMessage = response.choices[0].message;
-    console.log("[DIAGNOSTIC PROBE] 3. OpenAI Response Received.");
-
-    if (responseMessage?.tool_calls) {
-      const toolCall = responseMessage.tool_calls.find(
-        (tool) =>
-          tool.type === "function" &&
-          tool.function.name === "generate_project_dossier",
-      );
-
-      if (toolCall && toolCall.type === "function") {
-        console.log(
-          "[DIAGNOSTIC PROBE] 4. Executing Dossier Generation Logic...",
-        );
-        const rawData = JSON.parse(toolCall.function.arguments);
-
-        const investmentData = generateInvestmentTier({
-          linearFootage: rawData.linearFootage,
-          materialTier: rawData.materialTier as EstimatorInputs["materialTier"],
-          roomCondition:
-            rawData.roomCondition as EstimatorInputs["roomCondition"],
-        });
-
-        console.log(
-          "[DIAGNOSTIC PROBE] 5. Math calculated. Shipping volatile payload to UI.",
-        );
-        return NextResponse.json(
-          {
-            type: "dossier_generated",
-            message:
-              "Project parameters compiled. Transitioning to formal dossier.",
-            data: {
-              projectTitle: rawData.projectTitle,
-              assumedScope: rawData.assumedScope,
-              projectPhases: rawData.projectPhases,
-              investmentRange: {
-                floor: investmentData.formattedFloor,
-                ceiling: investmentData.formattedCeiling,
-              },
-              // The frontend needs the raw integers to execute the database write later
-              rawInvestment: {
-                floor: investmentData.rawFloor,
-                ceiling: investmentData.rawCeiling,
-                linearFootage: rawData.linearFootage,
-                materialTier: rawData.materialTier,
-                roomCondition: rawData.roomCondition,
-              },
-            },
-          },
-          { status: 200 },
-        );
-      }
-    }
-
-    console.log(
-      "[DIAGNOSTIC PROBE] 4. Standard chat response. Shipping payload to UI.",
-    );
-    return NextResponse.json(
-      {
-        type: "chat_response",
-        message:
-          responseMessage.content || "Processing structural variables...",
-      },
-      { status: 200 },
-    );
-  } catch (error: any) {
-    console.error("[BACKEND FAULT]", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  }
-}
-</file>
-
-<file path="app/api/generate-concept/route.ts">
-import { NextResponse } from "next/server";
-import { GoogleGenAI } from "@google/genai";
-
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-
-export async function POST(request: Request) {
-  try {
-    const body = await request.json();
-    const { projectScope } = body;
-
-    const prompt = `A realistic, high-end architectural photo of a finished custom carpentry and exterior remodeling project matching this scope: ${projectScope}. Professional lighting, master craftsmanship, premium materials.`;
-
-    // Correct SDK method call for image generation or safe fallback wrapper
-    let imageUrl = "";
-    try {
-      const response = await ai.models.generateImages({
-        model: "imagen-3.0-generate-002",
-        prompt: prompt,
-        config: {
-          numberOfImages: 1,
-          outputMimeType: "image/jpeg",
-        },
-      });
-      imageUrl = response.generatedImages?.[0]?.image?.imageBytes
-        ? `data:image/jpeg;base64,${response.generatedImages[0].image.imageBytes}`
-        : "";
-    } catch (imgError) {
-      console.warn("Imagen generation fallback triggered:", imgError);
-      // Fallback placeholder schematic if model generation is restricted on current tier key
-      imageUrl =
-        "https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=800&q=80";
-    }
-
-    return NextResponse.json({
-      success: true,
-      imageUrl: imageUrl,
-      dossierSummary:
-        "Project parameters locked. Verified by BSC Residential structural intake protocol.",
-    });
-  } catch (error: any) {
-    console.error("Conceptual Render Engine Error:", error);
-    return NextResponse.json(
-      { error: error.message || "Failed to generate conceptual render." },
-      { status: 500 },
-    );
-  }
-}
-</file>
-
-<file path="app/portal-login/page.tsx">
-import React from "react";
-import AuthGateway from "@/components/AuthGateway"; // The unified component
-
-export default function PortalLoginPage() {
-  return (
-    <main className="flex-1 w-full flex items-center justify-center p-8 min-h-screen">
-      <AuthGateway />
-    </main>
   );
 }
 </file>
@@ -1218,6 +1293,673 @@ export const estimateDossierSchema = z.object({
 export type EstimateDossier = z.infer<typeof estimateDossierSchema>;
 </file>
 
+<file path="lib/estimatingEngine.ts">
+// /lib/estimatingEngine.ts
+import { Database } from "./types/database";
+
+// STRICT TYPING: Extracting the exact column types directly from Supabase
+type ProjectRecord = Database["public"]["Tables"]["projects"]["Row"];
+
+export interface EstimatorInputs {
+  // We force these inputs to match the exact data types your database expects
+  linearFootage: NonNullable<ProjectRecord["linear_footage"]>;
+  materialTier: NonNullable<ProjectRecord["material_tier"]>;
+  roomCondition: NonNullable<ProjectRecord["room_condition"]>;
+}
+
+// ISOLATED CONFIGURATION: Your business logic variables
+const BASE_RATES = {
+  masterCarpenterDayRate: 850,
+  linearFootBaseline: 150,
+};
+
+// We define the exact string literals expected by the engine
+type MaterialTier = "Standard" | "Premium" | "Ultra-Custom";
+type RoomCondition = "Turnkey" | "Minor Prep Needed" | "Gut and Reframe";
+
+const MULTIPLIERS: Record<string, Record<string, number>> = {
+  material: {
+    Standard: 1.0,
+    Premium: 1.45,
+    "Ultra-Custom": 2.2,
+  },
+  complexity: {
+    Turnkey: 1.0,
+    "Minor Prep Needed": 1.25,
+    "Gut and Reframe": 1.75,
+  },
+};
+
+const ALLOWANCES = {
+  subcontractorBuffer: 1500,
+  contingencyMargin: 1.15,
+};
+
+export function generateInvestmentTier(inputs: EstimatorInputs) {
+  // 1. Calculate Base Structural Cost
+  const baseStructuralCost =
+    inputs.linearFootage * BASE_RATES.linearFootBaseline;
+
+  // 2. Apply Multipliers (Fallback to 1.0 if the AI passes an unexpected string)
+  const materialMultiplier = MULTIPLIERS.material[inputs.materialTier] || 1.0;
+  const complexityMultiplier =
+    MULTIPLIERS.complexity[inputs.roomCondition] || 1.0;
+
+  const calculatedCost =
+    baseStructuralCost * materialMultiplier * complexityMultiplier;
+
+  // 3. Add Fixed Allowances and Master Carpenter Minimums
+  const laborAndSubs =
+    BASE_RATES.masterCarpenterDayRate * 3 + ALLOWANCES.subcontractorBuffer;
+
+  const rawTotal = calculatedCost + laborAndSubs;
+
+  // 4. Generate the Range (Floor and Ceiling)
+  const targetFloor = rawTotal;
+  const targetCeiling = rawTotal * ALLOWANCES.contingencyMargin;
+
+  // Return formatted strings for the UI and raw integers for the database
+  return {
+    formattedFloor: new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+      maximumFractionDigits: 0,
+    }).format(targetFloor),
+    formattedCeiling: new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+      maximumFractionDigits: 0,
+    }).format(targetCeiling),
+    rawFloor: targetFloor,
+    rawCeiling: targetCeiling,
+  };
+}
+</file>
+
+<file path="lib/portfolioData.ts">
+export interface PortfolioProject {
+  id: string;
+  title: string;
+  description: string;
+  imagePath: string;
+  category:
+    | "Architectural Upgrade"
+    | "Custom Carpentry"
+    | "High-End Remodeling";
+}
+
+export const portfolioProjects: PortfolioProject[] = [
+  {
+    id: "patio-enclosure-01",
+    title: "Structural Patio Enclosure",
+    description:
+      "Precision framing and finishing for a seamless indoor-outdoor architectural transition.",
+    imagePath: "/portfolio/remodels/hero-patio.webp",
+    category: "Architectural Upgrade",
+  },
+  {
+    id: "custom-garage-01",
+    title: "Custom Wood-Overlay Garage Door",
+    description:
+      "8' x 18' structural installation featuring high-torque duplex torsion spring calibration and custom wood facing.",
+    imagePath: "/portfolio/carpentry/wood-garage.webp", // Ensure this file exists in your public folder
+    category: "Custom Carpentry",
+  },
+];
+</file>
+
+<file path="lib/supabaseClient.ts">
+import { createClient } from "@supabase/supabase-js";
+
+// Pull the secure API keys from the local environment
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+if (!supabaseUrl || !supabaseAnonKey) {
+  throw new Error(
+    "CRITICAL FAILURE: Supabase environment variables are missing.",
+  );
+}
+
+// Initialize and export the client for system-wide use
+export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+</file>
+
+<file path="supabase/.temp/linked-project.json">
+{"ref":"nrujiztotggvsnubppaj","name":"BSC Residential","organization_id":"ktovuwwkqukcgxgzpbbx","organization_slug":"ktovuwwkqukcgxgzpbbx"}
+</file>
+
+<file path="utils/supabase/client.ts">
+import { createBrowserClient } from "@supabase/ssr";
+
+export function createClient() {
+  return createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+  );
+}
+</file>
+
+<file path="AGENTS.md">
+<!-- BEGIN:nextjs-agent-rules -->
+# This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` before writing any code. Heed deprecation notices.
+<!-- END:nextjs-agent-rules -->
+</file>
+
+<file path="CLAUDE.md">
+@AGENTS.md
+</file>
+
+<file path="eslint.config.mjs">
+import { defineConfig, globalIgnores } from "eslint/config";
+import nextVitals from "eslint-config-next/core-web-vitals";
+import nextTs from "eslint-config-next/typescript";
+
+const eslintConfig = defineConfig([
+  ...nextVitals,
+  ...nextTs,
+  // Override default ignores of eslint-config-next.
+  globalIgnores([
+    // Default ignores of eslint-config-next:
+    ".next/**",
+    "out/**",
+    "build/**",
+    "next-env.d.ts",
+  ]),
+]);
+
+export default eslintConfig;
+</file>
+
+<file path="next.config.ts">
+import type { NextConfig } from "next";
+
+const nextConfig: NextConfig = {
+  /* config options here */
+};
+
+export default nextConfig;
+</file>
+
+<file path="proxy.ts">
+import { createServerClient } from "@supabase/ssr";
+import { NextResponse, type NextRequest } from "next/server";
+
+export async function proxy(request: NextRequest) {
+  let supabaseResponse = NextResponse.next({
+    request,
+  });
+
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll();
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value, options }) =>
+            request.cookies.set(name, value),
+          );
+          supabaseResponse = NextResponse.next({
+            request,
+          });
+          cookiesToSet.forEach(({ name, value, options }) =>
+            supabaseResponse.cookies.set(name, value, options),
+          );
+        },
+      },
+    },
+  );
+
+  // Verify the active session
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  // If there is no user and they are trying to access the portal, boot them to login
+  if (!user && request.nextUrl.pathname.startsWith("/dashboard")) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/portal-login"; // Adjust to your actual login route
+    return NextResponse.redirect(url);
+  }
+
+  return supabaseResponse;
+}
+
+// Ensure the middleware only runs on relevant routes to save processing bandwidth
+export const config = {
+  matcher: [
+    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+  ],
+};
+</file>
+
+<file path="README.md">
+This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+
+## Getting Started
+
+First, run the development server:
+
+```bash
+npm run dev
+# or
+yarn dev
+# or
+pnpm dev
+# or
+bun dev
+```
+
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+
+You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+
+This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+
+## Learn More
+
+To learn more about Next.js, take a look at the following resources:
+
+- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
+- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+
+You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+
+## Deploy on Vercel
+
+The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+
+Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+</file>
+
+<file path="tsconfig.json">
+{
+  "compilerOptions": {
+    "target": "ES2017",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "react-jsx",
+    "incremental": true,
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "paths": {
+      "@/*": ["./*"]
+    }
+  },
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts",
+    ".next/dev/types/**/*.ts",
+    "**/*.mts"
+  ],
+  "exclude": ["node_modules"]
+}
+</file>
+
+<file path="app/api/chat/route.ts">
+import { NextResponse } from "next/server";
+import OpenAI from "openai";
+import {
+  generateInvestmentTier,
+  EstimatorInputs,
+} from "@/lib/estimatingEngine";
+
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
+
+const MODEL_VERSION = process.env.DRAFT_SCOPE_MODEL || "gpt-4o-mini";
+
+// THE ABSTRACTION LAYER: Front-of-House Designer & Back-of-House PM
+const SYSTEM_INSTRUCTION = `
+You operate in two distinct cognitive phases for BSC Residential LLC, a high-end custom carpentry firm.
+
+PHASE 1: THE DESIGN CONSULTANT (Client-Facing)
+When conversing with the user, act as an elite architectural design consultant. Validate their aesthetic vision, accommodate their ideas, and gently expand their concepts using luxury design trends. DO NOT output JSON in your conversational replies.
+
+PHASE 2: THE PROJECT MANAGER (System-Facing)
+Once you have gathered enough structural context (typically 2-4 exchanges), you must explicitly ask: "Shall I compile these concepts into your preliminary project dossier?"
+If the client explicitly agrees, execute the 'generate_project_dossier' tool. You must extrapolate the client's abstract vision into four highly clinical, structural phases, and estimate the linear footage, material tier, and room condition based on the scope of the chat.
+`;
+
+const tools = [
+  {
+    type: "function" as const,
+    function: {
+      name: "generate_project_dossier",
+      description:
+        "Executes when the client agrees to finalize the consultation. Compiles the vision into a phased, structural scope of work.",
+      parameters: {
+        type: "object",
+        properties: {
+          projectTitle: { type: "string" },
+          assumedScope: { type: "string" },
+          projectPhases: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                phaseName: { type: "string" },
+                description: { type: "string" },
+              },
+              required: ["phaseName", "description"],
+            },
+          },
+          linearFootage: {
+            type: "number",
+            description: "Estimated linear footage of the work area.",
+          },
+          materialTier: {
+            type: "string",
+            enum: ["Standard", "Premium", "Ultra-Custom"],
+          },
+          roomCondition: {
+            type: "string",
+            enum: ["Turnkey", "Minor Prep Needed", "Gut and Reframe"],
+          },
+        },
+        required: [
+          "projectTitle",
+          "assumedScope",
+          "projectPhases",
+          "linearFootage",
+          "materialTier",
+          "roomCondition",
+        ],
+      },
+    },
+  },
+];
+
+export async function POST(request: Request) {
+  try {
+    console.log("[DIAGNOSTIC PROBE] 1. Request Received. Parsing payload...");
+    const { messages } = await request.json();
+
+    console.log(
+      "[DIAGNOSTIC PROBE] 2. Transmitting to OpenAI (Computation Only)...",
+    );
+    const response = await openai.chat.completions.create({
+      model: MODEL_VERSION,
+      messages: [{ role: "system", content: SYSTEM_INSTRUCTION }, ...messages],
+      tools: tools,
+      tool_choice: "auto",
+    });
+
+    const responseMessage = response.choices[0].message;
+    console.log("[DIAGNOSTIC PROBE] 3. OpenAI Response Received.");
+
+    if (responseMessage?.tool_calls) {
+      const toolCall = responseMessage.tool_calls.find(
+        (tool) =>
+          tool.type === "function" &&
+          tool.function.name === "generate_project_dossier",
+      );
+
+      if (toolCall && toolCall.type === "function") {
+        console.log(
+          "[DIAGNOSTIC PROBE] 4. Executing Dossier Generation Logic...",
+        );
+        const rawData = JSON.parse(toolCall.function.arguments);
+
+        const investmentData = generateInvestmentTier({
+          linearFootage: rawData.linearFootage,
+          materialTier: rawData.materialTier as EstimatorInputs["materialTier"],
+          roomCondition:
+            rawData.roomCondition as EstimatorInputs["roomCondition"],
+        });
+
+        console.log(
+          "[DIAGNOSTIC PROBE] 5. Math calculated. Shipping volatile payload to UI.",
+        );
+        return NextResponse.json(
+          {
+            type: "dossier_generated",
+            message:
+              "Project parameters compiled. Transitioning to formal dossier.",
+            data: {
+              projectTitle: rawData.projectTitle,
+              assumedScope: rawData.assumedScope,
+              projectPhases: rawData.projectPhases,
+              investmentRange: {
+                floor: investmentData.formattedFloor,
+                ceiling: investmentData.formattedCeiling,
+              },
+              // The frontend needs the raw integers to execute the database write later
+              rawInvestment: {
+                floor: investmentData.rawFloor,
+                ceiling: investmentData.rawCeiling,
+                linearFootage: rawData.linearFootage,
+                materialTier: rawData.materialTier,
+                roomCondition: rawData.roomCondition,
+              },
+            },
+          },
+          { status: 200 },
+        );
+      }
+    }
+
+    console.log(
+      "[DIAGNOSTIC PROBE] 4. Standard chat response. Shipping payload to UI.",
+    );
+    return NextResponse.json(
+      {
+        type: "chat_response",
+        message:
+          responseMessage.content || "Processing structural variables...",
+      },
+      { status: 200 },
+    );
+  } catch (error: any) {
+    console.error("[BACKEND FAULT]", error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}
+</file>
+
+<file path="lib/data/portfolio.ts">
+// src/lib/data/portfolio.ts
+
+export interface PortfolioImage {
+  src: string;
+  alt: string;
+}
+
+export interface PortfolioItem {
+  id: string;
+  title: string;
+  category: string;
+  projectScale: "custom-build" | "service-agreement";
+  description: string;
+  images: PortfolioImage[];
+}
+
+export const projects: PortfolioItem[] = [
+  {
+    id: "prj-gibson",
+    title: "Structural Patio Enclosure",
+    category: "Architectural Upgrade",
+    projectScale: "custom-build",
+    description:
+      "Complete structural enclosure engineered to exact tolerances focused on matching the existing aesthetic. Progression from initial framing to final interior and exterior finish, trim, and paint.",
+    images: [
+      {
+        src: "/portfolio/projects/gibson/patio-enclosure-before-north.webp",
+        alt: "Gibson before modifications",
+      },
+      {
+        src: "/portfolio/projects/gibson/patio-enclosure-framing.webp",
+        alt: "Gibson structural framing",
+      },
+      {
+        src: "/portfolio/projects/gibson/patio-enclosure-vapor-barrier.webp",
+        alt: "Gibson project vapor barrier application",
+      },
+      {
+        src: "/portfolio/projects/gibson/patio-enclosure-sheathing.webp",
+        alt: "Gibson project exterior sheathing installation",
+      },
+      {
+        src: "/portfolio/projects/gibson/patio-enclosure-trim-windows.webp",
+        alt: "Gibson project window and trim integration",
+      },
+      {
+        src: "/portfolio/projects/gibson/patio-enclosure-before-south.webp",
+        alt: "Gibson project before structural modifications south view",
+      },
+      {
+        src: "/portfolio/projects/gibson/patio-enclosure-doors.webp",
+        alt: "Gibson project final door installation",
+      },
+      {
+        src: "/portfolio/projects/gibson/patio-enclosure-insulation.webp",
+        alt: "Gibson project internal insulation phase",
+      },
+      {
+        src: "/portfolio/projects/gibson/patio-enclosure-drywall.webp",
+        alt: "Gibson project drywall hanging and finishing",
+      },
+      {
+        src: "/portfolio/projects/gibson/patio-enclosure-interior-north.webp",
+        alt: "Gibson project finished interior north view",
+      },
+      {
+        src: "/portfolio/projects/gibson/patio-enclosure-interior-south.webp",
+        alt: "Gibson project finished interior south view",
+      },
+      {
+        src: "/portfolio/projects/gibson/patio-enclosure-interior-furnished.webp",
+        alt: "Gibson project completed and furnished interior",
+      },
+    ],
+  },
+  {
+    id: "prj-pope",
+    title: "Architectural Metal Siding Installation",
+    category: "New Construction",
+    projectScale: "custom-build",
+    description:
+      "Comprehensive structural and aesthetic residential metal siding installation, documenting progress from naked structure to final finish.",
+    images: [
+      {
+        src: "/portfolio/projects/pope/southwest-before.webp",
+        alt: "Pope project southwest before",
+      },
+      {
+        src: "/portfolio/projects/pope/northwest-during.webp",
+        alt: "Pope project northwest framing during",
+      },
+
+      {
+        src: "/portfolio/projects/pope/southeast-during.webp",
+        alt: "Pope project southeast during phase",
+      },
+      {
+        src: "/portfolio/projects/pope/southeast-after.webp",
+        alt: "Pope project southeast finished",
+      },
+      {
+        src: "/portfolio/projects/pope/southwest-after.webp",
+        alt: "Pope project southwest finished",
+      },
+      {
+        src: "/portfolio/projects/pope/on-the-job.webp",
+        alt: "Pope project on the job active construction",
+      },
+    ],
+  },
+  {
+    id: "prj-ideal-garage-door",
+    title: "Custom Ideal Overhead Garage Door",
+    category: "Small Projects",
+    projectScale: "service-agreement",
+    description:
+      "Manual installation and precision balance of a high-torque duplex torsion spring system on a custom 8' x 18' Ideal overhead garage door. Executed as an independent short-duration contract to ensure exact mechanical tolerances.",
+    images: [
+      {
+        src: "/portfolio/projects/garage-door/overhead-garage-door-opening.webp",
+        alt: "Custom overhead garage door track and opening mechanism",
+      },
+      {
+        src: "/portfolio/projects/garage-door/overhead-garage-door-interior.webp",
+        alt: "Custom overhead garage door interior high-torque torsion spring system",
+      },
+      {
+        src: "/portfolio/projects/garage-door/overhead-garage-door-exterior.webp",
+        alt: "Custom overhead garage door exterior installation view",
+      },
+      {
+        src: "/portfolio/projects/garage-door/overhead-garage-door-after.webp",
+        alt: "Custom overhead garage door finished installation and mechanical balance",
+      },
+    ],
+  },
+  {
+    id: "prj-pope-shed",
+    title: "Outbuilding Restoration",
+    category: "Small Projects",
+    projectScale: "service-agreement",
+    description:
+      "High-velocity aesthetic and structural restoration of a residence outbuilding. Executed as an independent short-duration contract to protect exterior integrity.",
+    images: [
+      {
+        src: "/portfolio/projects/pope/shed-paint-before.webp",
+        alt: "Shed exterior condition prior to restoration",
+      },
+      {
+        src: "/portfolio/projects/pope/shed-paint-after.webp",
+        alt: "Shed exterior finished restoration",
+      },
+    ],
+  },
+  {
+    id: "prj-pope-shed-siding",
+    title: "Outbuilding Siding & Doors",
+    category: "Small Projects",
+    projectScale: "service-agreement",
+    description:
+      "High-velocity exterior siding replacement and door installation. Executed as a short-duration independent contract to restore structural integrity.",
+    images: [
+      {
+        src: "/portfolio/projects/shed/siding-before.webp",
+        alt: "Outbuilding siding condition prior to construction",
+      },
+      {
+        src: "/portfolio/projects/shed/siding-after.webp",
+        alt: "Outbuilding siding finished installation",
+      },
+      {
+        src: "/portfolio/projects/shed/siding-rear-after.webp",
+        alt: "Outbuilding rear siding finished installation",
+      },
+      {
+        src: "/portfolio/projects/shed/siding-doors-after.webp",
+        alt: "Outbuilding doors finished installation",
+      },
+    ],
+  },
+];
+</file>
+
 <file path="lib/types/database.ts">
 export type Json =
   | string
@@ -1384,6 +2126,7 @@ export type Database = {
           property_id: string
           room_condition: string | null
           status: string | null
+          user_id: string | null
         }
         Insert: {
           assumed_scope: string
@@ -1398,6 +2141,7 @@ export type Database = {
           property_id: string
           room_condition?: string | null
           status?: string | null
+          user_id?: string | null
         }
         Update: {
           assumed_scope?: string
@@ -1412,6 +2156,7 @@ export type Database = {
           property_id?: string
           room_condition?: string | null
           status?: string | null
+          user_id?: string | null
         }
         Relationships: [
           {
@@ -1622,256 +2367,111 @@ export const Constants = {
 } as const
 </file>
 
-<file path="lib/portfolioData.ts">
-export interface PortfolioProject {
-  id: string;
-  title: string;
-  description: string;
-  imagePath: string;
-  category:
-    | "Architectural Upgrade"
-    | "Custom Carpentry"
-    | "High-End Remodeling";
-}
-
-export const portfolioProjects: PortfolioProject[] = [
-  {
-    id: "patio-enclosure-01",
-    title: "Structural Patio Enclosure",
-    description:
-      "Precision framing and finishing for a seamless indoor-outdoor architectural transition.",
-    imagePath: "/portfolio/remodels/hero-patio.webp",
-    category: "Architectural Upgrade",
-  },
-  {
-    id: "custom-garage-01",
-    title: "Custom Wood-Overlay Garage Door",
-    description:
-      "8' x 18' structural installation featuring high-torque duplex torsion spring calibration and custom wood facing.",
-    imagePath: "/portfolio/carpentry/wood-garage.webp", // Ensure this file exists in your public folder
-    category: "Custom Carpentry",
-  },
-];
-</file>
-
-<file path="lib/supabaseClient.ts">
-import { createClient } from "@supabase/supabase-js";
-
-// Pull the secure API keys from the local environment
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error(
-    "CRITICAL FAILURE: Supabase environment variables are missing.",
-  );
-}
-
-// Initialize and export the client for system-wide use
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
-</file>
-
-<file path="utils/supabase/client.ts">
-import { createBrowserClient } from "@supabase/ssr";
-
-export function createClient() {
-  return createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-  );
-}
-</file>
-
-<file path="AGENTS.md">
-<!-- BEGIN:nextjs-agent-rules -->
-# This is NOT the Next.js you know
-
-This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` before writing any code. Heed deprecation notices.
-<!-- END:nextjs-agent-rules -->
-</file>
-
-<file path="CLAUDE.md">
-@AGENTS.md
-</file>
-
-<file path="eslint.config.mjs">
-import { defineConfig, globalIgnores } from "eslint/config";
-import nextVitals from "eslint-config-next/core-web-vitals";
-import nextTs from "eslint-config-next/typescript";
-
-const eslintConfig = defineConfig([
-  ...nextVitals,
-  ...nextTs,
-  // Override default ignores of eslint-config-next.
-  globalIgnores([
-    // Default ignores of eslint-config-next:
-    ".next/**",
-    "out/**",
-    "build/**",
-    "next-env.d.ts",
-  ]),
-]);
-
-export default eslintConfig;
-</file>
-
-<file path="next.config.ts">
-import type { NextConfig } from "next";
-
-const nextConfig: NextConfig = {
-  /* config options here */
-};
-
-export default nextConfig;
-</file>
-
-<file path="proxy.ts">
+<file path="utils/supabase/server.ts">
 import { createServerClient } from "@supabase/ssr";
-import { NextResponse, type NextRequest } from "next/server";
+import { cookies } from "next/headers";
 
-export async function proxy(request: NextRequest) {
-  let supabaseResponse = NextResponse.next({
-    request,
-  });
+export async function createClient() {
+  const cookieStore = await cookies();
 
-  const supabase = createServerClient(
+  return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        getAll() {
-          return request.cookies.getAll();
+        get(name: string) {
+          return cookieStore.get(name)?.value;
         },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) =>
-            request.cookies.set(name, value),
-          );
-          supabaseResponse = NextResponse.next({
-            request,
-          });
-          cookiesToSet.forEach(({ name, value, options }) =>
-            supabaseResponse.cookies.set(name, value, options),
-          );
+        set(name: string, value: string, options: any) {
+          try {
+            cookieStore.set({ name, value, ...options });
+          } catch (error) {
+            // The `set` method was called from a Server Component.
+            // This can be ignored if you have middleware refreshing
+            // user sessions.
+          }
+        },
+        remove(name: string, options: any) {
+          try {
+            cookieStore.set({ name, value: "", ...options });
+          } catch (error) {
+            // The `remove` method was called from a Server Component.
+          }
         },
       },
     },
   );
-
-  // Verify the active session
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  // If there is no user and they are trying to access the portal, boot them to login
-  if (!user && request.nextUrl.pathname.startsWith("/dashboard")) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/portal-login"; // Adjust to your actual login route
-    return NextResponse.redirect(url);
-  }
-
-  return supabaseResponse;
 }
-
-// Ensure the middleware only runs on relevant routes to save processing bandwidth
-export const config = {
-  matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
-  ],
-};
 </file>
 
-<file path="README.md">
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
-
-## Getting Started
-
-First, run the development server:
-
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
-
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
-</file>
-
-<file path="tsconfig.json">
-{
-  "compilerOptions": {
-    "target": "ES2017",
-    "lib": ["dom", "dom.iterable", "esnext"],
-    "allowJs": true,
-    "skipLibCheck": true,
-    "strict": true,
-    "noEmit": true,
-    "esModuleInterop": true,
-    "module": "esnext",
-    "moduleResolution": "bundler",
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "jsx": "react-jsx",
-    "incremental": true,
-    "plugins": [
-      {
-        "name": "next"
-      }
-    ],
-    "paths": {
-      "@/*": ["./*"]
-    }
+<file path="postcss.config.mjs">
+/** @type {import('postcss-load-config').Config} */
+const config = {
+  plugins: {
+    "@tailwindcss/postcss": {},
+    autoprefixer: {},
   },
-  "include": [
-    "next-env.d.ts",
-    "**/*.ts",
-    "**/*.tsx",
-    ".next/types/**/*.ts",
-    ".next/dev/types/**/*.ts",
-    "**/*.mts"
-  ],
-  "exclude": ["node_modules"]
-}
+};
+
+export default config;
+</file>
+
+<file path="prcommands.md">
+npx repomix --output project_context.txt
 </file>
 
 <file path="app/(portal)/dashboard/page.tsx">
-import React from "react";
+import { redirect } from "next/navigation";
+import { createClient } from "@/utils/supabase/server";
 import StorefrontLobby from "@/components/Dashboard/StorefrontLobby";
 import ClientProfile from "@/components/Dashboard/ClientProfile";
 import ProjectProposal from "@/components/Dashboard/ProjectProposal";
 import AccountabilityLedger from "@/components/Dashboard/AccountabilityLedger";
+import LedgerSync from "@/components/Dashboard/LedgerSync";
 
 export default async function ClientDashboardPage() {
+  // 1. Establish Server-Side Database Connection
+  const supabase = await createClient();
+
+  // 2. Security Intercept: Verify the user session securely on the server
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+
+  // Forcefully eject unauthenticated users back to the gateway
+  if (authError || !user) {
+    redirect("/portal-login");
+  }
+
+  // 3. Hydration Query: Fetch the user's active project ledger
+  const { data: projectData } = await supabase
+    .from("projects")
+    .select("*")
+    .eq("user_id", user.id)
+    .single();
+
+  // 4. Render the UI
   return (
     <div className="min-h-screen bg-brand-canvas text-white flex flex-col">
+      {/* 
+        Background Synchronization: 
+        Only mounts if no project exists in the database. 
+        It will read the local cache and write to Supabase.
+      */}
+      {!projectData && <LedgerSync userId={user.id} />}
+
       <StorefrontLobby />
 
-      <main className="flex-1 w-full max-w-6xl mx-auto p-4 md:p-8 flex flex-col gap-8">
-        <ClientProfile />
-        <ProjectProposal />
-        <AccountabilityLedger />
+      <main className="flex-1 w-full max-w-6xl mx-auto p-4 md:p-8 flex flex-col gap-12">
+        {/* 
+          Component Isolation Enforced.
+          UI wrappers have been stripped from this routing file.
+          The components now manage their own internal layout and accept the server payload.
+        */}
+        <ClientProfile project={projectData} />
+        <ProjectProposal project={projectData} />
+        <AccountabilityLedger project={projectData} />
       </main>
     </div>
   );
@@ -2004,9 +2604,14 @@ export default function ConsultationFeed({
       }
       // CONDITION 2: The AI is acting as the Project Manager (Dossier Built)
       else if (data.type === "dossier_generated") {
-        // Push the structured data to your Summary Card / Dashboard state
-        // e.g., setDossierPayload(data.data);
-        // e.g., transitionToNextStep();
+        // 1. Acknowledge the payload locally in the chat feed
+        setMessages((prevMessages) => [
+          ...prevMessages,
+          { role: "assistant", content: data.message },
+        ]);
+
+        // 2. Transmit the structured payload up to the parent to trigger Step 2
+        onIntakeComplete(data.data);
       }
     } catch (error) {
       console.error("Transmission Error:", error);
@@ -2151,313 +2756,8 @@ export default function ConsultationFeed({
 }
 </file>
 
-<file path="lib/data/portfolio.ts">
-// src/lib/data/portfolio.ts
-
-export interface PortfolioImage {
-  src: string;
-  alt: string;
-}
-
-export interface PortfolioItem {
-  id: string;
-  title: string;
-  category: string;
-  projectScale: "custom-build" | "service-agreement";
-  description: string;
-  images: PortfolioImage[];
-}
-
-export const projects: PortfolioItem[] = [
-  {
-    id: "prj-gibson",
-    title: "Structural Patio Enclosure",
-    category: "Architectural Upgrade",
-    projectScale: "custom-build",
-    description:
-      "Complete structural enclosure engineered to exact tolerances focused on matching the existing aesthetic. Progression from initial framing to final interior and exterior finish, trim, and paint.",
-    images: [
-      {
-        src: "/portfolio/projects/gibson/patio-enclosure-before-north.webp",
-        alt: "Gibson before modifications",
-      },
-      {
-        src: "/portfolio/projects/gibson/patio-enclosure-framing.webp",
-        alt: "Gibson structural framing",
-      },
-      {
-        src: "/portfolio/projects/gibson/patio-enclosure-vapor-barrier.webp",
-        alt: "Gibson project vapor barrier application",
-      },
-      {
-        src: "/portfolio/projects/gibson/patio-enclosure-sheathing.webp",
-        alt: "Gibson project exterior sheathing installation",
-      },
-      {
-        src: "/portfolio/projects/gibson/patio-enclosure-trim-windows.webp",
-        alt: "Gibson project window and trim integration",
-      },
-      {
-        src: "/portfolio/projects/gibson/patio-enclosure-before-south.webp",
-        alt: "Gibson project before structural modifications south view",
-      },
-      {
-        src: "/portfolio/projects/gibson/patio-enclosure-doors.webp",
-        alt: "Gibson project final door installation",
-      },
-      {
-        src: "/portfolio/projects/gibson/patio-enclosure-insulation.webp",
-        alt: "Gibson project internal insulation phase",
-      },
-      {
-        src: "/portfolio/projects/gibson/patio-enclosure-drywall.webp",
-        alt: "Gibson project drywall hanging and finishing",
-      },
-      {
-        src: "/portfolio/projects/gibson/patio-enclosure-interior-north.webp",
-        alt: "Gibson project finished interior north view",
-      },
-      {
-        src: "/portfolio/projects/gibson/patio-enclosure-interior-south.webp",
-        alt: "Gibson project finished interior south view",
-      },
-      {
-        src: "/portfolio/projects/gibson/patio-enclosure-interior-furnished.webp",
-        alt: "Gibson project completed and furnished interior",
-      },
-    ],
-  },
-  {
-    id: "prj-pope",
-    title: "Architectural Metal Siding Installation",
-    category: "New Construction",
-    projectScale: "custom-build",
-    description:
-      "Comprehensive structural and aesthetic residential metal siding installation, documenting progress from naked structure to final finish.",
-    images: [
-      {
-        src: "/portfolio/projects/pope/southwest-before.webp",
-        alt: "Pope project southwest before",
-      },
-      {
-        src: "/portfolio/projects/pope/northwest-during.webp",
-        alt: "Pope project northwest framing during",
-      },
-
-      {
-        src: "/portfolio/projects/pope/southeast-during.webp",
-        alt: "Pope project southeast during phase",
-      },
-      {
-        src: "/portfolio/projects/pope/southeast-after.webp",
-        alt: "Pope project southeast finished",
-      },
-      {
-        src: "/portfolio/projects/pope/southwest-after.webp",
-        alt: "Pope project southwest finished",
-      },
-      {
-        src: "/portfolio/projects/pope/on-the-job.webp",
-        alt: "Pope project on the job active construction",
-      },
-    ],
-  },
-  {
-    id: "prj-ideal-garage-door",
-    title: "Custom Ideal Overhead Garage Door",
-    category: "Small Projects",
-    projectScale: "service-agreement",
-    description:
-      "Manual installation and precision balance of a high-torque duplex torsion spring system on a custom 8' x 18' Ideal overhead garage door. Executed as an independent short-duration contract to ensure exact mechanical tolerances.",
-    images: [
-      {
-        src: "/portfolio/projects/garage-door/overhead-garage-door-opening.webp",
-        alt: "Custom overhead garage door track and opening mechanism",
-      },
-      {
-        src: "/portfolio/projects/garage-door/overhead-garage-door-interior.webp",
-        alt: "Custom overhead garage door interior high-torque torsion spring system",
-      },
-      {
-        src: "/portfolio/projects/garage-door/overhead-garage-door-exterior.webp",
-        alt: "Custom overhead garage door exterior installation view",
-      },
-      {
-        src: "/portfolio/projects/garage-door/overhead-garage-door-after.webp",
-        alt: "Custom overhead garage door finished installation and mechanical balance",
-      },
-    ],
-  },
-  {
-    id: "prj-pope-shed",
-    title: "Outbuilding Restoration",
-    category: "Small Projects",
-    projectScale: "service-agreement",
-    description:
-      "High-velocity aesthetic and structural restoration of a residence outbuilding. Executed as an independent short-duration contract to protect exterior integrity.",
-    images: [
-      {
-        src: "/portfolio/projects/pope/shed-paint-before.webp",
-        alt: "Shed exterior condition prior to restoration",
-      },
-      {
-        src: "/portfolio/projects/pope/shed-paint-after.webp",
-        alt: "Shed exterior finished restoration",
-      },
-    ],
-  },
-  {
-    id: "prj-pope-shed-siding",
-    title: "Outbuilding Siding & Doors",
-    category: "Small Projects",
-    projectScale: "service-agreement",
-    description:
-      "High-velocity exterior siding replacement and door installation. Executed as a short-duration independent contract to restore structural integrity.",
-    images: [
-      {
-        src: "/portfolio/projects/shed/siding-before.webp",
-        alt: "Outbuilding siding condition prior to construction",
-      },
-      {
-        src: "/portfolio/projects/shed/siding-after.webp",
-        alt: "Outbuilding siding finished installation",
-      },
-      {
-        src: "/portfolio/projects/shed/siding-rear-after.webp",
-        alt: "Outbuilding rear siding finished installation",
-      },
-      {
-        src: "/portfolio/projects/shed/siding-doors-after.webp",
-        alt: "Outbuilding doors finished installation",
-      },
-    ],
-  },
-];
-</file>
-
-<file path="utils/supabase/server.ts">
-import { createServerClient } from "@supabase/ssr";
-import { cookies } from "next/headers";
-
-export async function createClient() {
-  const cookieStore = await cookies();
-
-  return createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name: string) {
-          return cookieStore.get(name)?.value;
-        },
-        set(name: string, value: string, options: any) {
-          try {
-            cookieStore.set({ name, value, ...options });
-          } catch (error) {
-            // The `set` method was called from a Server Component.
-            // This can be ignored if you have middleware refreshing
-            // user sessions.
-          }
-        },
-        remove(name: string, options: any) {
-          try {
-            cookieStore.set({ name, value: "", ...options });
-          } catch (error) {
-            // The `remove` method was called from a Server Component.
-          }
-        },
-      },
-    },
-  );
-}
-</file>
-
-<file path="postcss.config.mjs">
-/** @type {import('postcss-load-config').Config} */
-const config = {
-  plugins: {
-    "@tailwindcss/postcss": {},
-    autoprefixer: {},
-  },
-};
-
-export default config;
-</file>
-
-<file path="prcommands.md">
-npx repomix --output project_context.txt
-npx repomix --output project_context.txt
-</file>
-
-<file path="components/Intake/DossierSummaryCard.tsx">
-"use client"; // Required for the onAcknowledge button interaction
-
-import React from "react";
-
-export interface DossierSummaryCardProps {
-  dossier: {
-    projectTitle: string;
-    assumedScope: string;
-    projectPhases: {
-      phaseName: string;
-      description: string;
-    }[];
-  };
-  onAcknowledge: () => void;
-}
-
-export default function DossierSummaryCard({
-  dossier,
-  onAcknowledge,
-}: DossierSummaryCardProps) {
-  return (
-    <div className="bg-brand-canvas border border-brand-primary/30 p-8 rounded-lg shadow-2xl flex flex-col gap-8 max-w-3xl mx-auto">
-      {/* HEADER: Acknowledging the completion of the consultation */}
-      <header className="border-b border-zinc-800 pb-4 text-center">
-        <h2 className="text-sm uppercase tracking-widest text-brand-primary mb-2">
-          Design Consultation Complete
-        </h2>
-        <h3 className="text-3xl font-light text-white">
-          {dossier.projectTitle}
-        </h3>
-      </header>
-
-      {/* THE VISION: Reflecting their idea back to them professionally */}
-      <section className="bg-zinc-900/50 p-6 rounded border border-zinc-800">
-        <h4 className="text-xs uppercase tracking-wider text-zinc-500 mb-3">
-          Proposed Scope of Work
-        </h4>
-        <p className="text-zinc-300 leading-relaxed text-lg">
-          {dossier.assumedScope}
-        </p>
-      </section>
-
-      {/* THE HOOK: The Value Exchange & Call to Action */}
-      <section className="bg-brand-primary/10 p-8 rounded border border-brand-primary/30 text-center">
-        <h4 className="text-xl text-brand-primary mb-3 font-medium">
-          Secure Your Project Blueprint
-        </h4>
-        <p className="text-sm text-zinc-300 mb-8 max-w-lg mx-auto">
-          Your preliminary design data has been synthesized. To permanently save
-          this dossier, unlock direct messaging with our Master Carpenter, and
-          schedule your on-site structural consultation, initialize your secure
-          client portal below.
-        </p>
-
-        <button
-          onClick={onAcknowledge}
-          className="w-full px-8 py-5 bg-brand-primary text-brand-canvas font-bold uppercase tracking-widest hover:bg-white transition-colors rounded shadow-lg text-sm"
-        >
-          Initialize Client Portal
-        </button>
-      </section>
-    </div>
-  );
-}
-</file>
-
 <file path="components/AuthGateway.tsx">
-"use client"; // Interactivity required for auth state[cite: 1]
+"use client";
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -2478,7 +2778,6 @@ export default function AuthGateway() {
     setLoading(true);
     setError(null);
 
-    // DIAGNOSTIC PROBE 1: Firing the sequence
     console.log("[AUTH PROBE] 1. Initialization started for:", email);
 
     try {
@@ -2495,6 +2794,15 @@ export default function AuthGateway() {
         const { data, error } = await supabase.auth.signUp({ email, password });
         console.log("[AUTH PROBE] 3. Registration Response:", { data, error });
         if (error) throw error;
+
+        // STRUCTURAL SAFEGUARD: Prevent silent failure if email confirmation is required
+        if (!data.session) {
+          setError(
+            "Account provisioned. Please check your email to verify your identity and unlock the portal.",
+          );
+          setLoading(false);
+          return; // Abort the redirect sequence
+        }
       }
 
       console.log(
@@ -2508,7 +2816,7 @@ export default function AuthGateway() {
       );
     } finally {
       console.log("[AUTH PROBE] 5. Resetting load state.");
-      setLoading(false);
+      if (error) setLoading(false);
     }
   };
 
@@ -2527,7 +2835,7 @@ export default function AuthGateway() {
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-5">
         {error && (
-          <div className="p-3 bg-red-900/30 border border-red-500/50 text-red-400 text-xs uppercase tracking-widest rounded">
+          <div className="p-3 bg-red-900/30 border border-red-500/50 text-red-400 text-xs uppercase tracking-widest rounded leading-relaxed text-center font-bold">
             {error}
           </div>
         )}
@@ -2541,7 +2849,7 @@ export default function AuthGateway() {
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="bg-zinc-900/50 border border-zinc-700 rounded p-4 text-white focus:outline-none focus:border-brand-primary transition-colors"
+            className="bg-zinc-900/50 border border-zinc-700 rounded-sm p-4 text-white focus:outline-none focus:border-brand-primary transition-colors"
             placeholder="client@example.com"
           />
         </div>
@@ -2555,7 +2863,7 @@ export default function AuthGateway() {
             required
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="bg-zinc-900/50 border border-zinc-700 rounded p-4 text-white focus:outline-none focus:border-brand-primary transition-colors"
+            className="bg-zinc-900/50 border border-zinc-700 rounded-sm p-4 text-white focus:outline-none focus:border-brand-primary transition-colors"
             placeholder="••••••••"
           />
         </div>
@@ -2563,7 +2871,7 @@ export default function AuthGateway() {
         <button
           type="submit"
           disabled={loading || !email || !password}
-          className="mt-2 w-full py-4 bg-brand-primary text-brand-canvas font-bold uppercase tracking-widest hover:bg-white transition-colors rounded disabled:opacity-50"
+          className="mt-2 w-full py-4 bg-brand-primary text-brand-canvas font-bold uppercase tracking-widest hover:bg-white transition-colors rounded-sm disabled:opacity-50"
         >
           {loading
             ? "Authenticating..."
@@ -2657,6 +2965,73 @@ yarn-error.log*
 next-env.d.ts
 
 repomix-output.xml
+</file>
+
+<file path="components/Intake/DossierSummaryCard.tsx">
+"use client"; // Required for the onAcknowledge button interaction
+
+import React from "react";
+
+export interface DossierSummaryCardProps {
+  dossier: {
+    projectTitle: string;
+    assumedScope: string;
+    projectPhases: {
+      phaseName: string;
+      description: string;
+    }[];
+  };
+  onAcknowledge: () => void;
+}
+
+export default function DossierSummaryCard({
+  dossier,
+  onAcknowledge,
+}: DossierSummaryCardProps) {
+  return (
+    <div className="bg-brand-canvas border border-brand-primary/30 p-8 rounded-lg shadow-2xl flex flex-col gap-8 max-w-3xl mx-auto">
+      {/* HEADER: Acknowledging the completion of the consultation */}
+      <header className="border-b border-zinc-800 pb-4 text-center">
+        <h2 className="text-sm uppercase tracking-widest text-brand-primary mb-2">
+          Design Consultation Complete
+        </h2>
+        <h3 className="text-3xl font-light text-white">
+          {dossier.projectTitle}
+        </h3>
+      </header>
+
+      {/* THE VISION: Reflecting their idea back to them professionally */}
+      <section className="bg-zinc-900/50 p-6 rounded border border-zinc-800">
+        <h4 className="text-xs uppercase tracking-wider text-zinc-500 mb-3">
+          Proposed Scope of Work
+        </h4>
+        <p className="text-zinc-300 leading-relaxed text-lg">
+          {dossier.assumedScope}
+        </p>
+      </section>
+
+      {/* THE HOOK: The Value Exchange & Call to Action */}
+      <section className="bg-brand-primary/10 p-8 rounded border border-brand-primary/30 text-center">
+        <h4 className="text-xl text-brand-primary mb-3 font-medium">
+          Secure Your Project Blueprint
+        </h4>
+        <p className="text-sm text-zinc-300 mb-8 max-w-lg mx-auto">
+          Your preliminary design data has been synthesized. To permanently save
+          this dossier, unlock direct messaging with our Master Carpenter, and
+          schedule your on-site structural consultation, initialize your secure
+          client portal below.
+        </p>
+
+        <button
+          onClick={onAcknowledge}
+          className="w-full px-8 py-5 bg-brand-primary text-brand-canvas font-bold uppercase tracking-widest hover:bg-white transition-colors rounded shadow-lg text-sm"
+        >
+          Initialize Client Portal
+        </button>
+      </section>
+    </div>
+  );
+}
 </file>
 
 <file path="components/OperatorProfile.tsx">
@@ -2760,6 +3135,7 @@ export default function OperatorProfile() {
     "eslint": "^9",
     "eslint-config-next": "16.2.11",
     "postcss": "^8.5.22",
+    "supabase": "^2.114.0",
     "tailwindcss": "^4.3.3",
     "typescript": "^5"
   }
@@ -2814,78 +3190,6 @@ export default function OperatorProfile() {
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background-color: #eab308; /* A brighter yellow for interaction feedback */
-}
-</file>
-
-<file path="components/Intake/ChatEstimator.tsx">
-"use client";
-
-import React, { useState } from "react";
-import ZipCodeGate from "./ZipCodeGate";
-import ConsultationFeed from "./ConsultationFeed";
-import DossierSummaryCard from "./DossierSummaryCard";
-import AuthGateway from "../AuthGateway";
-
-export interface DraftedScopePayload {
-  projectTitle: string;
-  assumedScope: string;
-  projectPhases: {
-    phaseName: string;
-    description: string;
-  }[];
-}
-
-export default function ChatEstimator() {
-  const [intakeStep, setIntakeStep] = useState<number>(0);
-  const [verifiedZip, setVerifiedZip] = useState<string>("");
-  const [draftedScope, setDraftedScope] = useState<DraftedScopePayload | null>(
-    null,
-  );
-
-  const handleZipVerification = (zip: string) => {
-    setVerifiedZip(zip);
-    setIntakeStep(1);
-  };
-
-  const handleVisionComplete = (scopeData: DraftedScopePayload) => {
-    setDraftedScope(scopeData);
-    setIntakeStep(2);
-  };
-
-  const handleDossierAcknowledge = () => {
-    setIntakeStep(3);
-  };
-
-  return (
-    <div className="w-full max-w-4xl mx-auto flex flex-col gap-8">
-      {intakeStep === 0 && <ZipCodeGate onVerified={handleZipVerification} />}
-
-      {/* STEP 1: The dynamic consultation feed replacing the static form */}
-      {intakeStep === 1 && (
-        <div className="animate-in fade-in duration-500">
-          <ConsultationFeed
-            zipCode={verifiedZip}
-            onIntakeComplete={handleVisionComplete}
-          />
-        </div>
-      )}
-
-      {intakeStep === 2 && draftedScope && (
-        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-          <DossierSummaryCard
-            dossier={draftedScope}
-            onAcknowledge={handleDossierAcknowledge}
-          />
-        </div>
-      )}
-
-      {intakeStep === 3 && (
-        <div className="animate-in fade-in duration-500">
-          <AuthGateway />
-        </div>
-      )}
-    </div>
-  );
 }
 </file>
 
@@ -3040,6 +3344,87 @@ export default function RootLayout({
         <Footer />
       </body>
     </html>
+  );
+}
+</file>
+
+<file path="components/Intake/ChatEstimator.tsx">
+"use client";
+
+import React, { useState } from "react";
+import ZipCodeGate from "./ZipCodeGate";
+import ConsultationFeed from "./ConsultationFeed";
+import DossierSummaryCard from "./DossierSummaryCard";
+import AuthGateway from "../AuthGateway";
+
+export interface DraftedScopePayload {
+  projectTitle: string;
+  assumedScope: string;
+  projectPhases: {
+    phaseName: string;
+    description: string;
+  }[];
+}
+
+export default function ChatEstimator() {
+  const [intakeStep, setIntakeStep] = useState<number>(0);
+  const [verifiedZip, setVerifiedZip] = useState<string>("");
+  const [draftedScope, setDraftedScope] = useState<DraftedScopePayload | null>(
+    null,
+  );
+
+  const handleZipVerification = (zip: string) => {
+    setVerifiedZip(zip);
+    setIntakeStep(1);
+  };
+
+  const handleVisionComplete = (scopeData: DraftedScopePayload) => {
+    setDraftedScope(scopeData);
+    setIntakeStep(2);
+  };
+
+  const handleDossierAcknowledge = () => {
+    // 1. Cache the volatile structural payload into browser storage to survive the routing boundary
+    if (draftedScope) {
+      sessionStorage.setItem(
+        "bsc_pending_dossier",
+        JSON.stringify(draftedScope),
+      );
+    }
+
+    // 2. Shift UI to the AuthGateway
+    setIntakeStep(3);
+  };
+
+  return (
+    <div className="w-full max-w-4xl mx-auto flex flex-col gap-8">
+      {intakeStep === 0 && <ZipCodeGate onVerified={handleZipVerification} />}
+
+      {/* STEP 1: The dynamic consultation feed replacing the static form */}
+      {intakeStep === 1 && (
+        <div className="animate-in fade-in duration-500">
+          <ConsultationFeed
+            zipCode={verifiedZip}
+            onIntakeComplete={handleVisionComplete}
+          />
+        </div>
+      )}
+
+      {intakeStep === 2 && draftedScope && (
+        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <DossierSummaryCard
+            dossier={draftedScope}
+            onAcknowledge={handleDossierAcknowledge}
+          />
+        </div>
+      )}
+
+      {intakeStep === 3 && (
+        <div className="animate-in fade-in duration-500">
+          <AuthGateway />
+        </div>
+      )}
+    </div>
   );
 }
 </file>

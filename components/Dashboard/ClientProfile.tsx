@@ -1,33 +1,89 @@
-"use client"; // Required for local UI toggle state
+"use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { createClient } from "@/utils/supabase/client";
+import { useRouter } from "next/navigation";
 
-export default function ClientProfile() {
-  const [isEditing, setIsEditing] = useState(true);
-  const [clientName, setClientName] = useState("");
-  const [phone, setPhone] = useState("");
-  const [siteAddress, setSiteAddress] = useState("");
+interface ClientProfileProps {
+  project: any;
+}
 
-  const handleSave = (e: React.FormEvent) => {
+export default function ClientProfile({ project }: ClientProfileProps) {
+  const supabase = createClient();
+  const router = useRouter();
+
+  // Determine initial state from the database payload
+  const initialName = project?.properties?.clients?.full_name || "";
+  const initialPhone = project?.properties?.clients?.phone || "";
+  const initialAddress = project?.properties?.site_address || "";
+
+  // If the data is empty or contains the placeholder, open in edit mode
+  const needsConfiguration =
+    !initialName || initialAddress === "Address Pending Consultation";
+
+  const [isEditing, setIsEditing] = useState(needsConfiguration);
+  const [clientName, setClientName] = useState(initialName);
+  const [phone, setPhone] = useState(initialPhone);
+  const [siteAddress, setSiteAddress] = useState(initialAddress);
+  const [isTransmitting, setIsTransmitting] = useState(false);
+
+  // Sync state if the server prop updates
+  useEffect(() => {
+    setClientName(project?.properties?.clients?.full_name || "");
+    setPhone(project?.properties?.clients?.phone || "");
+    setSiteAddress(project?.properties?.site_address || "");
+  }, [project]);
+
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsEditing(false);
+    if (!project) return;
+    setIsTransmitting(true);
+
+    try {
+      // 1. Update the Clients Table with strict return verification
+      const { data: updatedClient, error: clientError } = await supabase
+        .from("clients")
+        .update({ full_name: clientName, phone: phone })
+        .eq("id", project.user_id)
+        .select()
+        .single();
+
+      if (clientError) throw clientError;
+      if (!updatedClient) throw new Error("Client mutation blocked by RLS.");
+
+      // 2. Update the Properties Table with strict return verification
+      const { data: updatedProperty, error: propertyError } = await supabase
+        .from("properties")
+        .update({ site_address: siteAddress })
+        .eq("id", project.property_id)
+        .select()
+        .single();
+
+      if (propertyError) throw propertyError;
+      if (!updatedProperty)
+        throw new Error("Property mutation blocked by RLS.");
+
+      // Lock the UI and trigger a server refresh to hydrate the global state
+      setIsEditing(false);
+      router.refresh();
+    } catch (error) {
+      console.error("[DATABASE FAULT] Failed to lock profile data:", error);
+      // Optional: Add a UI error state here later to alert the client
+    } finally {
+      setIsTransmitting(false);
+    }
   };
 
   return (
-    <section className="bg-brand-canvas border border-zinc-800 rounded-lg shadow-xl overflow-hidden">
+    <section className="bg-brand-surface border border-zinc-800 rounded-lg shadow-xl overflow-hidden">
       <header className="bg-zinc-900/80 border-b border-zinc-800 p-6 flex justify-between items-center">
-        <div>
-          <h2 className="text-lg uppercase tracking-widest text-brand-primary">
-            Client Profile
-          </h2>
-          <p className="text-xs text-zinc-500 uppercase tracking-widest mt-1">
-            Identity & Site Parameters
-          </p>
-        </div>
+        <h2 className="text-sm font-bold uppercase tracking-widest text-brand-primary">
+          Site & Client Logistics
+        </h2>
         {!isEditing && (
           <button
             onClick={() => setIsEditing(true)}
-            className="text-xs text-zinc-400 hover:text-brand-primary uppercase tracking-widest transition-colors border border-zinc-700 hover:border-brand-primary px-4 py-2 rounded"
+            className="text-[10px] text-zinc-400 hover:text-brand-primary uppercase tracking-widest transition-colors border border-zinc-700 hover:border-brand-primary px-3 py-1.5 rounded"
           >
             Edit Data
           </button>
@@ -55,7 +111,7 @@ export default function ClientProfile() {
             </div>
             <div className="flex flex-col gap-2">
               <label className="text-xs uppercase tracking-widest text-zinc-500">
-                Contact Number (Optional)
+                Contact Number
               </label>
               <input
                 type="tel"
@@ -80,9 +136,10 @@ export default function ClientProfile() {
             </div>
             <button
               type="submit"
-              className="md:col-span-2 bg-brand-primary text-brand-canvas px-6 py-3 text-sm font-bold uppercase tracking-widest rounded hover:bg-white transition-colors"
+              disabled={isTransmitting}
+              className="md:col-span-2 bg-brand-primary text-brand-canvas px-6 py-3 text-sm font-bold uppercase tracking-widest rounded hover:bg-white transition-colors disabled:opacity-50"
             >
-              Lock Profile
+              {isTransmitting ? "Locking Data..." : "Lock Profile"}
             </button>
           </form>
         ) : (

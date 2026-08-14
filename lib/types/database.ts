@@ -163,6 +163,7 @@ export type Database = {
           property_id: string
           room_condition: string | null
           status: string | null
+          user_id: string | null
         }
         Insert: {
           assumed_scope: string
@@ -177,6 +178,7 @@ export type Database = {
           property_id: string
           room_condition?: string | null
           status?: string | null
+          user_id?: string | null
         }
         Update: {
           assumed_scope?: string
@@ -191,6 +193,7 @@ export type Database = {
           property_id?: string
           room_condition?: string | null
           status?: string | null
+          user_id?: string | null
         }
         Relationships: [
           {

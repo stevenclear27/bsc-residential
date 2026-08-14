@@ -1,24 +1,31 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
 
-export default function LedgerSync() {
+export default function LedgerSync({ userId }: { userId: string }) {
+  const router = useRouter();
   const supabase = createClient();
+
+  // Mechanical lock to prevent React Strict Mode from double-firing the database insert
   const syncAttempted = useRef(false);
 
   useEffect(() => {
     const synchronizeLedger = async () => {
+      // 1. Guard Clauses (Early Returns)
       if (syncAttempted.current) return;
-      syncAttempted.current = true;
 
       const cachedDossier = sessionStorage.getItem("bsc_pending_dossier");
       if (!cachedDossier) return;
 
+      // Engage the mechanical lock only after verifying there is data to process
+      syncAttempted.current = true;
+
       try {
         const payload = JSON.parse(cachedDossier);
 
-        // 1. Verify Authentication Clearance
+        // 2. Security Verification
         const {
           data: { user },
           error: authError,
@@ -26,8 +33,10 @@ export default function LedgerSync() {
         if (authError || !user)
           throw new Error("Authentication barrier failed.");
 
-        // 2. Generate a structural placeholder for the required property_id
-        // In a production environment, this triggers a dedicated property intake sequence.
+        // Strict verification: Ensure the logged-in user matches the intended ID
+        if (user.id !== userId) throw new Error("User identity mismatch.");
+
+        // 3. Sequential Database Execution
         const { data: propertyData, error: propertyError } = await supabase
           .from("properties")
           .insert({
@@ -39,10 +48,10 @@ export default function LedgerSync() {
 
         if (propertyError) throw propertyError;
 
-        // 3. Execute the strictly typed Project Insert
+        // Execute the strictly typed Project Insert enforcing Data Contracts
         const { error: dbError } = await supabase.from("projects").insert({
-          user_id: user.id, // The newly added column satisfying RLS
-          property_id: propertyData.id, // Satisfying the schema constraint
+          user_id: user.id,
+          property_id: propertyData.id,
           project_title: payload.projectTitle,
           assumed_scope: payload.assumedScope,
           project_phases: payload.projectPhases,
@@ -53,16 +62,21 @@ export default function LedgerSync() {
 
         if (dbError) throw dbError;
 
-        // 4. Purge the volatile cache
+        // 4. Volatile Cache Destruction
         sessionStorage.removeItem("bsc_pending_dossier");
-        console.log("Ledger synchronized. Volatile cache destroyed.");
+        console.log("[SYSTEM] Ledger synchronized. Volatile cache destroyed.");
+
+        // 5. The Feedback Loop (Hydration Trigger)
+        router.refresh();
       } catch (error) {
-        console.error("System Fault during Ledger Sync:", error);
+        console.error("[SYSTEM FAULT] Ledger Sync Failure:", error);
+        // Release the mechanical lock so the system can attempt synchronization again upon a manual page refresh
+        syncAttempted.current = false;
       }
     };
 
     synchronizeLedger();
-  }, [supabase]);
+  }, [userId, router, supabase]); // Syntax corrected: userId matches the defined prop
 
-  return null;
+  return null; // Component Isolation: This is a pure logic node; it renders no UI
 }
