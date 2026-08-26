@@ -170,7 +170,7 @@ export default function ConsultationFeed({
   };
 
   return (
-    <div className="bg-brand-canvas border border-brand-primary/20 p-6 rounded-lg shadow-xl flex flex-col h-175 max-w-4xl mx-auto">
+    <div className="bg-white border border-brand-primary/20 p-6 rounded-lg shadow-xl flex flex-col h-175 max-w-4xl mx-auto">
       <header className="border-b border-zinc-800 pb-4 mb-4 flex justify-between items-end">
         <div>
           <h2 className="text-xl font-bold text-brand-primary uppercase tracking-widest">
@@ -180,7 +180,7 @@ export default function ConsultationFeed({
             AI Assisting BSC Residential
           </p>
         </div>
-        <div className="text-xs text-zinc-500 uppercase tracking-wider text-right">
+        <div className="text-xs text-brand-accent uppercase tracking-wider text-right">
           Zone Verified: {zipCode}
         </div>
       </header>
@@ -193,7 +193,7 @@ export default function ConsultationFeed({
             className={`flex ${msg.role === "assistant" ? "justify-start" : "justify-end"}`}
           >
             <div
-              className={`max-w-[85%] p-4 rounded-lg ${msg.role === "assistant" ? "bg-zinc-900/80 border border-zinc-800 text-zinc-300" : "bg-brand-primary/10 border border-brand-primary/30 text-white shadow-inner"}`}
+              className={`max-w-[85%] p-4 rounded-lg ${msg.role === "assistant" ? "bg-zinc-900/80 border border-zinc-800 text-zinc-300" : "bg-brand-primary/10 border border-brand-primary/30 text-brand-primary shadow-inner"}`}
             >
               {renderContent(msg.content)}
             </div>

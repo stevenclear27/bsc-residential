@@ -5,61 +5,101 @@ export default function IntroSection() {
         {/* Primary Introduction Frame */}
         <div className="max-w-3xl">
           <h2 className="text-3xl mb-8 font-bold tracking-tight text-brand-primary sm:text-4xl uppercase">
-            Building Beyond Standard
+            Structural Integrity & Premium Restoration
           </h2>
           <div className="space-y-4 text-lg text-zinc-100 leading-relaxed">
             <p>
               High-end residential construction demands more than premium
-              materials; it requires structural integrity and absolute
-              transparency.
+              materials; it requires uncompromising structural precision.
             </p>
             <p>
-              BSC Residential engineers custom home upgrades and architectural
-              modifications with rigid compliance. By operating on a
-              single-point accountability system, we eliminate the friction of
-              subcontractor hand-offs.
+              Whether executing boutique custom upgrades or rebuilding
+              compromised structural envelopes, BSC Residential engineers every
+              modification to rigid compliance.
             </p>
             <p>
-              From initial demolition to final walkthrough, clients maintain
-              full visibility through a dedicated digital portal—ensuring every
-              tolerance is met, and every deadline is tracked.
+              From emergency exterior stabilization to final custom interior
+              finish work, your property is restored to an exacting master-level
+              standard.
             </p>
           </div>
         </div>
 
-        {/* Feature Grid: Rough-in for future service highlights */}
+        {/* Feature Grid: High-Scannability Service Modules */}
         <div className="mt-16 grid w-full grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
+          {/* Node 1: Exterior / Envelope */}
           <div className="flex flex-col items-start border border-brand-surface bg-brand-surface/50 p-8 text-left backdrop-blur-sm rounded-lg">
-            <h3 className="text-xl font-semibold text-brand-primary">
-              Structural Mastery
+            <h3 className="text-xl font-semibold text-brand-primary mb-4 uppercase tracking-widest text-sm">
+              Exterior & Envelope Systems
             </h3>
-            <p className="mt-3 text-sm text-zinc-200">
-              Forged through 30+ years of domain expertise. We execute precise
-              custom framing and load-bearing alterations to guarantee
-              uncompromised foundational stability.
-            </p>
+            <ul className="text-sm text-zinc-200 space-y-3 w-full">
+              <li className="flex gap-2">
+                <span className="text-brand-primary">▹</span> Dimensional roof
+                replacement
+              </li>
+              <li className="flex gap-2">
+                <span className="text-brand-primary">▹</span> Architectural
+                siding repair & installation
+              </li>
+              <li className="flex gap-2">
+                <span className="text-brand-primary">▹</span> Load-bearing
+                structural stabilization
+              </li>
+              <li className="flex gap-2">
+                <span className="text-brand-primary">▹</span> Secondary water
+                intrusion mitigation
+              </li>
+            </ul>
           </div>
 
+          {/* Node 2: Interior / Trim */}
           <div className="flex flex-col items-start border border-brand-surface bg-brand-surface/50 p-8 text-left backdrop-blur-sm rounded-lg">
-            <h3 className="text-xl font-semibold text-brand-primary">
-              Custom Upgrades
+            <h3 className="text-xl font-semibold text-brand-primary mb-4 uppercase tracking-widest text-sm">
+              Interior Rebuilds & Finish
             </h3>
-            <p className="mt-3 text-sm text-zinc-200">
-              Boutique cabinetry, architectural millwork, and high-end
-              remodeling. Every aesthetic modification is built to exact
-              tolerances to elevate your environment.
-            </p>
+            <ul className="text-sm text-zinc-200 space-y-3 w-full">
+              <li className="flex gap-2">
+                <span className="text-brand-primary">▹</span> Custom
+                architectural millwork & trim
+              </li>
+              <li className="flex gap-2">
+                <span className="text-brand-primary">▹</span> Hardwood & premium
+                flooring replacement
+              </li>
+              <li className="flex gap-2">
+                <span className="text-brand-primary">▹</span> Drywall
+                replacement & paint matching
+              </li>
+              <li className="flex gap-2">
+                <span className="text-brand-primary">▹</span> Water-damage
+                structural framing
+              </li>
+            </ul>
           </div>
 
+          {/* Node 3: Custom / Decks (Maintaining Core Brand) */}
           <div className="flex flex-col items-start border border-brand-surface bg-brand-surface/50 p-8 text-left backdrop-blur-sm rounded-lg">
-            <h3 className="text-xl font-semibold text-brand-primary">
-              Systematic Accountability
+            <h3 className="text-xl font-semibold text-brand-primary mb-4 uppercase tracking-widest text-sm">
+              Custom Builds & Decking
             </h3>
-            <p className="mt-3 text-sm text-zinc-200">
-              Zero subcontractor hand-offs and complete project transparency.
-              Track milestone progress and site updates directly through your
-              dedicated client portal.
-            </p>
+            <ul className="text-sm text-zinc-200 space-y-3 w-full">
+              <li className="flex gap-2">
+                <span className="text-brand-primary">▹</span> Premium composite
+                & wood deck replacement
+              </li>
+              <li className="flex gap-2">
+                <span className="text-brand-primary">▹</span> High-end cabinetry
+                & remodeling
+              </li>
+              <li className="flex gap-2">
+                <span className="text-brand-primary">▹</span> Boutique outdoor
+                living structures
+              </li>
+              <li className="flex gap-2">
+                <span className="text-brand-primary">▹</span> Code-compliant
+                structural upgrades
+              </li>
+            </ul>
           </div>
         </div>
       </div>

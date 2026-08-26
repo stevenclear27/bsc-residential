@@ -35,13 +35,6 @@ export default function PortalLayout({ children }: { children: ReactNode }) {
             Site Logs
           </Link>
         </nav>
-
-        <div className="p-4 border-t border-brand-primary/20">
-          {/* Logout functionality will be wired here */}
-          <button className="w-full text-left px-4 py-2 text-sm text-zinc-400 hover:text-brand-primary transition-colors">
-            Sign Out
-          </button>
-        </div>
       </aside>
 
       {/* MAIN CONTENT AREA */}

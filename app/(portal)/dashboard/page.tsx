@@ -1,10 +1,12 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
-import StorefrontLobby from "@/components/Dashboard/StorefrontLobby";
+import SignOutButton from "@/components/Dashboard/SignOutButton";
 import ClientProfile from "@/components/Dashboard/ClientProfile";
 import ProjectProposal from "@/components/Dashboard/ProjectProposal";
 import AccountabilityLedger from "@/components/Dashboard/AccountabilityLedger";
 import LedgerSync from "@/components/Dashboard/LedgerSync";
+import DocumentVault from "@/components/Dashboard/DocumentVault";
+import DocumentList from "@/components/Dashboard/DocumentList";
 
 export default async function ClientDashboardPage() {
   const supabase = await createClient();
@@ -29,7 +31,7 @@ export default async function ClientDashboardPage() {
     redirect("/admin-dashboard");
   }
 
-  // 2. RELATIONAL HYDRATION: Fetch project, linked property, and client data
+  // 2. RELATIONAL HYDRATION: Fetch project, linked property, client data, and vault index
   const { data: projectData } = await supabase
     .from("projects")
     .select(
@@ -43,6 +45,12 @@ export default async function ClientDashboardPage() {
           full_name,
           phone
         )
+      ),
+      project_documents (
+        id,
+        file_name,
+        file_url,
+        created_at
       )
     `,
     )
@@ -52,12 +60,19 @@ export default async function ClientDashboardPage() {
   return (
     <div className="min-h-screen bg-brand-canvas text-white flex flex-col">
       {!projectData && <LedgerSync userId={user.id} />}
-      <StorefrontLobby />
+
       <main className="flex-1 w-full max-w-6xl mx-auto p-4 md:p-8 flex flex-col gap-12">
         {/* Pass the fully hydrated payload down the tree */}
         <ClientProfile project={projectData} />
         <ProjectProposal project={projectData} />
+
+        <div className="flex flex-col gap-2">
+          <DocumentVault projectId={projectData.id} />
+          <DocumentList documents={projectData.project_documents} />
+        </div>
+
         <AccountabilityLedger project={projectData} />
+        <SignOutButton />
       </main>
     </div>
   );

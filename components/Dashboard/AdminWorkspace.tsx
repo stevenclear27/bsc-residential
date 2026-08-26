@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import AccountabilityLedger from "./AccountabilityLedger";
+import SignOutButton from "./SignOutButton";
 
 interface AdminWorkspaceProps {
   projects: any[];
@@ -90,6 +91,7 @@ export default function AdminWorkspace({ projects }: AdminWorkspaceProps) {
           </div>
         )}
       </div>
+      <SignOutButton />
     </main>
   );
 }
