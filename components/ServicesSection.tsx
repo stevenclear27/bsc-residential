@@ -1,38 +1,42 @@
 import React from "react";
 import OperatorProfile from "./OperatorProfile";
 
+// Strict typing mandatory to prevent runtime failures[cite: 7, 8]
 interface ServiceItem {
   title: string;
   description: string;
   features: string[];
 }
 
+// Extracted data structure allows for frictionless future copy modifications
 const services: ServiceItem[] = [
   {
-    title: "Structural Modifications",
-    description:
-      "Precision framing, load-bearing alterations, and foundational adjustments designed for long-term stability and architectural integrity.",
+    title: "Exterior Stabilization",
+    description: "Securing properties against harsh winter conditions.",
     features: [
-      "Load-Bearing Wall Removal",
-      "Custom Framing",
-      "Subfloor Leveling",
+      "Architectural Siding Replacement",
+      "Window & Door Installation",
+      "Four-Season Patio Enclosures",
     ],
   },
   {
     title: "Boutique Carpentry",
-    description:
-      "High-end custom builds and finish work that elevate the aesthetic and functional standard of the environment.",
+    description: "High-end custom builds and finish work.",
     features: [
-      "Custom Cabinetry",
-      "Architectural Millwork",
-      "Hardwood Installations",
+      "Custom Architectural Millwork",
+      "Engineered Decking Systems",
+      "Perimeter Fencing Solutions",
     ],
   },
   {
     title: "Systematic Remodeling",
     description:
-      "Comprehensive space transformations managed with rigid accountability, from initial demolition to final walkthrough.",
-    features: ["Kitchen Overhauls", "Bathroom Upgrades", "Basement Finishing"],
+      "Comprehensive space transformations managed with rigid accountability.",
+    features: [
+      "Kitchen & Bath Renovation",
+      "Load-Bearing Wall Removal",
+      "Flooring Replacement",
+    ],
   },
 ];
 
@@ -40,17 +44,18 @@ export default function ServicesSection() {
   return (
     <section className="w-full py-24 border-t border-brand-surface bg-brand-canvas">
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
+        {/* Header Block */}
         <div className="mx-auto max-w-2xl text-center">
           <h1 className="text-4xl font-bold tracking-tight text-brand-primary sm:text-5xl uppercase">
             Core Capabilities
           </h1>
           <p className="mt-6 text-lg leading-8 text-zinc-200">
             Executed with the precision of a Master Carpenter and the rigorous
-            oversight of a dedicated project manager. We do not compromise on
-            structural tolerances.
+            oversight of a dedicated project manager.
           </p>
         </div>
 
+        {/* Primary Services Grid */}
         <div className="mx-auto mt-16 max-w-2xl sm:mt-20 lg:mt-24 lg:max-w-none">
           <dl className="grid max-w-xl grid-cols-1 gap-x-8 gap-y-16 lg:max-w-none lg:grid-cols-3">
             {services.map((service) => (
@@ -81,6 +86,25 @@ export default function ServicesSection() {
             ))}
           </dl>
         </div>
+
+        {/* Strategic Addition: Aging-in-Place Architecture */}
+        <div className="mx-auto mt-20 max-w-4xl border border-brand-surface bg-brand-surface/30 p-8 rounded-lg text-center backdrop-blur-sm">
+          <h2 className="text-2xl font-semibold leading-7 text-brand-primary uppercase mb-4">
+            Custom Aging-in-Place Solutions
+          </h2>
+          <p className="text-base leading-7 text-zinc-200">
+            Structural modifications should not compromise the aesthetic
+            standard of a high-end residence.
+          </p>
+          <p className="text-base leading-7 text-zinc-200">
+            <br />
+            We engineer and execute discreet, compliant architectural
+            adjustments—from reinforced structural blocking to long-term
+            accessibility solutions without sacrificing premium design.
+          </p>
+        </div>
+
+        {/* Operator Profile Routing */}
         <div className="mt-24 border-t border-brand-primary/20 pt-8">
           <OperatorProfile />
         </div>
