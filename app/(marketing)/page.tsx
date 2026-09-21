@@ -1,14 +1,11 @@
-import FemaHero from "@/components/DisasterRelief/FemaHero";
+import HeroSection from "@/components/HeroSection";
 import ChatEstimator from "@/components/Intake/ChatEstimator";
-
-// PEACETIME COMPONENTS PRESERVED FOR FAST REVERSION
-// import HeroSection from "@/components/HeroSection";
 
 export default function Home() {
   return (
     <main className="flex min-h-screen flex-col items-center justify-start bg-brand-canvas">
       {/* 1. THE HOOK: FEMA Interceptor */}
-      <FemaHero />
+      <HeroSection />
 
       {/* 2. THE FILTER: Automated Intake & Dossier Generation */}
       <section
